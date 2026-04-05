@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Windows 10 Taskbar
+   Adapted from https://codepen.io/gcazin/pen/bKbMQW by gcazin
+   ========================================================================== */
+
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 40px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1000;
+  user-select: none;
+}
+
+.taskbar-icons {
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* ---------- Left side ---------- */
+
+.taskbar-left {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.taskbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: white;
+  border-bottom: 2px solid transparent;
+}
+
+.taskbar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-btn:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Search bar */
+.taskbar-search {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.12);
+  padding: 0 12px;
+  gap: 10px;
+  cursor: text;
+  min-width: 0;
+}
+
+.taskbar-search:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.taskbar-search-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.taskbar-search-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+
+/* Task View */
+.taskbar-taskview {
+  width: 48px;
+  height: 100%;
+}
+
+/* ---------- Right side (system tray) ---------- */
+
+.taskbar-right {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.taskbar-small {
+  width: 30px;
+  height: 100%;
+}
+
+/* Date & Time */
+.taskbar-datetime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.taskbar-datetime:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-time,
+.taskbar-date {
+  color: white;
+  font-size: 11px;
+  line-height: 1.4;
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+
+/* Notification */
+.taskbar-notification {
+  width: 40px;
+  height: 100%;
+}
+
+/* Show Desktop strip (far right) */
+.taskbar-show-desktop {
+  width: 5px;
+  height: 100%;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.taskbar-show-desktop:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================================
+   Responsive — Mobile
+   ========================================================================== */
+
+/* Tablets and below */
+@media (max-width: 768px) {
+  .taskbar {
+    height: 36px;
+  }
+
+  .taskbar-search-text {
+    display: none;
+  }
+
+  .taskbar-search {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .taskbar-taskview {
+    width: 40px;
+  }
+
+  .taskbar-datetime {
+    min-width: 60px;
+    padding: 0 6px;
+  }
+
+  .taskbar-time,
+  .taskbar-date {
+    font-size: 10px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .taskbar {
+    height: 32px;
+  }
+
+  .taskbar-search {
+    width: 36px;
+  }
+
+  .taskbar-taskview {
+    width: 36px;
+  }
+
+  .taskbar-small {
+    width: 24px;
+  }
+
+  .taskbar-notification {
+    width: 32px;
+  }
+
+  .taskbar-datetime {
+    min-width: 50px;
+    padding: 0 4px;
+  }
+
+  .taskbar-time,
+  .taskbar-date {
+    font-size: 9px;
+  }
+}
