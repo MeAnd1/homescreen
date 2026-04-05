@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ChevronUp, Wifi, Volume2, Bell } from "lucide-react";
+import { Search, ChevronUp, Wifi, Volume2 } from "lucide-react";
 import "./Taskbar.css";
 
 function Taskbar() {
@@ -62,14 +62,6 @@ function Taskbar() {
             </span>
             <span className="taskbar-date">{date}</span>
           </div>
-
-          {/* Notifications */}
-          <button
-            className="taskbar-btn taskbar-notification"
-            aria-label="Notifications"
-          >
-            <Bell size={16} color="white" strokeWidth={1.5} />
-          </button>
 
           {/* Show Desktop */}
           <div className="taskbar-show-desktop" title="Show desktop" />
