@@ -16,14 +16,18 @@ const icons = [
   { name: '???', src: mysteryIcon },
 ]
 
-function DesktopIcons() {
+interface DesktopIconsProps {
+  onIconClick?: (name: string) => void
+}
+
+function DesktopIcons({ onIconClick }: DesktopIconsProps) {
   return (
     <div className="desktop-icons">
       {icons.map((icon) => (
         <button
           key={icon.name}
           className="desktop-icon"
-          onClick={() => console.log(`Clicked: ${icon.name}`)}
+          onClick={() => onIconClick?.(icon.name)}
         >
           <img src={icon.src} alt={icon.name} draggable={false} />
           <span className="desktop-icon-label">{icon.name}</span>

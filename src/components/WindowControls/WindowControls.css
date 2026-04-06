@@ -1,0 +1,26 @@
+.window-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.window-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+}
+
+.window-control-btn:hover {
+  background: #e5e5e5;
+}
+
+.window-control-close:hover {
+  background: #e81123;
+  color: #fff;
+}
