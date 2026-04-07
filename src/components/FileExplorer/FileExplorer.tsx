@@ -1,80 +1,103 @@
-import charactersIcon from "../../assets/icons/characters.webp";
-import ocData from "../../data/oc.json";
 import Window from "../Window/Window";
 import "./FileExplorer.css";
 
+interface SidebarItem {
+  label: string;
+  active?: boolean;
+  star?: boolean;
+  onClick?: () => void;
+}
+
 interface FileExplorerProps {
+  title: string;
+  icon?: string;
+  tabs?: { label: string; active?: boolean }[];
+  sidebar?: SidebarItem[];
+  statusText?: string;
+  defaultWidth?: number;
+  defaultHeight?: number;
+  defaultX?: number;
+  defaultY?: number;
   onClose: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  children: React.ReactNode;
 }
 
-function FileExplorer({ onClose, onFocus, zIndex }: FileExplorerProps) {
+function FileExplorer({
+  title,
+  icon,
+  tabs,
+  sidebar,
+  statusText,
+  defaultWidth = 720,
+  defaultHeight = 480,
+  defaultX = 120,
+  defaultY = 60,
+  onClose,
+  onFocus,
+  zIndex,
+  children,
+}: FileExplorerProps) {
   return (
     <Window
-      title="Characters"
-      icon={charactersIcon}
-      defaultWidth={720}
-      defaultHeight={480}
-      defaultX={120}
-      defaultY={60}
+      title={title}
+      icon={icon}
+      defaultWidth={defaultWidth}
+      defaultHeight={defaultHeight}
+      defaultX={defaultX}
+      defaultY={defaultY}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}
     >
       {/* Toolbar */}
-      <div className="explorer-toolbar">
-        <div className="explorer-toolbar-tabs">
-          <span className="explorer-tab active">Chara…</span>
-          <span className="explorer-tab">Menu</span>
+      {tabs && tabs.length > 0 && (
+        <div className="explorer-toolbar">
+          <div className="explorer-toolbar-tabs">
+            {tabs.map((tab) => (
+              <span
+                key={tab.label}
+                className={`explorer-tab${tab.active ? " active" : ""}`}
+              >
+                {tab.label}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main content area */}
       <div className="explorer-body">
         {/* Sidebar */}
-        <div className="explorer-sidebar">
-          <div className="explorer-sidebar-item">Strongest to weakest</div>
-          <div className="explorer-sidebar-item">Important</div>
-          <div className="explorer-sidebar-item star">
-            <span className="explorer-star">★</span> Favourites
+        {sidebar && sidebar.length > 0 && (
+          <div className="explorer-sidebar">
+            {sidebar.map((item) => (
+              <div
+                key={item.label}
+                className={`explorer-sidebar-item${item.active ? " active" : ""}${item.star ? " star" : ""}`}
+                onClick={item.onClick}
+              >
+                {item.star && <span className="explorer-star">★</span>}
+                {item.label}
+              </div>
+            ))}
           </div>
-          <div className="explorer-sidebar-item active">All</div>
-        </div>
+        )}
 
-        {/* File grid */}
+        {/* Content */}
         <div className="explorer-content-wrapper">
           <div className="explorer-content-header"></div>
-          <div className="explorer-content">
-            {ocData.map((oc, i) => (
-            <button
-              key={oc.name || i}
-              className="explorer-file"
-              onClick={() => console.log(`Open: ${oc.name}`)}
-            >
-              {oc.avatar ? (
-                <img
-                  src={oc.avatar}
-                  alt={oc.name}
-                  className="explorer-file-icon has-avatar"
-                />
-              ) : (
-                <div className="explorer-file-icon placeholder">
-                  <span>oc</span>
-                  <span>photo</span>
-                </div>
-              )}
-              <span className="explorer-file-name">{oc.name}</span>
-            </button>
-          ))}
-          </div>
+          <div className="explorer-content">{children}</div>
         </div>
       </div>
 
       {/* Status bar */}
-      <div className="explorer-statusbar">
-        <span>{ocData.length} items</span>
-      </div>
+      {statusText && (
+        <div className="explorer-statusbar">
+          <span>{statusText}</span>
+        </div>
+      )}
     </Window>
   );
 }

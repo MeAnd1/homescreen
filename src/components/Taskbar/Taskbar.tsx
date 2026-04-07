@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { Search, ChevronUp, Wifi, Volume2 } from "lucide-react";
+import type { OcEntry } from "../../App";
 import "./Taskbar.css";
 
-function Taskbar() {
+interface TaskbarProps {
+  selectedCharacters: OcEntry[];
+}
+
+function Taskbar({ selectedCharacters }: TaskbarProps) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -34,6 +39,27 @@ function Taskbar() {
               Search the web and Windows
             </span>
           </div>
+
+          {/* Selected character avatars */}
+          {selectedCharacters.map((oc) => (
+            <button
+              key={oc.name}
+              className="taskbar-btn taskbar-avatar-btn"
+              title={oc.name}
+            >
+              {oc.avatar ? (
+                <img
+                  src={oc.avatar}
+                  alt={oc.name}
+                  className="taskbar-avatar"
+                />
+              ) : (
+                <div className="taskbar-avatar taskbar-avatar-placeholder">
+                  {oc.name.charAt(0)}
+                </div>
+              )}
+            </button>
+          ))}
         </div>
 
         <div className="taskbar-right">

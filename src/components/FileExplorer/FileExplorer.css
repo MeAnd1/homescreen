@@ -142,6 +142,16 @@
   background: #c4c5c8;
 }
 
+.explorer-file.selected {
+  background: #cce8ff;
+  border-color: #99d1ff;
+}
+
+.explorer-file.selected:hover {
+  background: #b8deff;
+  border-color: #80c4ff;
+}
+
 /* Avatar thumbnails */
 .explorer-file-icon {
   width: 64px;
