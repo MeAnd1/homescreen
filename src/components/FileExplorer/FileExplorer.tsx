@@ -43,8 +43,10 @@ function FileExplorer({ onClose, onFocus, zIndex }: FileExplorerProps) {
         </div>
 
         {/* File grid */}
-        <div className="explorer-content">
-          {ocData.map((oc, i) => (
+        <div className="explorer-content-wrapper">
+          <div className="explorer-content-header"></div>
+          <div className="explorer-content">
+            {ocData.map((oc, i) => (
             <button
               key={oc.name || i}
               className="explorer-file"
@@ -65,6 +67,7 @@ function FileExplorer({ onClose, onFocus, zIndex }: FileExplorerProps) {
               <span className="explorer-file-name">{oc.name}</span>
             </button>
           ))}
+          </div>
         </div>
       </div>
 
