@@ -2,15 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #fff;
-  border: 1px solid #707070;
+  background: #b5b6b9;
+  border: 1px solid #bfc4cb;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  font-family: 'Noto Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Noto Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-size: 12px;
   color: #1a1a1a;
   touch-action: none;
 }
-
 
 .window--maximized {
   border: none;
@@ -25,8 +24,8 @@
   justify-content: space-between;
   height: 30px;
   padding: 0 4px;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  background: #b5b6b4;
+  border-bottom: 1px solid #898a90;
   flex-shrink: 0;
   cursor: default;
   user-select: none;

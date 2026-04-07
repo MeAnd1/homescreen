@@ -9,8 +9,8 @@
   align-items: center;
   height: 26px;
   padding: 0 8px;
-  background: #f3f3f3;
-  border-bottom: 1px solid #d6d6d6;
+  background: #c8c9cc;
+  border-bottom: 1px solid #a8a9ad;
   flex-shrink: 0;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .explorer-tab:hover {
-  background: #e0e0e0;
+  background: #b8b9bc;
 }
 
 .explorer-tab.active {
@@ -49,8 +49,8 @@
 .explorer-sidebar {
   width: 160px;
   min-width: 120px;
-  background: #fff;
-  border-right: 1px solid #e0e0e0;
+  background: #d8d9dc;
+  border-right: 1px solid #bbbcc0;
   padding: 12px 0;
   overflow-y: auto;
   flex-shrink: 0;
@@ -68,11 +68,11 @@
 }
 
 .explorer-sidebar-item:hover {
-  background: #e8f0fe;
+  background: #c8c9cc;
 }
 
 .explorer-sidebar-item.active {
-  background: #cce4f7;
+  background: #bfc0c4;
   font-weight: 600;
 }
 
@@ -99,8 +99,8 @@
 
 .explorer-content-header {
   height: 28px;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  background: #e8e9ec;
+  border-bottom: 1px solid #bbbcc0;
   flex-shrink: 0;
   padding: 0 12px;
   display: flex;
@@ -116,7 +116,7 @@
   gap: 8px;
   padding: 16px;
   overflow-y: auto;
-  background: #fff;
+  background: #e0e1e4;
 }
 
 .explorer-file {
@@ -134,12 +134,12 @@
 }
 
 .explorer-file:hover {
-  background: #e8f0fe;
-  border-color: #cce4f7;
+  background: #d0d1d4;
+  border-color: #bbbcc0;
 }
 
 .explorer-file:active {
-  background: #cce4f7;
+  background: #c4c5c8;
 }
 
 /* Avatar thumbnails */
@@ -180,8 +180,8 @@
   align-items: center;
   height: 22px;
   padding: 0 12px;
-  background: #f3f3f3;
-  border-top: 1px solid #d6d6d6;
+  background: #c8c9cc;
+  border-top: 1px solid #a8a9ad;
   font-size: 11px;
   color: #666;
   flex-shrink: 0;

@@ -18,7 +18,7 @@
 }
 
 .window-control-btn:hover {
-  background: #e5e5e5;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .window-control-close:hover {
