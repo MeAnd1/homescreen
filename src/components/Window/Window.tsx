@@ -97,18 +97,20 @@ function Window({
       style={{ zIndex }}
       className={`window ${isMaximized ? 'window--maximized' : ''}`}
     >
-      <div className="window-titlebar">
-        <div className="window-titlebar-left">
-          {icon && <img src={icon} alt="" className="window-titlebar-icon" />}
-          <span className="window-title">{title}</span>
+      <div className="window-inner">
+        <div className="window-titlebar">
+          <div className="window-titlebar-left">
+            {icon && <img src={icon} alt="" className="window-titlebar-icon" />}
+            <span className="window-title">{title}</span>
+          </div>
+          <WindowControls
+            onMaximize={handleMaximize}
+            onClose={onClose}
+          />
         </div>
-        <WindowControls
-          onMaximize={handleMaximize}
-          onClose={onClose}
-        />
-      </div>
-      <div className="window-body">
-        {children}
+        <div className="window-body">
+          {children}
+        </div>
       </div>
     </Rnd>
   )
