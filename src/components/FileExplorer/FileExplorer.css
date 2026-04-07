@@ -174,7 +174,8 @@
 
 @media (max-width: 768px) {
   .explorer-sidebar {
-    display: none;
+    width: 130px;
+    min-width: 100px;
   }
 
   .explorer-file {
@@ -192,10 +193,6 @@
 }
 
 @media (max-width: 480px) {
-  .explorer-toolbar {
-    display: none;
-  }
-
   .explorer-file {
     width: 72px;
     padding: 6px 2px;

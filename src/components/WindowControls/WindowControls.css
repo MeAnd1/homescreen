@@ -14,6 +14,7 @@
   border: none;
   cursor: pointer;
   color: #333;
+  touch-action: auto;
 }
 
 .window-control-btn:hover {
