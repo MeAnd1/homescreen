@@ -1,9 +1,7 @@
+import charactersIcon from "../../assets/icons/characters.webp";
 import ocData from "../../data/oc.json";
 import Window from "../Window/Window";
 import "./FileExplorer.css";
-
-const EXPLORER_ICON =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='6' height='5' rx='0.5' fill='%23f5c542'/%3E%3Crect x='9' y='2' width='6' height='5' rx='0.5' fill='%2342a5f5'/%3E%3Crect x='1' y='9' width='6' height='5' rx='0.5' fill='%2366bb6a'/%3E%3Crect x='9' y='9' width='6' height='5' rx='0.5' fill='%23ef5350'/%3E%3C/svg%3E";
 
 interface FileExplorerProps {
   onClose: () => void;
@@ -15,7 +13,7 @@ function FileExplorer({ onClose, onFocus, zIndex }: FileExplorerProps) {
   return (
     <Window
       title="Characters"
-      icon={EXPLORER_ICON}
+      icon={charactersIcon}
       defaultWidth={720}
       defaultHeight={480}
       defaultX={120}
