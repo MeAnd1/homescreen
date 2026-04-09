@@ -1,0 +1,61 @@
+.image-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #2a2a2a;
+}
+
+.image-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  background: #b5b6b9;
+  border-bottom: 1px solid #898a90;
+  flex-shrink: 0;
+}
+
+.image-viewer-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: none;
+  color: #1a1a1a;
+  cursor: pointer;
+  padding: 0;
+}
+
+.image-viewer-toolbar-btn:hover {
+  background: #d0d1d4;
+  border-color: #898a90;
+}
+
+.image-viewer-toolbar-btn:active {
+  background: #a0a1a4;
+}
+
+.image-viewer-canvas {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.image-viewer-canvas:active {
+  cursor: grabbing;
+}
+
+.image-viewer-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
