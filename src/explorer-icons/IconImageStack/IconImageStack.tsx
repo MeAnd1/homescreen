@@ -1,7 +1,7 @@
 import "./IconImageStack.css";
 
 interface IconImageStackProps {
-  images: string[];
+  images: { thumbnail: string; full: string; fileName: string }[];
   alt?: string;
   size?: number;
 }
@@ -13,11 +13,11 @@ function IconImageStack({ images, alt = "", size = 64 }: IconImageStackProps) {
 
   return (
     <div className="icon-image-stack" style={{ width: size, height: size }}>
-      {visibleImages.map((src, i) => (
+      {visibleImages.map((img, i) => (
         <img
           key={i}
-          src={src}
-          alt={alt}
+          src={img.thumbnail}
+          alt={img.fileName}
           className="icon-image-stack-img"
           style={{
             zIndex: i,

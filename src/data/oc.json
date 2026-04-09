@@ -4,9 +4,21 @@
     "name": "Placeholder OC 1",
     "avatar": "https://static.vecteezy.com/system/resources/thumbnails/044/776/845/small/chicken-isolated-on-transparent-background-png.png",
     "images": [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfEgw0ylJv5AtWwjBasIG356gzsBUTAt4Uew&s",
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBlFoEfdO_yVbataswO7PPKezzW2H3fzzYSQ&s",
-      "https://cdn.britannica.com/07/183407-050-C35648B5/Chicken.jpg"
+      {
+        "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfEgw0ylJv5AtWwjBasIG356gzsBUTAt4Uew&s",
+        "full": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfEgw0ylJv5AtWwjBasIG356gzsBUTAt4Uew&s",
+        "fileName": "chicken1.jpg"
+      },
+      {
+        "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBlFoEfdO_yVbataswO7PPKezzW2H3fzzYSQ&s",
+        "full": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBlFoEfdO_yVbataswO7PPKezzW2H3fzzYSQ&s",
+        "fileName": "chicken2.jpg"
+      },
+      {
+        "thumbnail": "https://cdn.britannica.com/07/183407-050-C35648B5/Chicken.jpg",
+        "full": "https://cdn.britannica.com/07/183407-050-C35648B5/Chicken.jpg",
+        "fileName": "chicken3.jpg"
+      }
     ]
   },
   {

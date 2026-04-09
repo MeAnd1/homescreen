@@ -43,26 +43,26 @@ function ImageGallery({ oc, onClose, onFocus, zIndex }: ImageGalleryProps) {
         onFocus={onFocus}
         zIndex={zIndex}
       >
-        {images.map((src, i) => (
+        {images.map((img, i) => (
           <div
             key={i}
             className="explorer-file gallery-item"
             onClick={() => openImageViewer(i)}
           >
             <img
-              src={src}
-              alt={`${oc.name} ${i + 1}`}
+              src={img.thumbnail}
+              alt={img.fileName}
               className="gallery-thumb"
             />
-            <span className="explorer-file-name">Image {i + 1}</span>
+            <span className="explorer-file-name">{img.fileName}</span>
           </div>
         ))}
       </FileExplorer>
       {openImages.map((index) => (
         <ImageViewer
           key={index}
-          src={images[index]}
-          title={`${oc.name} — Image ${index + 1}`}
+          src={images[index].full}
+          title={images[index].fileName}
           icon={oc.avatar}
           onClose={() => closeImageViewer(index)}
         />

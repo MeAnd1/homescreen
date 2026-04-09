@@ -11,7 +11,7 @@ export interface OcEntry {
   slug: string;
   name: string;
   avatar?: string;
-  images?: string[];
+  images?: { thumbnail: string; full: string; fileName: string }[];
 }
 
 function App() {
