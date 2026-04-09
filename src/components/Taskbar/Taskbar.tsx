@@ -17,11 +17,7 @@ function Taskbar({ selectedCharacters }: TaskbarProps) {
 
   const hours = time.getHours().toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
-  const date = time.toLocaleDateString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-  });
+  const date = `${time.getMonth() + 1}/${time.getDate()}/2171`;
 
   return (
     <div className="taskbar">
