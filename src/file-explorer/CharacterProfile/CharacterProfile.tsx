@@ -6,6 +6,7 @@ import "./CharacterProfile.css";
 
 interface CharacterProfileProps {
   oc: OcEntry;
+  hidden?: boolean;
   onClose: () => void;
   onFocus?: () => void;
   zIndex?: number;
@@ -31,6 +32,7 @@ const sidebar = [
 
 function CharacterProfile({
   oc,
+  hidden,
   onClose,
   onFocus,
   zIndex,
@@ -47,6 +49,7 @@ function CharacterProfile({
       defaultHeight={480}
       defaultX={200 + Math.random() * 60}
       defaultY={80 + Math.random() * 60}
+      hidden={hidden}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}

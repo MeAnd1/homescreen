@@ -13,6 +13,7 @@ interface WindowProps {
   defaultHeight?: number;
   minWidth?: number;
   minHeight?: number;
+  hidden?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
   zIndex?: number;
@@ -40,6 +41,7 @@ function Window({
   defaultHeight = 480,
   minWidth = 320,
   minHeight = 240,
+  hidden = false,
   onClose,
   onFocus,
   zIndex = 500,
@@ -113,7 +115,7 @@ function Window({
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
       onMouseDown={onFocus}
-      style={{ zIndex }}
+      style={{ zIndex, display: hidden ? "none" : undefined }}
       className={`window ${isMaximized ? "window--maximized" : ""}`}
     >
       <div className="window-inner">

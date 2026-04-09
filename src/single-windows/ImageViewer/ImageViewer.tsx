@@ -16,6 +16,7 @@ interface ImageViewerProps {
   defaultY?: number;
   defaultWidth?: number;
   defaultHeight?: number;
+  hidden?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
   zIndex?: number;
@@ -52,6 +53,7 @@ function ImageViewer({
   defaultY = 80,
   defaultWidth = 640,
   defaultHeight = 480,
+  hidden,
   onClose,
   onFocus,
   zIndex,
@@ -68,6 +70,7 @@ function ImageViewer({
       defaultY={defaultY}
       defaultWidth={defaultWidth}
       defaultHeight={defaultHeight}
+      hidden={hidden}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}

@@ -104,6 +104,63 @@
   font-family: 'Noto Sans', 'Segoe UI', Arial, Helvetica, sans-serif;
 }
 
+/* Hidden OC (windows minimized) */
+.taskbar-avatar-btn.taskbar-avatar-hidden {
+  border-bottom-color: transparent;
+  opacity: 0.5;
+}
+
+/* Avatar wrapper — anchor for context menu */
+.taskbar-avatar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+/* Context menu — Windows 10 taskbar style */
+.taskbar-context-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: #2b2b2b;
+  border: 1px solid #454545;
+  padding: 2px 0;
+  min-width: 200px;
+  z-index: 1001;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.taskbar-context-menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 28px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-family: 'Noto Sans', 'Segoe UI', Arial, Helvetica, sans-serif;
+  text-align: left;
+  cursor: default;
+  line-height: 1.4;
+}
+
+.taskbar-context-menu-item:hover {
+  background-color: #3d3d3d;
+}
+
+.taskbar-context-menu-item:active {
+  background-color: #333333;
+}
+
+.taskbar-context-menu-separator {
+  height: 1px;
+  background: #454545;
+  margin: 2px 0;
+}
+
 /* Task View */
 .taskbar-taskview {
   width: 48px;

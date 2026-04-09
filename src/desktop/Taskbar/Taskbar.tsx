@@ -5,10 +5,19 @@ import "./Taskbar.css";
 
 interface TaskbarProps {
   selectedCharacters: OcEntry[];
+  hiddenCharacters: Set<string>;
+  onToggleVisibility: (slug: string) => void;
+  onDeselectCharacter: (slug: string) => void;
 }
 
-function Taskbar({ selectedCharacters }: TaskbarProps) {
+function Taskbar({
+  selectedCharacters,
+  hiddenCharacters,
+  onToggleVisibility,
+  onDeselectCharacter,
+}: TaskbarProps) {
   const [time, setTime] = useState(new Date());
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -38,23 +47,49 @@ function Taskbar({ selectedCharacters }: TaskbarProps) {
 
           {/* Selected character avatars */}
           {selectedCharacters.map((oc) => (
-            <button
+            <div
               key={oc.slug}
-              className="taskbar-btn taskbar-avatar-btn"
-              title={oc.name}
+              className="taskbar-avatar-wrapper"
+              onMouseEnter={() => setHoveredSlug(oc.slug)}
+              onMouseLeave={() => setHoveredSlug(null)}
             >
-              {oc.avatar ? (
-                <img
-                  src={oc.avatar}
-                  alt={oc.name}
-                  className="taskbar-avatar"
-                />
-              ) : (
-                <div className="taskbar-avatar taskbar-avatar-placeholder">
-                  {oc.name.charAt(0)}
+              <button
+                className={`taskbar-btn taskbar-avatar-btn${hiddenCharacters.has(oc.slug) ? " taskbar-avatar-hidden" : ""}`}
+                title={oc.name}
+                onClick={() => onToggleVisibility(oc.slug)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setHoveredSlug(oc.slug);
+                }}
+              >
+                {oc.avatar ? (
+                  <img
+                    src={oc.avatar}
+                    alt={oc.name}
+                    className="taskbar-avatar"
+                  />
+                ) : (
+                  <div className="taskbar-avatar taskbar-avatar-placeholder">
+                    {oc.name.charAt(0)}
+                  </div>
+                )}
+              </button>
+
+              {/* Context menu — shown on hover */}
+              {hoveredSlug === oc.slug && (
+                <div className="taskbar-context-menu">
+                  <button
+                    className="taskbar-context-menu-item"
+                    onClick={() => {
+                      onDeselectCharacter(oc.slug);
+                      setHoveredSlug(null);
+                    }}
+                  >
+                    Close all windows
+                  </button>
                 </div>
               )}
-            </button>
+            </div>
           ))}
         </div>
 

@@ -18,6 +18,7 @@ interface FileExplorerProps {
   defaultHeight?: number;
   defaultX?: number;
   defaultY?: number;
+  hidden?: boolean;
   onClose: () => void;
   onFocus?: () => void;
   zIndex?: number;
@@ -34,6 +35,7 @@ function FileExplorer({
   defaultHeight = 480,
   defaultX = 120,
   defaultY = 60,
+  hidden,
   onClose,
   onFocus,
   zIndex,
@@ -47,6 +49,7 @@ function FileExplorer({
       defaultHeight={defaultHeight}
       defaultX={defaultX}
       defaultY={defaultY}
+      hidden={hidden}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}
