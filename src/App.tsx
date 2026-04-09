@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import "./App.css";
 import background from "./assets/background.webp";
 import DesktopIcons from "./desktop/DesktopIcons/DesktopIcons";
@@ -32,6 +32,35 @@ function App() {
     new Set()
   );
 
+  // Z-index stacking: track a monotonically increasing counter and per-window z-index
+  const zCounter = useRef(500);
+  const [windowZIndices, setWindowZIndices] = useState<Record<string, number>>(
+    {}
+  );
+
+  const bringToFront = useCallback((windowId: string) => {
+    zCounter.current += 1;
+    setWindowZIndices((prev) => ({ ...prev, [windowId]: zCounter.current }));
+  }, []);
+
+  const bringCharacterToFront = useCallback(
+    (slug: string) => {
+      // Bring all windows belonging to this character to front
+      setWindowZIndices((prev) => {
+        const next = { ...prev };
+        const keys = Object.keys(prev).filter(
+          (k) => k === `profile-${slug}` || k === `gallery-${slug}` || k.startsWith(`viewer-${slug}-`)
+        );
+        for (const key of keys) {
+          zCounter.current += 1;
+          next[key] = zCounter.current;
+        }
+        return next;
+      });
+    },
+    []
+  );
+
   const deselectCharacter = (slug: string) => {
     setSelectedCharacters((prev) => prev.filter((c) => c.slug !== slug));
     setOpenProfiles((prev) => prev.filter((c) => c.slug !== slug));
@@ -57,6 +86,8 @@ function App() {
       const next = new Set(prev);
       if (next.has(slug)) {
         next.delete(slug);
+        // Bring all windows for this character to front when unhiding
+        bringCharacterToFront(slug);
       } else {
         next.add(slug);
       }
@@ -69,6 +100,7 @@ function App() {
       if (prev.some((c) => c.slug === oc.slug)) return prev;
       return [...prev, oc];
     });
+    bringToFront(`profile-${oc.slug}`);
   };
 
   const closeCharacterProfile = (slug: string) => {
@@ -80,6 +112,7 @@ function App() {
       if (prev.some((c) => c.slug === oc.slug)) return prev;
       return [...prev, oc];
     });
+    bringToFront(`gallery-${oc.slug}`);
   };
 
   const closeImageGallery = (slug: string) => {
@@ -93,6 +126,7 @@ function App() {
         return prev;
       return [...prev, { slug, imageIndex }];
     });
+    bringToFront(`viewer-${slug}-${imageIndex}`);
   };
 
   const closeImageViewer = (slug: string, imageIndex: number) => {
@@ -110,12 +144,17 @@ function App() {
     <div className="app" style={{ backgroundImage: `url(${background})` }}>
       <DesktopIcons
         onIconClick={(name) => {
-          if (name === "Characters") setShowCharacters(true);
+          if (name === "Characters") {
+            setShowCharacters(true);
+            bringToFront("charlist");
+          }
         }}
       />
       {showCharacters && (
         <CharacterList
           onClose={() => setShowCharacters(false)}
+          onFocus={() => bringToFront("charlist")}
+          zIndex={windowZIndices["charlist"]}
           selectedCharacters={selectedCharacters}
           onToggleCharacter={selectCharacter}
           onOpenProfile={openCharacterProfile}
@@ -127,6 +166,8 @@ function App() {
           oc={oc}
           hidden={hiddenCharacters.has(oc.slug)}
           onClose={() => closeCharacterProfile(oc.slug)}
+          onFocus={() => bringToFront(`profile-${oc.slug}`)}
+          zIndex={windowZIndices[`profile-${oc.slug}`]}
           onOpenImages={openImageGallery}
         />
       ))}
@@ -136,6 +177,8 @@ function App() {
           oc={oc}
           hidden={hiddenCharacters.has(oc.slug)}
           onClose={() => closeImageGallery(oc.slug)}
+          onFocus={() => bringToFront(`gallery-${oc.slug}`)}
+          zIndex={windowZIndices[`gallery-${oc.slug}`]}
           onOpenImage={openImageViewer}
         />
       ))}
@@ -143,14 +186,17 @@ function App() {
         const oc = getOcBySlug(viewer.slug);
         const image = oc?.images?.[viewer.imageIndex];
         if (!image) return null;
+        const viewerKey = `viewer-${viewer.slug}-${viewer.imageIndex}`;
         return (
           <ImageViewer
-            key={`${viewer.slug}-${viewer.imageIndex}`}
+            key={viewerKey}
             src={image.full}
             title={image.fileName}
             icon={oc?.avatar}
             hidden={hiddenCharacters.has(viewer.slug)}
             onClose={() => closeImageViewer(viewer.slug, viewer.imageIndex)}
+            onFocus={() => bringToFront(viewerKey)}
+            zIndex={windowZIndices[viewerKey]}
           />
         );
       })}
