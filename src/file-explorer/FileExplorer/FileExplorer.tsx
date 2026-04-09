@@ -1,4 +1,4 @@
-import Window from "../Window/Window";
+import Window from "../../window/Window/Window";
 import "./FileExplorer.css";
 
 interface SidebarItem {
