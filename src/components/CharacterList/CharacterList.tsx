@@ -9,6 +9,7 @@ interface CharacterListProps {
   zIndex?: number;
   selectedCharacters: OcEntry[];
   onToggleCharacter: (oc: OcEntry) => void;
+  onOpenProfile: (oc: OcEntry) => void;
 }
 
 const tabs = [{ label: "Chara…", active: true }, { label: "Menu" }];
@@ -26,6 +27,7 @@ function CharacterList({
   zIndex,
   selectedCharacters,
   onToggleCharacter,
+  onOpenProfile,
 }: CharacterListProps) {
   return (
     <FileExplorer
@@ -38,13 +40,13 @@ function CharacterList({
       onFocus={onFocus}
       zIndex={zIndex}
     >
-      {ocData.map((oc, i) => {
-        const isSelected = selectedCharacters.some((c) => c.name === oc.name);
+      {ocData.map((oc) => {
+        const isSelected = selectedCharacters.some((c) => c.slug === oc.slug);
         return (
           <button
-            key={oc.name || i}
+            key={oc.slug}
             className={`explorer-file${isSelected ? " selected" : ""}`}
-            onClick={() => onToggleCharacter(oc)}
+            onClick={() => { onToggleCharacter(oc); onOpenProfile(oc); }}
           >
             {oc.avatar ? (
               <img

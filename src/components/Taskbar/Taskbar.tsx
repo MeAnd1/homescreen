@@ -43,7 +43,7 @@ function Taskbar({ selectedCharacters }: TaskbarProps) {
           {/* Selected character avatars */}
           {selectedCharacters.map((oc) => (
             <button
-              key={oc.name}
+              key={oc.slug}
               className="taskbar-btn taskbar-avatar-btn"
               title={oc.name}
             >

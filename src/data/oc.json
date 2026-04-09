@@ -1,10 +1,12 @@
 [
   {
+    "slug": "placeholder-oc-1",
     "name": "Placeholder OC 1",
-    "avatar": "https://picsum.photos/64"
+    "avatar": "https://static.vecteezy.com/system/resources/thumbnails/044/776/845/small/chicken-isolated-on-transparent-background-png.png"
   },
   {
+    "slug": "placeholder-oc-2",
     "name": "Placeholder OC 2",
-    "avatar": "https://picsum.photos/64"
+    "avatar": "https://png.pngtree.com/png-clipart/20240428/original/pngtree-chicken-hen-png-image_14965893.png"
   }
 ]
