@@ -1,0 +1,15 @@
+.icon-image-stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-image-stack-img {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}

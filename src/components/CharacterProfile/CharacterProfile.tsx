@@ -1,5 +1,6 @@
 import { Image, BookOpen, Palette, Zap, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
+import IconImageStack from "../IconImageStack/IconImageStack";
 import type { OcEntry } from "../../App";
 import "./CharacterProfile.css";
 
@@ -36,6 +37,7 @@ function CharacterProfile({
   return (
     <FileExplorer
       title={oc.name}
+      icon={oc.avatar}
       tabs={tabs}
       sidebar={sidebar}
       statusText={`${folders.length} items`}
@@ -50,7 +52,11 @@ function CharacterProfile({
       {folders.map(({ label, icon: Icon }) => (
         <button key={label} className="explorer-file character-folder">
           <div className="character-folder-icon">
-            <Icon size={32} strokeWidth={1.5} />
+            {label === "Images" && oc.images?.[0] ? (
+              <IconImageStack images={oc.images} alt={oc.name} size={64} />
+            ) : (
+              <Icon size={32} strokeWidth={1.5} />
+            )}
           </div>
           <span className="explorer-file-name">{label}</span>
         </button>

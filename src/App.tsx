@@ -10,6 +10,7 @@ export interface OcEntry {
   slug: string;
   name: string;
   avatar?: string;
+  images?: string[];
 }
 
 function App() {
