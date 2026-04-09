@@ -22,11 +22,13 @@ interface WindowProps {
 function clampDefaults(x: number, y: number, w: number, h: number) {
   const vw = window.innerWidth
   const vh = window.innerHeight - 40 // account for taskbar
-  const cw = Math.min(w, vw)
+  const isMobile = vw <= 768
+  const margin = isMobile ? 8 : 0
+  const cw = Math.min(w, vw - margin * 2)
   const ch = Math.min(h, vh)
-  const cx = Math.min(x, vw - cw)
+  const cx = isMobile ? margin : Math.min(x, vw - cw)
   const cy = Math.min(y, vh - ch)
-  return { x: Math.max(0, cx), y: Math.max(0, cy), width: cw, height: ch }
+  return { x: Math.max(margin, cx), y: Math.max(0, cy), width: cw, height: ch }
 }
 
 function Window({
