@@ -15,8 +15,10 @@ All commands run from the `homescreen/` directory.
 
 React 19 + TypeScript app built with Vite, simulating a Windows-style desktop homescreen. Deployed under the `/homescreen/` base path (set in `vite.config.ts`).
 
-Entry point: `src/main.tsx` → `src/App.tsx`. App renders a fullscreen background image with a bottom-anchored Taskbar component (`src/components/Taskbar/`).
+Entry point: `src/main.tsx` → `src/App.tsx`. App renders a fullscreen background image with a bottom-anchored Taskbar.
 
-Uses [lucide-react](https://lucide.dev) for icons. Components are organized as `ComponentName/ComponentName.tsx` + `.css` pairs. CSS is plain (no CSS modules or preprocessor).
+Components are organized by domain into `src/desktop/` (Taskbar, DesktopIcons), `src/window/` (Window, WindowControls), `src/file-explorer/` (FileExplorer, CharacterList, CharacterProfile, ImageGallery), and `src/explorer-icons/` (IconImageStack). Each component follows the `ComponentName/ComponentName.tsx` + `.css` pattern. Character data lives in `src/data/oc.json`.
+
+Uses [lucide-react](https://lucide.dev) for icons. CSS is plain (no CSS modules or preprocessor).
 
 No routing, state management, or testing framework is configured.
