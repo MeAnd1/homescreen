@@ -16,8 +16,9 @@ export interface OcEntry {
 }
 
 interface OpenImageViewer {
+  id: number;
   slug: string;
-  imageIndex: number;
+  startIndex: number;
 }
 
 function App() {
@@ -31,6 +32,9 @@ function App() {
   const [hiddenCharacters, setHiddenCharacters] = useState<Set<string>>(
     new Set()
   );
+
+  // Unique counter for image viewer instances (allows multiple viewers per image)
+  const viewerCounter = useRef(0);
 
   // Z-index stacking: track a monotonically increasing counter and per-window z-index
   const zCounter = useRef(500);
@@ -121,18 +125,17 @@ function App() {
   };
 
   const openImageViewer = (slug: string, imageIndex: number) => {
-    setOpenImageViewers((prev) => {
-      if (prev.some((v) => v.slug === slug && v.imageIndex === imageIndex))
-        return prev;
-      return [...prev, { slug, imageIndex }];
-    });
-    bringToFront(`viewer-${slug}-${imageIndex}`);
+    viewerCounter.current += 1;
+    const id = viewerCounter.current;
+    setOpenImageViewers((prev) => [
+      ...prev,
+      { id, slug, startIndex: imageIndex },
+    ]);
+    bringToFront(`viewer-${slug}-${id}`);
   };
 
-  const closeImageViewer = (slug: string, imageIndex: number) => {
-    setOpenImageViewers((prev) =>
-      prev.filter((v) => !(v.slug === slug && v.imageIndex === imageIndex))
-    );
+  const closeImageViewer = (id: number) => {
+    setOpenImageViewers((prev) => prev.filter((v) => v.id !== id));
   };
 
   // Helper to look up OC data for image viewers
@@ -184,17 +187,20 @@ function App() {
       ))}
       {openImageViewers.map((viewer) => {
         const oc = getOcBySlug(viewer.slug);
-        const image = oc?.images?.[viewer.imageIndex];
-        if (!image) return null;
-        const viewerKey = `viewer-${viewer.slug}-${viewer.imageIndex}`;
+        const images = oc?.images;
+        if (!images || images.length === 0) return null;
+        const viewerKey = `viewer-${viewer.slug}-${viewer.id}`;
+        const offset = (viewer.id % 12) * 20;
         return (
           <ImageViewer
-            key={viewerKey}
-            src={image.full}
-            title={image.fileName}
+            key={viewer.id}
+            images={images}
+            startIndex={viewer.startIndex}
             icon={oc?.avatar}
+            defaultX={150 + offset}
+            defaultY={80 + offset}
             hidden={hiddenCharacters.has(viewer.slug)}
-            onClose={() => closeImageViewer(viewer.slug, viewer.imageIndex)}
+            onClose={() => closeImageViewer(viewer.id)}
             onFocus={() => bringToFront(viewerKey)}
             zIndex={windowZIndices[viewerKey]}
           />

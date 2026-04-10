@@ -6,7 +6,7 @@ interface IconImageStackProps {
   size?: number;
 }
 
-function IconImageStack({ images, alt = "", size = 64 }: IconImageStackProps) {
+function IconImageStack({ images, size = 64 }: IconImageStackProps) {
   const visibleImages = images.slice(0, 3);
   const rotations = [-6, 5, 0];
   const count = visibleImages.length;

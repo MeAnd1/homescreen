@@ -16,6 +16,10 @@
   flex-shrink: 0;
 }
 
+.image-viewer-toolbar-spacer {
+  flex: 1;
+}
+
 .image-viewer-toolbar-btn {
   display: flex;
   align-items: center;

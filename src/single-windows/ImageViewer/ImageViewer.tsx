@@ -1,16 +1,21 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   TransformWrapper,
   TransformComponent,
   useControls,
 } from "react-zoom-pan-pinch";
-import { ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import Window from "../../window/Window/Window";
 import "./ImageViewer.css";
 
+export interface ImageViewerImage {
+  full: string;
+  fileName: string;
+}
+
 interface ImageViewerProps {
-  src: string;
-  title?: string;
+  images: ImageViewerImage[];
+  startIndex?: number;
   icon?: string;
   defaultX?: number;
   defaultY?: number;
@@ -22,7 +27,13 @@ interface ImageViewerProps {
   zIndex?: number;
 }
 
-function Controls() {
+function Controls({
+  onPrev,
+  onNext,
+}: {
+  onPrev: () => void;
+  onNext: () => void;
+}) {
   const { zoomIn, zoomOut } = useControls();
 
   return (
@@ -41,13 +52,28 @@ function Controls() {
       >
         <ZoomOut size={14} />
       </button>
+      <div className="image-viewer-toolbar-spacer" />
+      <button
+        className="image-viewer-toolbar-btn"
+        onClick={onPrev}
+        title="Previous image"
+      >
+        <ChevronLeft size={14} />
+      </button>
+      <button
+        className="image-viewer-toolbar-btn"
+        onClick={onNext}
+        title="Next image"
+      >
+        <ChevronRight size={14} />
+      </button>
     </div>
   );
 }
 
 function ImageViewer({
-  src,
-  title = "Image Viewer",
+  images,
+  startIndex = 0,
   icon,
   defaultX = 150,
   defaultY = 80,
@@ -58,13 +84,27 @@ function ImageViewer({
   onFocus,
   zIndex,
 }: ImageViewerProps) {
+  const [currentIndex, setCurrentIndex] = useState(startIndex);
+  const total = images.length;
+  const current = images[currentIndex];
+
+  const handlePrev = useCallback(() => {
+    setCurrentIndex((i) => (i - 1 + total) % total);
+  }, [total]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((i) => (i + 1) % total);
+  }, [total]);
+
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.stopPropagation();
   }, []);
 
+  if (!current) return null;
+
   return (
     <Window
-      title={title}
+      title={current.fileName}
       icon={icon}
       defaultX={defaultX}
       defaultY={defaultY}
@@ -77,6 +117,7 @@ function ImageViewer({
     >
       <div className="image-viewer" onWheel={handleWheel}>
         <TransformWrapper
+          key={currentIndex}
           initialScale={1}
           minScale={0.5}
           maxScale={5}
@@ -85,15 +126,15 @@ function ImageViewer({
           pinch={{ step: 5 }}
           doubleClick={{ mode: "reset" }}
         >
-          <Controls />
+          <Controls onPrev={handlePrev} onNext={handleNext} />
           <div className="image-viewer-canvas">
             <TransformComponent
               wrapperStyle={{ width: "100%", height: "100%" }}
               contentStyle={{ width: "100%", height: "100%" }}
             >
               <img
-                src={src}
-                alt={title}
+                src={current.full}
+                alt={current.fileName}
                 className="image-viewer-img"
                 draggable={false}
               />
