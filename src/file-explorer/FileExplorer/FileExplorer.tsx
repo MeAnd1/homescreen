@@ -1,4 +1,5 @@
 import Window from "../../window/Window/Window";
+import favouritesIcon from "../../assets/icons/favourites.webp";
 import "./FileExplorer.css";
 
 interface SidebarItem {
@@ -81,7 +82,13 @@ function FileExplorer({
                 className={`explorer-sidebar-item${item.active ? " active" : ""}${item.star ? " star" : ""}`}
                 onClick={item.onClick}
               >
-                {item.star && <span className="explorer-star">★</span>}
+                {item.star && (
+                  <img
+                    className="explorer-star"
+                    src={favouritesIcon}
+                    alt=""
+                  />
+                )}
                 {item.label}
               </div>
             ))}
