@@ -227,10 +227,6 @@
 
 /* Tablets and below */
 @media (max-width: 768px) {
-  .taskbar {
-    height: 36px;
-  }
-
   .taskbar-search-text {
     display: none;
   }
@@ -258,10 +254,6 @@
 
 /* Small phones */
 @media (max-width: 480px) {
-  .taskbar {
-    height: 32px;
-  }
-
   .taskbar-search {
     width: 36px;
   }

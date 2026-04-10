@@ -21,7 +21,18 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-.window-control-close:hover {
+.window-control-close:not(:disabled):hover {
   background: #e81123;
   color: #fff;
+}
+
+.window-control-btn:disabled {
+  cursor: not-allowed;
+  color: #6b6b6b;
+  opacity: 0.45;
+  background: none;
+}
+
+.window-control-btn:disabled:hover {
+  background: none;
 }
