@@ -6,6 +6,7 @@ import CharacterList from "./file-explorer/CharacterList/CharacterList";
 import CharacterProfile from "./file-explorer/CharacterProfile/CharacterProfile";
 import ImageGallery from "./file-explorer/ImageGallery/ImageGallery";
 import ImageViewer from "./single-windows/ImageViewer/ImageViewer";
+import MsWordWindow from "./single-windows/MsWordWindow/MsWordWindow";
 import Taskbar from "./desktop/Taskbar/Taskbar";
 
 export interface OcEntry {
@@ -23,14 +24,17 @@ interface OpenImageViewer {
 
 function App() {
   const [showCharacters, setShowCharacters] = useState(false);
+  const [showMsWord, setShowMsWord] = useState(false);
   const [selectedCharacters, setSelectedCharacters] = useState<OcEntry[]>([]);
   const [openProfiles, setOpenProfiles] = useState<OcEntry[]>([]);
   const [openGalleries, setOpenGalleries] = useState<OcEntry[]>([]);
+  const [openLores, setOpenLores] = useState<OcEntry[]>([]);
+  const [loreTexts, setLoreTexts] = useState<Record<string, string>>({});
   const [openImageViewers, setOpenImageViewers] = useState<OpenImageViewer[]>(
-    []
+    [],
   );
   const [hiddenCharacters, setHiddenCharacters] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Unique counter for image viewer instances (allows multiple viewers per image)
@@ -39,7 +43,7 @@ function App() {
   // Z-index stacking: track a monotonically increasing counter and per-window z-index
   const zCounter = useRef(500);
   const [windowZIndices, setWindowZIndices] = useState<Record<string, number>>(
-    {}
+    {},
   );
 
   const bringToFront = useCallback((windowId: string) => {
@@ -47,28 +51,30 @@ function App() {
     setWindowZIndices((prev) => ({ ...prev, [windowId]: zCounter.current }));
   }, []);
 
-  const bringCharacterToFront = useCallback(
-    (slug: string) => {
-      // Bring all windows belonging to this character to front
-      setWindowZIndices((prev) => {
-        const next = { ...prev };
-        const keys = Object.keys(prev).filter(
-          (k) => k === `profile-${slug}` || k === `gallery-${slug}` || k.startsWith(`viewer-${slug}-`)
-        );
-        for (const key of keys) {
-          zCounter.current += 1;
-          next[key] = zCounter.current;
-        }
-        return next;
-      });
-    },
-    []
-  );
+  const bringCharacterToFront = useCallback((slug: string) => {
+    // Bring all windows belonging to this character to front
+    setWindowZIndices((prev) => {
+      const next = { ...prev };
+      const keys = Object.keys(prev).filter(
+        (k) =>
+          k === `profile-${slug}` ||
+          k === `gallery-${slug}` ||
+          k === `lore-${slug}` ||
+          k.startsWith(`viewer-${slug}-`),
+      );
+      for (const key of keys) {
+        zCounter.current += 1;
+        next[key] = zCounter.current;
+      }
+      return next;
+    });
+  }, []);
 
   const deselectCharacter = (slug: string) => {
     setSelectedCharacters((prev) => prev.filter((c) => c.slug !== slug));
     setOpenProfiles((prev) => prev.filter((c) => c.slug !== slug));
     setOpenGalleries((prev) => prev.filter((c) => c.slug !== slug));
+    setOpenLores((prev) => prev.filter((c) => c.slug !== slug));
     setOpenImageViewers((prev) => prev.filter((v) => v.slug !== slug));
     setHiddenCharacters((prev) => {
       if (!prev.has(slug)) return prev;
@@ -124,6 +130,31 @@ function App() {
     setOpenImageViewers((prev) => prev.filter((v) => v.slug !== slug));
   };
 
+  const openCharacterLore = (oc: OcEntry) => {
+    setOpenLores((prev) => {
+      if (prev.some((c) => c.slug === oc.slug)) return prev;
+      return [...prev, oc];
+    });
+    bringToFront(`lore-${oc.slug}`);
+    if (loreTexts[oc.slug] === undefined) {
+      fetch(`${import.meta.env.BASE_URL}backstory/${oc.slug}.txt`)
+        .then(async (res) => {
+          if (!res.ok) return "Nothing here...";
+          const content = await res.text();
+          if (content.includes("<!DOCTYPE html>") || content.includes("<html"))
+            return "Nothing here...";
+          if (!content.trim()) return "Nothing here...";
+          return content;
+        })
+        .catch(() => "Nothing here...")
+        .then((text) => setLoreTexts((prev) => ({ ...prev, [oc.slug]: text })));
+    }
+  };
+
+  const closeCharacterLore = (slug: string) => {
+    setOpenLores((prev) => prev.filter((c) => c.slug !== slug));
+  };
+
   const openImageViewer = (slug: string, imageIndex: number) => {
     viewerCounter.current += 1;
     const id = viewerCounter.current;
@@ -150,9 +181,19 @@ function App() {
           if (name === "Characters") {
             setShowCharacters(true);
             bringToFront("charlist");
+          } else if (name === "Info") {
+            setShowMsWord(true);
+            bringToFront("msword");
           }
         }}
       />
+      {showMsWord && (
+        <MsWordWindow
+          onClose={() => setShowMsWord(false)}
+          onFocus={() => bringToFront("msword")}
+          zIndex={windowZIndices["msword"]}
+        />
+      )}
       {showCharacters && (
         <CharacterList
           onClose={() => setShowCharacters(false)}
@@ -172,6 +213,19 @@ function App() {
           onFocus={() => bringToFront(`profile-${oc.slug}`)}
           zIndex={windowZIndices[`profile-${oc.slug}`]}
           onOpenImages={openImageGallery}
+          onOpenLore={openCharacterLore}
+        />
+      ))}
+      {openLores.map((oc) => (
+        <MsWordWindow
+          key={`lore-${oc.slug}`}
+          title={`${oc.name} - Lore`}
+          icon={oc.avatar}
+          text={loreTexts[oc.slug] ?? "Loading..."}
+          hidden={hiddenCharacters.has(oc.slug)}
+          onClose={() => closeCharacterLore(oc.slug)}
+          onFocus={() => bringToFront(`lore-${oc.slug}`)}
+          zIndex={windowZIndices[`lore-${oc.slug}`]}
         />
       ))}
       {openGalleries.map((oc) => (

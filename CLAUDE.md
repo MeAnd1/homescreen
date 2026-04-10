@@ -21,4 +21,6 @@ Components follow the `ComponentName/ComponentName.tsx` + `.css` pattern, organi
 
 Character data: `src/data/oc.json`
 
+OC backstories: plain-text files in `public/backstory/<slug>.txt`, fetched on demand when the "Lore" folder is opened from a `CharacterProfile`.
+
 No routing, state management library, or testing framework is configured.

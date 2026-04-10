@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="96" viewBox="0 0 900 96">
+  <rect width="900" height="96" fill="#f3f3f3"/>
+  <rect y="0" width="900" height="26" fill="#f3f3f3"/>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#444">
+    <text x="14" y="17">File</text>
+    <text x="50" y="17" font-weight="600" fill="#222">Home</text>
+    <rect x="46" y="24" width="42" height="2" fill="#2b579a"/>
+    <text x="96" y="17">Insert</text>
+    <text x="136" y="17">Design</text>
+    <text x="182" y="17">Layout</text>
+    <text x="228" y="17">References</text>
+    <text x="294" y="17">Mailings</text>
+    <text x="348" y="17">Review</text>
+    <text x="394" y="17">View</text>
+    <text x="430" y="17">Help</text>
+  </g>
+  <rect y="26" width="900" height="70" fill="#f3f3f3" stroke="#dcdcdc" stroke-width="1"/>
+  <g fill="#ffffff" stroke="#d4d4d4">
+    <rect x="8" y="32" width="56" height="54" rx="1"/>
+    <rect x="72" y="32" width="150" height="54" rx="1"/>
+    <rect x="230" y="32" width="170" height="54" rx="1"/>
+    <rect x="408" y="32" width="170" height="54" rx="1"/>
+    <rect x="586" y="32" width="120" height="54" rx="1"/>
+    <rect x="714" y="32" width="80" height="54" rx="1"/>
+    <rect x="802" y="32" width="90" height="54" rx="1"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="9" fill="#777">
+    <text x="18" y="82">Clipboard</text>
+    <text x="122" y="82">Font</text>
+    <text x="292" y="82">Paragraph</text>
+    <text x="470" y="82">Styles</text>
+    <text x="622" y="82">Editing</text>
+    <text x="730" y="82">Voice</text>
+    <text x="820" y="82">Editor</text>
+  </g>
+  <g fill="#e8e8e8">
+    <rect x="14" y="38" width="36" height="30"/>
+    <rect x="80" y="36" width="110" height="14"/>
+    <rect x="80" y="54" width="70" height="14"/>
+    <rect x="238" y="38" width="150" height="10"/>
+    <rect x="238" y="52" width="120" height="10"/>
+    <rect x="238" y="66" width="140" height="10"/>
+    <rect x="416" y="38" width="150" height="10"/>
+    <rect x="416" y="52" width="120" height="10"/>
+    <rect x="416" y="66" width="140" height="10"/>
+  </g>
+</svg>

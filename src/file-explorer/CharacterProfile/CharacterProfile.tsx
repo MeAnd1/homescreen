@@ -1,6 +1,7 @@
-import { Image, BookOpen, Palette, Zap, UserRound } from "lucide-react";
+import { Image, Palette, Zap, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
 import IconImageStack from "../../explorer-icons/IconImageStack/IconImageStack";
+import msWordIcon from "../../assets/icons/ms-word.webp";
 import type { OcEntry } from "../../App";
 import "./CharacterProfile.css";
 
@@ -11,11 +12,12 @@ interface CharacterProfileProps {
   onFocus?: () => void;
   zIndex?: number;
   onOpenImages: (oc: OcEntry) => void;
+  onOpenLore: (oc: OcEntry) => void;
 }
 
 const folders = [
   { label: "Images", icon: Image },
-  { label: "Lore", icon: BookOpen },
+  { label: "Lore", icon: null, image: msWordIcon },
   { label: "Design", icon: Palette },
   { label: "Powers", icon: Zap },
   { label: "About", icon: UserRound },
@@ -37,6 +39,7 @@ function CharacterProfile({
   onFocus,
   zIndex,
   onOpenImages,
+  onOpenLore,
 }: CharacterProfileProps) {
   return (
     <FileExplorer
@@ -54,20 +57,23 @@ function CharacterProfile({
       onFocus={onFocus}
       zIndex={zIndex}
     >
-      {folders.map(({ label, icon: Icon }) => (
+      {folders.map(({ label, icon: Icon, image }) => (
         <button
           key={label}
           className="explorer-file character-folder"
           onClick={() => {
             if (label === "Images") onOpenImages(oc);
+            else if (label === "Lore") onOpenLore(oc);
           }}
         >
           <div className="character-folder-icon">
             {label === "Images" && oc.images?.[0] ? (
               <IconImageStack images={oc.images} alt={oc.name} size={64} />
-            ) : (
+            ) : image ? (
+              <img src={image} alt="" width={48} height={48} />
+            ) : Icon ? (
               <Icon size={32} strokeWidth={1.5} />
-            )}
+            ) : null}
           </div>
           <span className="explorer-file-name">{label}</span>
         </button>
