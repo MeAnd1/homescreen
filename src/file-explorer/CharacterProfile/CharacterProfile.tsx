@@ -48,6 +48,7 @@ function CharacterProfile({
       tabs={tabs}
       sidebar={sidebar}
       statusText={`${folders.length} items`}
+      headerText={oc.name}
       defaultWidth={720}
       defaultHeight={480}
       defaultX={200 + Math.random() * 60}

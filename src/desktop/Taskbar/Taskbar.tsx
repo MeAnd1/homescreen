@@ -40,9 +40,7 @@ function Taskbar({
               className="taskbar-search-icon"
               strokeWidth={2}
             />
-            <span className="taskbar-search-text">
-              Search the web and Windows
-            </span>
+            <span className="taskbar-search-text">Search</span>
           </div>
 
           {/* Selected character avatars */}
