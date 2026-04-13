@@ -1,10 +1,6 @@
 import { useCallback, useState } from "react";
-import {
-  TransformWrapper,
-  TransformComponent,
-  useControls,
-} from "react-zoom-pan-pinch";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Window from "../../window/Window/Window";
 import "./ImageViewer.css";
 
@@ -25,50 +21,6 @@ interface ImageViewerProps {
   onClose?: () => void;
   onFocus?: () => void;
   zIndex?: number;
-}
-
-function Controls({
-  onPrev,
-  onNext,
-}: {
-  onPrev: () => void;
-  onNext: () => void;
-}) {
-  const { zoomIn, zoomOut } = useControls();
-
-  return (
-    <div className="image-viewer-toolbar">
-      <button
-        className="image-viewer-toolbar-btn"
-        onClick={() => zoomIn()}
-        title="Zoom in"
-      >
-        <ZoomIn size={14} />
-      </button>
-      <button
-        className="image-viewer-toolbar-btn"
-        onClick={() => zoomOut()}
-        title="Zoom out"
-      >
-        <ZoomOut size={14} />
-      </button>
-      <div className="image-viewer-toolbar-spacer" />
-      <button
-        className="image-viewer-toolbar-btn"
-        onClick={onPrev}
-        title="Previous image"
-      >
-        <ChevronLeft size={14} />
-      </button>
-      <button
-        className="image-viewer-toolbar-btn"
-        onClick={onNext}
-        title="Next image"
-      >
-        <ChevronRight size={14} />
-      </button>
-    </div>
-  );
 }
 
 function ImageViewer({
@@ -126,11 +78,16 @@ function ImageViewer({
           pinch={{ step: 5 }}
           doubleClick={{ mode: "reset" }}
         >
-          <Controls onPrev={handlePrev} onNext={handleNext} />
           <div className="image-viewer-canvas">
             <TransformComponent
               wrapperStyle={{ width: "100%", height: "100%" }}
-              contentStyle={{ width: "100%", height: "100%" }}
+              contentStyle={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <img
                 src={current.full}
@@ -139,6 +96,24 @@ function ImageViewer({
                 draggable={false}
               />
             </TransformComponent>
+            {total > 1 && (
+              <>
+                <button
+                  className="image-viewer-nav image-viewer-nav--prev"
+                  onClick={handlePrev}
+                  title="Previous image"
+                >
+                  <ChevronLeft size={28} />
+                </button>
+                <button
+                  className="image-viewer-nav image-viewer-nav--next"
+                  onClick={handleNext}
+                  title="Next image"
+                >
+                  <ChevronRight size={28} />
+                </button>
+              </>
+            )}
           </div>
         </TransformWrapper>
       </div>
