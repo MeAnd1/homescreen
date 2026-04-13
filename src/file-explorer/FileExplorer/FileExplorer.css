@@ -88,13 +88,14 @@
   object-fit: contain;
 }
 
-/* Content wrapper (header + grid) */
-.explorer-content-wrapper {
-  flex: 1;
+/* Content area */
+.explorer-content {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+  background: #e0e1e4;
 }
 
 .explorer-content-header {
@@ -108,7 +109,7 @@
 }
 
 /* File grid */
-.explorer-content {
+.explorer-file-grid {
   flex: 1 1 0;
   display: flex;
   flex-wrap: wrap;
@@ -116,7 +117,6 @@
   gap: 8px;
   padding: 16px;
   overflow-y: auto;
-  background: #e0e1e4;
 }
 
 .explorer-file {
@@ -216,7 +216,7 @@
     height: 48px;
   }
 
-  .explorer-content {
+  .explorer-file-grid {
     padding: 8px;
   }
 }

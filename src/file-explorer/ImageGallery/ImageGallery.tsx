@@ -38,20 +38,22 @@ function ImageGallery({
       onFocus={onFocus}
       zIndex={zIndex}
     >
-      {images.map((img, i) => (
-        <div
-          key={i}
-          className="explorer-file gallery-item"
-          onClick={() => onOpenImage(oc.slug, i)}
-        >
-          <img
-            src={img.thumbnail}
-            alt={img.fileName}
-            className="gallery-thumb"
-          />
-          <span className="explorer-file-name">{img.fileName}</span>
-        </div>
-      ))}
+      <div className="explorer-file-grid">
+        {images.map((img, i) => (
+          <div
+            key={i}
+            className="explorer-file gallery-item"
+            onClick={() => onOpenImage(oc.slug, i)}
+          >
+            <img
+              src={img.thumbnail}
+              alt={img.fileName}
+              className="gallery-thumb"
+            />
+            <span className="explorer-file-name">{img.fileName}</span>
+          </div>
+        ))}
+      </div>
     </FileExplorer>
   );
 }

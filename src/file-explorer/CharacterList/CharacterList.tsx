@@ -40,30 +40,33 @@ function CharacterList({
       onFocus={onFocus}
       zIndex={zIndex}
     >
-      {ocData.map((oc) => {
-        const isSelected = selectedCharacters.some((c) => c.slug === oc.slug);
-        return (
-          <button
-            key={oc.slug}
-            className={`explorer-file${isSelected ? " selected" : ""}`}
-            onClick={() => { onToggleCharacter(oc); onOpenProfile(oc); }}
-          >
-            {oc.avatar ? (
-              <img
-                src={oc.avatar}
-                alt={oc.name}
-                className="explorer-file-icon has-avatar"
-              />
-            ) : (
-              <div className="explorer-file-icon placeholder">
-                <span>oc</span>
-                <span>photo</span>
-              </div>
-            )}
-            <span className="explorer-file-name">{oc.name}</span>
-          </button>
-        );
-      })}
+      <div className="explorer-content-header">Characters</div>
+      <div className="explorer-file-grid">
+        {ocData.map((oc) => {
+          const isSelected = selectedCharacters.some((c) => c.slug === oc.slug);
+          return (
+            <button
+              key={oc.slug}
+              className={`explorer-file${isSelected ? " selected" : ""}`}
+              onClick={() => { onToggleCharacter(oc); onOpenProfile(oc); }}
+            >
+              {oc.avatar ? (
+                <img
+                  src={oc.avatar}
+                  alt={oc.name}
+                  className="explorer-file-icon has-avatar"
+                />
+              ) : (
+                <div className="explorer-file-icon placeholder">
+                  <span>oc</span>
+                  <span>photo</span>
+                </div>
+              )}
+              <span className="explorer-file-name">{oc.name}</span>
+            </button>
+          );
+        })}
+      </div>
     </FileExplorer>
   );
 }

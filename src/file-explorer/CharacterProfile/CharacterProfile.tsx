@@ -48,7 +48,6 @@ function CharacterProfile({
       tabs={tabs}
       sidebar={sidebar}
       statusText={`${folders.length} items`}
-      headerText={oc.name}
       defaultWidth={720}
       defaultHeight={480}
       defaultX={200 + Math.random() * 60}
@@ -58,27 +57,30 @@ function CharacterProfile({
       onFocus={onFocus}
       zIndex={zIndex}
     >
-      {folders.map(({ label, icon: Icon, image }) => (
-        <button
-          key={label}
-          className="explorer-file character-folder"
-          onClick={() => {
-            if (label === "Images") onOpenImages(oc);
-            else if (label === "Lore") onOpenLore(oc);
-          }}
-        >
-          <div className="character-folder-icon">
-            {label === "Images" && oc.images?.[0] ? (
-              <IconImageStack images={oc.images} alt={oc.name} size={64} />
-            ) : image ? (
-              <img src={image} alt="" width={48} height={48} />
-            ) : Icon ? (
-              <Icon size={32} strokeWidth={1.5} />
-            ) : null}
-          </div>
-          <span className="explorer-file-name">{label}</span>
-        </button>
-      ))}
+      <div className="explorer-content-header">{oc.name}</div>
+      <div className="explorer-file-grid">
+        {folders.map(({ label, icon: Icon, image }) => (
+          <button
+            key={label}
+            className="explorer-file character-folder"
+            onClick={() => {
+              if (label === "Images") onOpenImages(oc);
+              else if (label === "Lore") onOpenLore(oc);
+            }}
+          >
+            <div className="character-folder-icon">
+              {label === "Images" && oc.images?.[0] ? (
+                <IconImageStack images={oc.images} alt={oc.name} size={64} />
+              ) : image ? (
+                <img src={image} alt="" width={48} height={48} />
+              ) : Icon ? (
+                <Icon size={32} strokeWidth={1.5} />
+              ) : null}
+            </div>
+            <span className="explorer-file-name">{label}</span>
+          </button>
+        ))}
+      </div>
     </FileExplorer>
   );
 }

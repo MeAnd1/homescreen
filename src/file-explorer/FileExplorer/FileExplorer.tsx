@@ -15,7 +15,6 @@ interface FileExplorerProps {
   tabs?: { label: string; active?: boolean }[];
   sidebar?: SidebarItem[];
   statusText?: string;
-  headerText?: string;
   defaultWidth?: number;
   defaultHeight?: number;
   defaultX?: number;
@@ -33,7 +32,6 @@ function FileExplorer({
   tabs,
   sidebar,
   statusText,
-  headerText,
   defaultWidth = 720,
   defaultHeight = 480,
   defaultX = 120,
@@ -98,10 +96,7 @@ function FileExplorer({
         )}
 
         {/* Content */}
-        <div className="explorer-content-wrapper">
-          <div className="explorer-content-header">{headerText}</div>
-          <div className="explorer-content">{children}</div>
-        </div>
+        <div className="explorer-content">{children}</div>
       </div>
 
       {/* Status bar */}
