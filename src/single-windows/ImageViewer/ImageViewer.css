@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: #2a2a2a;
+  background: #2b2b2b;
 }
 
 .image-viewer-canvas {
@@ -28,7 +28,7 @@
   border: none;
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.45);
-  color: #fff;
+  color: var(--text-inverse);
   cursor: pointer;
   padding: 0;
   z-index: 2;

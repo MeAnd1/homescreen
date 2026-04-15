@@ -12,13 +12,13 @@
   background-color: #f3f3f3;
   background-repeat: no-repeat;
   background-position: left top;
-  border-bottom: 1px solid #d4d4d4;
+  border-bottom: 1px solid #d0d1d4;
 }
 
 .msword-canvas {
   flex: 1;
   overflow: auto;
-  background: #c8c8c8;
+  background: var(--surface-toolbar);
   padding: 18px 0;
 }
 
@@ -37,7 +37,7 @@
   font-family: "Calibri", "Segoe UI", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color: #1a1a1a;
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -50,7 +50,7 @@
   height: 22px;
   padding: 0 12px;
   background: #2b579a;
-  color: #ffffff;
+  color: var(--text-inverse);
   font-family: "Segoe UI", Arial, sans-serif;
   font-size: 11px;
 }

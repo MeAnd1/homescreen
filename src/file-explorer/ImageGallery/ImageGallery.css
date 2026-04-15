@@ -8,7 +8,7 @@
   height: 110px;
   object-fit: cover;
   border-radius: 3px;
-  border: 1px solid #bbbcc0;
+  border: 1px solid var(--border-default);
 }
 
 @media (max-width: 768px) {

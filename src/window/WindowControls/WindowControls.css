@@ -13,7 +13,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #333;
+  color: var(--text-default);
   touch-action: auto;
 }
 
@@ -23,12 +23,12 @@
 
 .window-control-close:not(:disabled):hover {
   background: #e81123;
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .window-control-btn:disabled {
   cursor: not-allowed;
-  color: #6b6b6b;
+  color: #666;
   opacity: 0.45;
   background: none;
 }

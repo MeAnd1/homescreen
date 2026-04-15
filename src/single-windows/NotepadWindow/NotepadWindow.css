@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--surface-content);
+  background: #e0e1e4;
   overflow: hidden;
 }
 
@@ -13,7 +13,7 @@
   font-family: "Consolas", "Menlo", "Monaco", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.55;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .notepad-text {

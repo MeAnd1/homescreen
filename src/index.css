@@ -1,26 +1,9 @@
 :root {
-  /* Text */
   --text-primary: #1a1a1a;
-  --text-active: #222;
   --text-default: #333;
-  --text-subtle: #444;
-  --text-muted: #666;
-  --text-placeholder: #888;
-
-  /* Borders */
-  --border-strong: #a8a9ad;
+  --text-inverse: #ffffff;
   --border-default: #bbbcc0;
-
-  /* Surfaces (light to dark) */
-  --surface-raised: #e8e9ec;
-  --surface-content: #e0e1e4;
-  --surface-sidebar: #d8d9dc;
-  --surface-file-hover: #d0d1d4;
   --surface-toolbar: #c8c9cc;
-  --surface-file-pressed: #c4c5c8;
-  --surface-sidebar-active: #bfc0c4;
-  --surface-tab-hover: #b8b9bc;
-  --surface-titlebar: #b5b6b4;
 }
 
 * {

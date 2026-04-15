@@ -10,7 +10,7 @@
   height: 26px;
   padding: 0 8px;
   background: var(--surface-toolbar);
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid #a8a9ad;
   flex-shrink: 0;
 }
 
@@ -22,18 +22,18 @@
 .explorer-tab {
   padding: 4px 12px;
   font-size: 11px;
-  color: var(--text-subtle);
+  color: #444;
   cursor: default;
   border-bottom: 2px solid transparent;
 }
 
 .explorer-tab:hover {
-  background: var(--surface-tab-hover);
+  background: #b8b9bc;
 }
 
 .explorer-tab.active {
   border-bottom-color: #0078d4;
-  color: var(--text-active);
+  color: #222;
 }
 
 /* ---------- Body (sidebar + content) ---------- */
@@ -49,7 +49,7 @@
 .explorer-sidebar {
   width: 160px;
   min-width: 120px;
-  background: var(--surface-sidebar);
+  background: #d8d9dc;
   border-right: 1px solid var(--border-default);
   padding: 12px 0;
   overflow-y: auto;
@@ -72,7 +72,7 @@
 }
 
 .explorer-sidebar-item.active {
-  background: var(--surface-sidebar-active);
+  background: #bfc0c4;
   font-weight: 600;
 }
 
@@ -95,12 +95,12 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  background: var(--surface-content);
+  background: #e0e1e4;
 }
 
 .explorer-content-header {
   height: 28px;
-  background: var(--surface-raised);
+  background: #e8e9ec;
   border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
   padding: 0 12px;
@@ -134,12 +134,12 @@
 }
 
 .explorer-file:hover {
-  background: var(--surface-file-hover);
+  background: #d0d1d4;
   border-color: var(--border-default);
 }
 
 .explorer-file:active {
-  background: var(--surface-file-pressed);
+  background: #c4c5c8;
 }
 
 .explorer-file.selected {
@@ -168,8 +168,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--surface-raised);
-  color: var(--text-placeholder);
+  background: #e8e9ec;
+  color: #888;
   font-size: 11px;
   line-height: 1.2;
 }
@@ -191,9 +191,9 @@
   height: 22px;
   padding: 0 12px;
   background: var(--surface-toolbar);
-  border-top: 1px solid var(--border-strong);
+  border-top: 1px solid #a8a9ad;
   font-size: 11px;
-  color: var(--text-muted);
+  color: #666;
   flex-shrink: 0;
 }
 

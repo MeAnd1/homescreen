@@ -139,7 +139,7 @@
   padding: 8px 28px;
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text-inverse);
   font-size: 12px;
   font-family: 'Noto Sans', 'Segoe UI', Arial, Helvetica, sans-serif;
   text-align: left;
