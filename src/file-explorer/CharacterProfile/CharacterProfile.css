@@ -6,3 +6,10 @@
   justify-content: center;
   color: #e8b731;
 }
+
+.character-folder-empty {
+  width: 48px;
+  height: 48px;
+  opacity: 0.45;
+  filter: grayscale(1);
+}

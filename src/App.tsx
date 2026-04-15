@@ -27,6 +27,7 @@ export interface OcEntry {
   name: string;
   avatar?: string;
   images?: { thumbnail: string; full: string; fileName: string }[];
+  designs?: { thumbnail: string; full: string; fileName: string }[];
 }
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
   const [selectedCharacters, setSelectedCharacters] = useState<OcEntry[]>([]);
   const [openProfiles, setOpenProfiles] = useState<OcEntry[]>([]);
   const [openGalleries, setOpenGalleries] = useState<OcEntry[]>([]);
+  const [openDesigns, setOpenDesigns] = useState<OcEntry[]>([]);
   const [openLores, setOpenLores] = useState<OcEntry[]>([]);
   const [hiddenCharacters, setHiddenCharacters] = useState<Set<string>>(
     new Set(),
@@ -88,6 +90,7 @@ function App() {
     setSelectedCharacters((prev) => prev.filter((c) => c.slug !== slug));
     setOpenProfiles((prev) => prev.filter((c) => c.slug !== slug));
     setOpenGalleries((prev) => prev.filter((c) => c.slug !== slug));
+    setOpenDesigns((prev) => prev.filter((c) => c.slug !== slug));
     setOpenLores((prev) => prev.filter((c) => c.slug !== slug));
     closeViewersForSlug(slug);
     setHiddenCharacters((prev) => {
@@ -134,6 +137,17 @@ function App() {
     closeViewersForSlug(slug);
   };
 
+  const openDesignGallery = (oc: OcEntry) => {
+    setOpenDesigns((prev) =>
+      prev.some((c) => c.slug === oc.slug) ? prev : [...prev, oc],
+    );
+    bringToFront(`designs-${oc.slug}`);
+  };
+
+  const closeDesignGallery = (slug: string) => {
+    setOpenDesigns((prev) => prev.filter((c) => c.slug !== slug));
+  };
+
   const openCharacterLore = (oc: OcEntry) => {
     setOpenLores((prev) =>
       prev.some((c) => c.slug === oc.slug) ? prev : [...prev, oc],
@@ -147,13 +161,19 @@ function App() {
   };
 
   const handleOpenImage = (slug: string, imageIndex: number) => {
-    const id = openViewer(slug, imageIndex);
+    const id = openViewer(slug, imageIndex, "images");
+    bringToFront(`viewer-${slug}-${id}`);
+  };
+
+  const handleOpenDesignImage = (slug: string, imageIndex: number) => {
+    const id = openViewer(slug, imageIndex, "designs");
     bringToFront(`viewer-${slug}-${id}`);
   };
 
   const getOcBySlug = (slug: string) =>
     selectedCharacters.find((c) => c.slug === slug) ??
-    openGalleries.find((c) => c.slug === slug);
+    openGalleries.find((c) => c.slug === slug) ??
+    openDesigns.find((c) => c.slug === slug);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -246,6 +266,7 @@ function App() {
           zIndex={getZIndex(`profile-${oc.slug}`)}
           onOpenImages={openImageGallery}
           onOpenLore={openCharacterLore}
+          onOpenDesigns={openDesignGallery}
         />
       ))}
 
@@ -276,10 +297,26 @@ function App() {
         />
       ))}
 
+      {/* --- Character design galleries --- */}
+      {openDesigns.map((oc) => (
+        <ImageGallery
+          key={`designs-${oc.slug}`}
+          oc={oc}
+          title="Design"
+          tabLabel="Design"
+          images={oc.designs ?? []}
+          hidden={hiddenCharacters.has(oc.slug)}
+          onClose={() => closeDesignGallery(oc.slug)}
+          onFocus={() => bringToFront(`designs-${oc.slug}`)}
+          zIndex={getZIndex(`designs-${oc.slug}`)}
+          onOpenImage={handleOpenDesignImage}
+        />
+      ))}
+
       {/* --- Image viewers --- */}
       {openImageViewers.map((viewer) => {
         const oc = getOcBySlug(viewer.slug);
-        const images = oc?.images;
+        const images = viewer.kind === "designs" ? oc?.designs : oc?.images;
         if (!images || images.length === 0) return null;
         const viewerKey = `viewer-${viewer.slug}-${viewer.id}`;
         const offset = (viewer.id % 12) * 20;

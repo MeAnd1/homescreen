@@ -4,6 +4,9 @@ import "./ImageGallery.css";
 
 interface ImageGalleryProps {
   oc: OcEntry;
+  title?: string;
+  images?: { thumbnail: string; full: string; fileName: string }[];
+  tabLabel?: string;
   hidden?: boolean;
   onClose: () => void;
   onFocus?: () => void;
@@ -11,24 +14,26 @@ interface ImageGalleryProps {
   onOpenImage: (slug: string, index: number) => void;
 }
 
-const tabs = [{ label: "Images", active: true }, { label: "Menu" }];
-
 function ImageGallery({
   oc,
+  title = "Images",
+  images,
+  tabLabel = "Images",
   hidden,
   onClose,
   onFocus,
   zIndex,
   onOpenImage,
 }: ImageGalleryProps) {
-  const images = oc.images ?? [];
+  const items = images ?? oc.images ?? [];
+  const tabs = [{ label: tabLabel, active: true }, { label: "Menu" }];
 
   return (
     <FileExplorer
-      title="Images"
+      title={title}
       icon={oc.avatar}
       tabs={tabs}
-      statusText={`${images.length} items`}
+      statusText={`${items.length} items`}
       defaultWidth={640}
       defaultHeight={420}
       defaultX={260 + Math.random() * 60}
@@ -39,7 +44,7 @@ function ImageGallery({
       zIndex={zIndex}
     >
       <div className="explorer-file-grid">
-        {images.map((img, i) => (
+        {items.map((img, i) => (
           <div
             key={i}
             className="explorer-file gallery-item"

@@ -2,6 +2,7 @@ import { Image, Palette, Zap, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
 import IconImageStack from "../../explorer-icons/IconImageStack/IconImageStack";
 import msWordIcon from "../../assets/icons/ms-word.webp";
+import folderEmptyIcon from "../../assets/icons/folder-empty.webp";
 import type { OcEntry } from "../../App";
 import "./CharacterProfile.css";
 
@@ -13,6 +14,7 @@ interface CharacterProfileProps {
   zIndex?: number;
   onOpenImages: (oc: OcEntry) => void;
   onOpenLore: (oc: OcEntry) => void;
+  onOpenDesigns: (oc: OcEntry) => void;
 }
 
 const folders = [
@@ -40,6 +42,7 @@ function CharacterProfile({
   zIndex,
   onOpenImages,
   onOpenLore,
+  onOpenDesigns,
 }: CharacterProfileProps) {
   return (
     <FileExplorer
@@ -66,11 +69,30 @@ function CharacterProfile({
             onClick={() => {
               if (label === "Images") onOpenImages(oc);
               else if (label === "Lore") onOpenLore(oc);
+              else if (label === "Design") onOpenDesigns(oc);
             }}
           >
             <div className="character-folder-icon">
-              {label === "Images" && oc.images?.[0] ? (
-                <IconImageStack images={oc.images} alt={oc.name} size={64} />
+              {label === "Images" ? (
+                oc.images?.[0] ? (
+                  <IconImageStack images={oc.images} alt={oc.name} size={64} />
+                ) : (
+                  <img
+                    src={folderEmptyIcon}
+                    alt=""
+                    className="character-folder-empty"
+                  />
+                )
+              ) : label === "Design" ? (
+                oc.designs?.[0] ? (
+                  <IconImageStack images={oc.designs} alt={oc.name} size={64} />
+                ) : (
+                  <img
+                    src={folderEmptyIcon}
+                    alt=""
+                    className="character-folder-empty"
+                  />
+                )
               ) : image ? (
                 <img src={image} alt="" width={48} height={48} />
               ) : Icon ? (
