@@ -9,8 +9,8 @@
   align-items: center;
   height: 26px;
   padding: 0 8px;
-  background: #c8c9cc;
-  border-bottom: 1px solid #a8a9ad;
+  background: var(--surface-toolbar);
+  border-bottom: 1px solid var(--border-strong);
   flex-shrink: 0;
 }
 
@@ -22,18 +22,18 @@
 .explorer-tab {
   padding: 4px 12px;
   font-size: 11px;
-  color: #444;
+  color: var(--text-subtle);
   cursor: default;
   border-bottom: 2px solid transparent;
 }
 
 .explorer-tab:hover {
-  background: #b8b9bc;
+  background: var(--surface-tab-hover);
 }
 
 .explorer-tab.active {
   border-bottom-color: #0078d4;
-  color: #222;
+  color: var(--text-active);
 }
 
 /* ---------- Body (sidebar + content) ---------- */
@@ -49,8 +49,8 @@
 .explorer-sidebar {
   width: 160px;
   min-width: 120px;
-  background: #d8d9dc;
-  border-right: 1px solid #bbbcc0;
+  background: var(--surface-sidebar);
+  border-right: 1px solid var(--border-default);
   padding: 12px 0;
   overflow-y: auto;
   flex-shrink: 0;
@@ -62,17 +62,17 @@
 .explorer-sidebar-item {
   padding: 5px 16px;
   font-size: 12px;
-  color: #333;
+  color: var(--text-default);
   cursor: default;
   white-space: nowrap;
 }
 
 .explorer-sidebar-item:hover {
-  background: #c8c9cc;
+  background: var(--surface-toolbar);
 }
 
 .explorer-sidebar-item.active {
-  background: #bfc0c4;
+  background: var(--surface-sidebar-active);
   font-weight: 600;
 }
 
@@ -95,13 +95,13 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  background: #e0e1e4;
+  background: var(--surface-content);
 }
 
 .explorer-content-header {
   height: 28px;
-  background: #e8e9ec;
-  border-bottom: 1px solid #bbbcc0;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
   padding: 0 12px;
   display: flex;
@@ -134,12 +134,12 @@
 }
 
 .explorer-file:hover {
-  background: #d0d1d4;
-  border-color: #bbbcc0;
+  background: var(--surface-file-hover);
+  border-color: var(--border-default);
 }
 
 .explorer-file:active {
-  background: #c4c5c8;
+  background: var(--surface-file-pressed);
 }
 
 .explorer-file.selected {
@@ -168,15 +168,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #e8e8e8;
-  color: #888;
+  background: var(--surface-raised);
+  color: var(--text-placeholder);
   font-size: 11px;
   line-height: 1.2;
 }
 
 .explorer-file-name {
   font-size: 11px;
-  color: #1a1a1a;
+  color: var(--text-primary);
   text-align: center;
   word-break: break-word;
   line-height: 1.3;
@@ -190,10 +190,10 @@
   align-items: center;
   height: 22px;
   padding: 0 12px;
-  background: #c8c9cc;
-  border-top: 1px solid #a8a9ad;
+  background: var(--surface-toolbar);
+  border-top: 1px solid var(--border-strong);
   font-size: 11px;
-  color: #666;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 

@@ -24,7 +24,7 @@
   justify-content: space-between;
   height: 30px;
   padding: 0 4px;
-  background: #b5b6b4;
+  background: var(--surface-titlebar);
   border-bottom: 1px solid #898a90;
   flex-shrink: 0;
   cursor: default;

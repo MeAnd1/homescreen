@@ -7,10 +7,20 @@ import CharacterProfile from "./file-explorer/CharacterProfile/CharacterProfile"
 import ImageGallery from "./file-explorer/ImageGallery/ImageGallery";
 import ImageViewer from "./single-windows/ImageViewer/ImageViewer";
 import MsWordWindow from "./single-windows/MsWordWindow/MsWordWindow";
+import NotepadWindow from "./single-windows/NotepadWindow/NotepadWindow";
 import Taskbar from "./desktop/Taskbar/Taskbar";
 import { useWindowManager } from "./hooks/useWindowManager";
 import { useLoreTexts } from "./hooks/useLoreTexts";
+import { useInfectionTexts } from "./hooks/useInfectionTexts";
 import { useImageViewers } from "./hooks/useImageViewers";
+import infectionData from "./data/infection.json";
+
+interface InfectionEntry {
+  slug: string;
+  name: string;
+}
+
+const infections = infectionData as InfectionEntry[];
 
 export interface OcEntry {
   slug: string;
@@ -26,6 +36,8 @@ function App() {
   // --- Standalone desktop windows ---
   const [showCharacters, setShowCharacters] = useState(false);
   const [showMsWord, setShowMsWord] = useState(false);
+  const [showInfectionIndex, setShowInfectionIndex] = useState(false);
+  const [openInfections, setOpenInfections] = useState<InfectionEntry[]>([]);
 
   // --- Character windows ---
   const [selectedCharacters, setSelectedCharacters] = useState<OcEntry[]>([]);
@@ -38,6 +50,21 @@ function App() {
 
   // --- Lore text fetching ---
   const { loadLore, getLore } = useLoreTexts();
+
+  // --- Infection text fetching ---
+  const { loadInfection, getInfection } = useInfectionTexts();
+
+  const openInfection = (entry: InfectionEntry) => {
+    setOpenInfections((prev) =>
+      prev.some((i) => i.slug === entry.slug) ? prev : [...prev, entry],
+    );
+    bringToFront(`infection-${entry.slug}`);
+    loadInfection(entry.slug);
+  };
+
+  const closeInfection = (slug: string) => {
+    setOpenInfections((prev) => prev.filter((i) => i.slug !== slug));
+  };
 
   // --- Image viewers ---
   const {
@@ -143,6 +170,9 @@ function App() {
           } else if (name === "Info") {
             setShowMsWord(true);
             bringToFront("msword");
+          } else if (name === "Infections") {
+            setShowInfectionIndex(true);
+            bringToFront("infection-index");
           }
         }}
       />
@@ -155,6 +185,45 @@ function App() {
           zIndex={getZIndex("msword")}
         />
       )}
+      {showInfectionIndex && (
+        <NotepadWindow
+          title="Infections"
+          defaultX={120}
+          defaultY={60}
+          defaultWidth={280}
+          defaultHeight={400}
+          onClose={() => setShowInfectionIndex(false)}
+          onFocus={() => bringToFront("infection-index")}
+          zIndex={getZIndex("infection-index")}
+        >
+          <ul className="notepad-links">
+            {infections.map((entry) => (
+              <li key={entry.slug}>
+                <button
+                  className="notepad-link"
+                  onClick={() => openInfection(entry)}
+                >
+                  {entry.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </NotepadWindow>
+      )}
+      {openInfections.map((entry, i) => (
+        <NotepadWindow
+          key={`infection-${entry.slug}`}
+          title={entry.name}
+          defaultX={220 + i * 24}
+          defaultY={80 + i * 24}
+          defaultWidth={420}
+          defaultHeight={480}
+          text={getInfection(entry.slug)}
+          onClose={() => closeInfection(entry.slug)}
+          onFocus={() => bringToFront(`infection-${entry.slug}`)}
+          zIndex={getZIndex(`infection-${entry.slug}`)}
+        />
+      ))}
       {showCharacters && (
         <CharacterList
           onClose={() => setShowCharacters(false)}
