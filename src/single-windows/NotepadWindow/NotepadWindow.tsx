@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Window from "../../window/Window/Window";
+import BBCodeDisplay from "../../common-components/BBCodeDisplay";
 import "./NotepadWindow.css";
 
 interface NotepadWindowProps {
@@ -48,7 +49,11 @@ function NotepadWindow({
     >
       <div className="notepad">
         <div className="notepad-body">
-          {children ?? <pre className="notepad-text">{text ?? ""}</pre>}
+          {children ?? (
+            <div className="notepad-text">
+              <BBCodeDisplay bbcode={text ?? ""} container="div" />
+            </div>
+          )}
         </div>
       </div>
     </Window>

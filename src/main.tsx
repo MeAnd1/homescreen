@@ -8,6 +8,8 @@ const PageSetPassword = lazy(
   () => import('./pages/PageSetPassword/PageSetPassword.tsx'),
 )
 
+const Editor = lazy(() => import('./editor/Editor.tsx'))
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename="/homescreen">
@@ -15,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/set-password" element={<PageSetPassword />} />
+          <Route path="/editor" element={<Editor />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

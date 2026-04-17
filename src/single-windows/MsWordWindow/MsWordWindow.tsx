@@ -1,4 +1,5 @@
 import Window from "../../window/Window/Window";
+import BBCodeDisplay from "../../common-components/BBCodeDisplay";
 import ribbonImg from "../../assets/ms-word/ribbon-placeholder.svg";
 import msWordIcon from "../../assets/icons/ms-word.webp";
 import "./MsWordWindow.css";
@@ -54,7 +55,9 @@ function MsWordWindow({
         />
         <div className="msword-canvas">
           <div className="msword-page">
-            <pre className="msword-text">{text ?? ""}</pre>
+            <div className="msword-text">
+              <BBCodeDisplay bbcode={text ?? ""} container="div" />
+            </div>
           </div>
         </div>
         <div className="msword-statusbar">

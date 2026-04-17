@@ -10,12 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@bbob/preset-html5": "^4.3.1",
+    "@bbob/react": "^4.3.1",
     "lucide-react": "^1.7.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.6.0",
     "react-rnd": "^10.5.3",
     "react-router-dom": "^7.14.1",
-    "react-zoom-pan-pinch": "^4.0.3"
+    "react-zoom-pan-pinch": "^4.0.3",
+    "sceditor-react": "^0.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
