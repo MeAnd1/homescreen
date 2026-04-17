@@ -23,4 +23,6 @@ Character data: `src/data/oc.json`
 
 OC backstories: plain-text files in `public/backstory/<slug>.txt`, fetched on demand when the "Lore" folder is opened from a `CharacterProfile`.
 
-No routing, state management library, or testing framework is configured.
+Routing: `react-router-dom` `BrowserRouter` with `basename="/homescreen"`, declared in `src/main.tsx`. Standalone pages live in `src/pages/PageName/` and are lazy-loaded. GitHub Pages deep-link refreshes are handled by the rafgraph SPA shim (`public/404.html` + decode script in `index.html` head).
+
+No state management library or testing framework is configured.
