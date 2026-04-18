@@ -88,13 +88,13 @@ export const EditorBackstory: React.FC = () => {
                   className="editor-text-muted"
                   style={{ textAlign: "center", marginTop: 12 }}
                 >
-                  Loading backstory...
+                  Loading...
                 </p>
               </div>
             ) : (
               <div className="editor-form">
                 <h3>
-                  Editing: backstory of{" "}
+                  Editing: lore of{" "}
                   {ocs.find((o) => o.slug === selectedSlug)?.name ??
                     selectedSlug}
                 </h3>
@@ -126,7 +126,7 @@ export const EditorBackstory: React.FC = () => {
                   <SavePushButton
                     fileId={`backstory/${selectedSlug}`}
                     getData={() => content}
-                    label="Save backstory"
+                    label="Save lore"
                     className="editor-button-success"
                   />
                   <button
@@ -153,7 +153,7 @@ export const EditorBackstory: React.FC = () => {
             )
           ) : (
             <div className="editor-form">
-              <p className="editor-text-muted">Pick an OC to edit backstory.</p>
+              <p className="editor-text-muted">Pick an OC to edit lore.</p>
             </div>
           )}
         </div>
