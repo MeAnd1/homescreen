@@ -217,11 +217,12 @@ export const EditorInfection: React.FC = () => {
                   />
                 </div>
 
-                <div className="editor-button-group">
+                <div className="editor-button-row">
                   <SavePushButton
                     fileId={`infection-text/${selectedSlug}`}
                     getData={() => content}
                     label="Save content"
+                    className="editor-button-success"
                   />
                   <button
                     onClick={() => setContent(originalContent)}
