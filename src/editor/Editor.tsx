@@ -3,9 +3,10 @@ import { EditorPasswordProvider } from "./EditorPasswordContext";
 import EditorOc from "./EditorOc";
 import EditorInfection from "./EditorInfection";
 import EditorBackstory from "./EditorBackstory";
+import EditorPinImageUrl from "./EditorPinImageUrl";
 import "./EditorCommon.css";
 
-type EditorTab = "ocs" | "infection" | "backstory";
+type EditorTab = "ocs" | "infection" | "backstory" | "pin-image";
 
 const Editor: React.FC = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("ocs");
@@ -21,6 +22,11 @@ const Editor: React.FC = () => {
       id: "backstory" as const,
       label: "Backstory",
       component: EditorBackstory,
+    },
+    {
+      id: "pin-image" as const,
+      label: "Get Pinterest image urls",
+      component: EditorPinImageUrl,
     },
   ];
 
