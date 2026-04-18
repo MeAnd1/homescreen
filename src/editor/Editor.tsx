@@ -20,7 +20,7 @@ const Editor: React.FC = () => {
     },
     {
       id: "backstory" as const,
-      label: "Backstory",
+      label: "Lore",
       component: EditorBackstory,
     },
     {
