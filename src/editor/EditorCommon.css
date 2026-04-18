@@ -207,6 +207,14 @@
   align-items: stretch;
 }
 
+.editor-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--editor-spacing-md);
+  align-items: center;
+}
+
 .editor-button-group .editor-button {
   margin: 0;
   background: transparent;

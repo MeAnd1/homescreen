@@ -122,11 +122,12 @@ export const EditorBackstory: React.FC = () => {
                   />
                 </div>
 
-                <div className="editor-button-group">
+                <div className="editor-button-row">
                   <SavePushButton
                     fileId={`backstory/${selectedSlug}`}
                     getData={() => content}
                     label="Save backstory"
+                    className="editor-button-success"
                   />
                   <button
                     onClick={() => setContent(originalContent)}

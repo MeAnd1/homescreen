@@ -7,6 +7,7 @@ interface SavePushButtonProps {
   getData: () => unknown;
   label?: string;
   disabled?: boolean;
+  className?: string;
 }
 
 const SavePushButton: React.FC<SavePushButtonProps> = ({
@@ -14,6 +15,7 @@ const SavePushButton: React.FC<SavePushButtonProps> = ({
   getData,
   label = "Save & Push",
   disabled,
+  className,
 }) => {
   const { saveToServer } = useEditorPassword();
   const [saving, setSaving] = useState(false);
@@ -44,7 +46,7 @@ const SavePushButton: React.FC<SavePushButtonProps> = ({
     <button
       onClick={handleSave}
       disabled={saving || disabled}
-      className="editor-button editor-button-primary"
+      className={`editor-button ${className ?? "editor-button-primary"}`}
     >
       {saving ? "Pushing..." : label}
     </button>
