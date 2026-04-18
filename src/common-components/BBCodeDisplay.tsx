@@ -1,8 +1,8 @@
 import React from "react";
 import BBCode from "@bbob/react";
-import presetHTML5 from "@bbob/preset-html5";
+import presetReact from "@bbob/preset-react";
 
-const preset = presetHTML5.extend((tags) => ({
+const preset = presetReact.extend((tags) => ({
   ...tags,
   br: () => ({ tag: "br", content: null }),
 }));

@@ -219,7 +219,7 @@ export const EditorOc: React.FC = () => {
                   className="editor-input"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Kataa's cool OC name"
+                  placeholder=""
                   onKeyDown={(e) => {
                     if (e.key === "Enter") addOc();
                   }}

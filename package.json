@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@bbob/preset-html5": "^4.3.1",
+    "@bbob/preset-react": "^4.3.1",
     "@bbob/react": "^4.3.1",
     "lucide-react": "^1.7.0",
     "react": "^19.1.0",
