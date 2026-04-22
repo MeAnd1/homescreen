@@ -4,9 +4,10 @@ import EditorOc from "./EditorOc";
 import EditorInfection from "./EditorInfection";
 import EditorBackstory from "./EditorBackstory";
 import EditorPinImageUrl from "./EditorPinImageUrl";
+import EditorFavourites from "./EditorFavourites";
 import "./EditorCommon.css";
 
-type EditorTab = "ocs" | "infection" | "backstory" | "pin-image";
+type EditorTab = "ocs" | "infection" | "backstory" | "pin-image" | "favourites";
 
 const Editor: React.FC = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("ocs");
@@ -22,6 +23,11 @@ const Editor: React.FC = () => {
       id: "backstory" as const,
       label: "Lore",
       component: EditorBackstory,
+    },
+    {
+      id: "favourites" as const,
+      label: "Favourites",
+      component: EditorFavourites,
     },
     {
       id: "pin-image" as const,
