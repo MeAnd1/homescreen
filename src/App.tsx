@@ -9,7 +9,6 @@ import ImageGallery from "./file-explorer/ImageGallery/ImageGallery";
 import ImageViewer from "./single-windows/ImageViewer/ImageViewer";
 import MsWordWindow from "./single-windows/MsWordWindow/MsWordWindow";
 import NotepadWindow from "./single-windows/NotepadWindow/NotepadWindow";
-import TaggedImageSample from "./single-windows/TaggedImageSample/TaggedImageSample";
 import Taskbar from "./desktop/Taskbar/Taskbar";
 import { useWindowManager } from "./hooks/useWindowManager";
 import { useLoreTexts } from "./hooks/useLoreTexts";
@@ -41,7 +40,6 @@ function App() {
   const [showCharacters, setShowCharacters] = useState(false);
   const [showMsWord, setShowMsWord] = useState(false);
   const [showInfectionIndex, setShowInfectionIndex] = useState(false);
-  const [showTaggedImageSample, setShowTaggedImageSample] = useState(false);
   const [showFavourites, setShowFavourites] = useState(false);
   const [openInfections, setOpenInfections] = useState<InfectionEntry[]>([]);
 
@@ -217,13 +215,6 @@ function App() {
             selectCharacter(oc);
             openCharacterProfile(oc);
           }}
-        />
-      )}
-      {showTaggedImageSample && (
-        <TaggedImageSample
-          onClose={() => setShowTaggedImageSample(false)}
-          onFocus={() => bringToFront("tagged-image-sample")}
-          zIndex={getZIndex("tagged-image-sample")}
         />
       )}
       {showMsWord && (
