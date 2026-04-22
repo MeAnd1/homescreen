@@ -15,9 +15,10 @@ React 19 + TypeScript + Vite. Deployed under the `/homescreen/` base path (confi
 Components follow the `ComponentName/ComponentName.tsx` + `.css` pattern, organized by domain:
 - `src/desktop/` — Taskbar, DesktopIcons
 - `src/window/` — Window, WindowControls
-- `src/file-explorer/` — FileExplorer, CharacterList, CharacterProfile, ImageGallery
+- `src/file-explorer/` — FileExplorer, CharacterList, CharacterProfile, ImageGallery, Favourites
 - `src/single-windows/` — ImageViewer
 - `src/explorer-icons/` — IconImageStack
+- `src/common-components/` — shared, domain-agnostic components (BBCodeDisplay, TaggedImage)
 
 Character data: `src/data/oc.json`
 
