@@ -1,0 +1,16 @@
+.favourites-grid {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.favourites-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+  flex-shrink: 0;
+}

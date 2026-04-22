@@ -4,6 +4,7 @@ import background from "./assets/background.webp";
 import DesktopIcons from "./desktop/DesktopIcons/DesktopIcons";
 import CharacterList from "./file-explorer/CharacterList/CharacterList";
 import CharacterProfile from "./file-explorer/CharacterProfile/CharacterProfile";
+import Favourites from "./file-explorer/Favourites/Favourites";
 import ImageGallery from "./file-explorer/ImageGallery/ImageGallery";
 import ImageViewer from "./single-windows/ImageViewer/ImageViewer";
 import MsWordWindow from "./single-windows/MsWordWindow/MsWordWindow";
@@ -14,6 +15,7 @@ import { useLoreTexts } from "./hooks/useLoreTexts";
 import { useInfectionTexts } from "./hooks/useInfectionTexts";
 import { useImageViewers } from "./hooks/useImageViewers";
 import infectionData from "./data/infection.json";
+import ocData from "./data/oc.json";
 
 interface InfectionEntry {
   slug: string;
@@ -38,6 +40,7 @@ function App() {
   const [showCharacters, setShowCharacters] = useState(false);
   const [showMsWord, setShowMsWord] = useState(false);
   const [showInfectionIndex, setShowInfectionIndex] = useState(false);
+  const [showFavourites, setShowFavourites] = useState(false);
   const [openInfections, setOpenInfections] = useState<InfectionEntry[]>([]);
 
   // --- Character windows ---
@@ -193,11 +196,27 @@ function App() {
           } else if (name === "Infections") {
             setShowInfectionIndex(true);
             bringToFront("infection-index");
+          } else if (name === "Favourites") {
+            setShowFavourites(true);
+            bringToFront("favourites");
           }
         }}
       />
 
       {/* --- Standalone windows --- */}
+      {showFavourites && (
+        <Favourites
+          onClose={() => setShowFavourites(false)}
+          onFocus={() => bringToFront("favourites")}
+          zIndex={getZIndex("favourites")}
+          onOpenOc={(slug) => {
+            const oc = ocData.find((c) => c.slug === slug);
+            if (!oc) return;
+            selectCharacter(oc);
+            openCharacterProfile(oc);
+          }}
+        />
+      )}
       {showMsWord && (
         <MsWordWindow
           onClose={() => setShowMsWord(false)}
