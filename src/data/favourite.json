@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Long Cat",
+    "spriteUrl": "https://ih1.redbubble.net/image.227046153.7270/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.jpg",
+    "namePlatePosition": {
+      "x": 40,
+      "y": 60
+    },
+    "linkedOcSlug": "o013",
+    "shortDescription": "A long cat"
+  },
+  {
+    "name": "Another long cat",
+    "spriteUrl": "https://raw.githubusercontent.com/mattn/longcat/master/screenshot.png",
+    "namePlatePosition": {
+      "x": 10,
+      "y": 20
+    },
+    "linkedOcSlug": "hollow",
+    "shortDescription": "Another long cat"
+  },
+  {
+    "name": "Tacgnol",
+    "spriteUrl": "https://origin.giantbomb.com/a/uploads/scale_super/4/45471/1137172-tacgnol.jpg",
+    "namePlatePosition": {
+      "x": 50,
+      "y": 30
+    },
+    "linkedOcSlug": "hollow",
+    "shortDescription": "Long cat but black"
+  }
+]
