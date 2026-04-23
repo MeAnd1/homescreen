@@ -25,12 +25,26 @@
   {
     "slug": "hollow",
     "name": "Hollow",
-    "avatar": "https://i.pinimg.com/736x/1d/41/db/1d41db68117f42a5c09c0e17778f65ae.jpg"
+    "avatar": "https://i.pinimg.com/736x/1d/41/db/1d41db68117f42a5c09c0e17778f65ae.jpg",
+    "images": [
+      {
+        "thumbnail": "",
+        "full": "",
+        "fileName": ""
+      }
+    ]
   },
   {
     "slug": "m1a",
     "name": "M1a",
     "avatar": "https://i.pinimg.com/736x/89/34/49/8934495e0fe2dc614b0faea570ad6718.jpg",
+    "images": [],
+    "designs": []
+  },
+  {
+    "slug": "lilith",
+    "name": "Lilith",
+    "avatar": "https://i.pinimg.com/736x/83/71/95/8371951396ddb0de6bbaebce1e2f5252.jpg",
     "images": [],
     "designs": []
   }
