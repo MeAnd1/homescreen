@@ -1,7 +1,7 @@
 import Window from "../../window/Window/Window";
 import BBCodeDisplay from "../../common-components/BBCodeDisplay";
 import ribbonImg from "../../assets/ms-word/ribbon-placeholder.svg";
-import msWordIcon from "../../assets/icons/ms-word.webp";
+import msWordIcon from "../../assets/icons/ms-word.svg";
 import "./MsWordWindow.css";
 
 interface MsWordWindowProps {
