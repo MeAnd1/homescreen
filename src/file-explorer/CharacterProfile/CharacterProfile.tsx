@@ -1,7 +1,7 @@
 import { Image, Palette, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
 import IconImageStack from "../../explorer-icons/IconImageStack/IconImageStack";
-import msWordIcon from "../../assets/icons/ms-word.webp";
+import msWordIcon from "../../assets/icons/ms-word.svg";
 import folderEmptyIcon from "../../assets/icons/folder-empty.webp";
 import ocProfilePowersIcon from "../../assets/icons/oc-profile-powers.gif";
 import type { OcEntry } from "../../App";
