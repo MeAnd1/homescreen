@@ -1,8 +1,9 @@
-import { Image, Palette, Zap, UserRound } from "lucide-react";
+import { Image, Palette, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
 import IconImageStack from "../../explorer-icons/IconImageStack/IconImageStack";
 import msWordIcon from "../../assets/icons/ms-word.webp";
 import folderEmptyIcon from "../../assets/icons/folder-empty.webp";
+import ocProfilePowersIcon from "../../assets/icons/oc-profile-powers.gif";
 import type { OcEntry } from "../../App";
 import "./CharacterProfile.css";
 
@@ -21,7 +22,7 @@ const folders = [
   { label: "Images", icon: Image },
   { label: "Lore", icon: null, image: msWordIcon },
   { label: "Design", icon: Palette },
-  { label: "Powers", icon: Zap },
+  { label: "Powers", icon: null, image: ocProfilePowersIcon },
   { label: "About", icon: UserRound },
 ];
 
