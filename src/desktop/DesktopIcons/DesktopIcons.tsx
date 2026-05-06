@@ -1,5 +1,6 @@
 import "./DesktopIcons.css";
 
+import WindowsIcon from "../../common-components/WindowsIcon/WindowsIcon";
 import charactersIcon from "../../assets/icons/characters.webp";
 import infectionsIcon from "../../assets/icons/infections.webp";
 import favouritesIcon from "../../assets/icons/favourites.webp";
@@ -24,14 +25,13 @@ function DesktopIcons({ onIconClick }: DesktopIconsProps) {
   return (
     <div className="desktop-icons">
       {icons.map((icon) => (
-        <button
+        <WindowsIcon
           key={icon.name}
-          className="desktop-icon"
+          variant="desktop"
+          label={icon.name}
+          src={icon.src}
           onClick={() => onIconClick?.(icon.name)}
-        >
-          <img src={icon.src} alt={icon.name} draggable={false} />
-          <span className="desktop-icon-label">{icon.name}</span>
-        </button>
+        />
       ))}
     </div>
   );

@@ -1,6 +1,11 @@
-.gallery-item {
+.gallery-item.windows-icon {
   width: 130px;
   padding: 8px;
+}
+
+.gallery-item .windows-icon-graphic {
+  width: 110px;
+  height: 110px;
 }
 
 .gallery-thumb {
@@ -12,10 +17,13 @@
 }
 
 @media (max-width: 768px) {
-  .gallery-item {
+  .gallery-item.windows-icon {
     width: 100px;
   }
-
+  .gallery-item .windows-icon-graphic {
+    width: 80px;
+    height: 80px;
+  }
   .gallery-thumb {
     width: 80px;
     height: 80px;
@@ -23,10 +31,13 @@
 }
 
 @media (max-width: 480px) {
-  .gallery-item {
+  .gallery-item.windows-icon {
     width: 80px;
   }
-
+  .gallery-item .windows-icon-graphic {
+    width: 64px;
+    height: 64px;
+  }
   .gallery-thumb {
     width: 64px;
     height: 64px;

@@ -1,5 +1,6 @@
 import { Image, Palette, UserRound } from "lucide-react";
 import FileExplorer from "../FileExplorer/FileExplorer";
+import WindowsIcon from "../../common-components/WindowsIcon/WindowsIcon";
 import IconImageStack from "../../explorer-icons/IconImageStack/IconImageStack";
 import msWordIcon from "../../assets/icons/ms-word.svg";
 import folderEmptyIcon from "../../assets/icons/folder-empty.webp";
@@ -12,6 +13,7 @@ interface CharacterProfileProps {
   hidden?: boolean;
   onClose: () => void;
   onFocus?: () => void;
+  onMinimize?: () => void;
   zIndex?: number;
   onOpenImages: (oc: OcEntry) => void;
   onOpenLore: (oc: OcEntry) => void;
@@ -40,6 +42,7 @@ function CharacterProfile({
   hidden,
   onClose,
   onFocus,
+  onMinimize,
   zIndex,
   onOpenImages,
   onOpenLore,
@@ -59,14 +62,16 @@ function CharacterProfile({
       hidden={hidden}
       onClose={onClose}
       onFocus={onFocus}
+      onMinimize={onMinimize}
       zIndex={zIndex}
     >
       <div className="explorer-content-header">{oc.name}</div>
       <div className="explorer-file-grid">
         {folders.map(({ label, icon: Icon, image }) => (
-          <button
+          <WindowsIcon
             key={label}
-            className="explorer-file character-folder"
+            label={label}
+            className="character-folder"
             onClick={() => {
               if (label === "Images") onOpenImages(oc);
               else if (label === "Lore") onOpenLore(oc);
@@ -78,21 +83,13 @@ function CharacterProfile({
                 oc.images?.[0] ? (
                   <IconImageStack images={oc.images} alt={oc.name} size={64} />
                 ) : (
-                  <img
-                    src={folderEmptyIcon}
-                    alt=""
-                    className="character-folder-empty"
-                  />
+                  <img src={folderEmptyIcon} alt="" className="character-folder-empty" />
                 )
               ) : label === "Design" ? (
                 oc.designs?.[0] ? (
                   <IconImageStack images={oc.designs} alt={oc.name} size={64} />
                 ) : (
-                  <img
-                    src={folderEmptyIcon}
-                    alt=""
-                    className="character-folder-empty"
-                  />
+                  <img src={folderEmptyIcon} alt="" className="character-folder-empty" />
                 )
               ) : image ? (
                 <img src={image} alt="" width={48} height={48} />
@@ -100,8 +97,7 @@ function CharacterProfile({
                 <Icon size={32} strokeWidth={1.5} />
               ) : null}
             </div>
-            <span className="explorer-file-name">{label}</span>
-          </button>
+          </WindowsIcon>
         ))}
       </div>
     </FileExplorer>

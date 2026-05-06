@@ -1,4 +1,5 @@
 import FileExplorer from "../FileExplorer/FileExplorer";
+import WindowsIcon from "../../common-components/WindowsIcon/WindowsIcon";
 import type { OcEntry } from "../../App";
 import "./ImageGallery.css";
 
@@ -45,18 +46,14 @@ function ImageGallery({
     >
       <div className="explorer-file-grid">
         {items.map((img, i) => (
-          <div
+          <WindowsIcon
             key={i}
-            className="explorer-file gallery-item"
+            label={img.fileName}
+            className="gallery-item"
             onClick={() => onOpenImage(oc.slug, i)}
           >
-            <img
-              src={img.thumbnail}
-              alt={img.fileName}
-              className="gallery-thumb"
-            />
-            <span className="explorer-file-name">{img.fileName}</span>
-          </div>
+            <img src={img.thumbnail} alt={img.fileName} className="gallery-thumb" />
+          </WindowsIcon>
         ))}
       </div>
     </FileExplorer>

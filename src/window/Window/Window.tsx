@@ -18,6 +18,7 @@ interface WindowProps {
   hidden?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
+  onMinimize?: () => void;
   zIndex?: number;
   children: React.ReactNode;
 }
@@ -46,6 +47,7 @@ function Window({
   hidden = false,
   onClose,
   onFocus,
+  onMinimize,
   zIndex = 500,
   children,
 }: WindowProps) {
@@ -125,6 +127,7 @@ function Window({
           <WindowControls
             isMaximized={isMaximized}
             onMaximize={handleMaximize}
+            onMinimize={onMinimize}
             onClose={onClose}
           />
         </div>

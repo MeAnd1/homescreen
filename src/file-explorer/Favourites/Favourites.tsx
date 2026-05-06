@@ -139,7 +139,7 @@ function Favourites({ onClose, onFocus, zIndex, onOpenOc }: FavouritesProps) {
             >
               {row.map((i) => (
                 <FavouriteSprite
-                  key={entries[i].linkedOcSlug}
+                  key={`${entries[i].linkedOcSlug}-${i}`}
                   entry={entries[i]}
                   height={layout.rowH}
                   onOpenOc={onOpenOc}

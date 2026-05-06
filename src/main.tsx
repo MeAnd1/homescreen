@@ -15,7 +15,10 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter basename="/homescreen">
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/" element={<App />} />
+          <Route
+            path="/"
+            element={<App />}
+          />
           <Route path="/set-password" element={<PageSetPassword />} />
           <Route path="/editor" element={<Editor />} />
         </Routes>

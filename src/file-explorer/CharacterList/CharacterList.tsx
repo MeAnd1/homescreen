@@ -1,14 +1,16 @@
+import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import charactersIcon from "../../assets/icons/characters.webp";
 import ocData from "../../data/oc.json";
 import FileExplorer from "../FileExplorer/FileExplorer";
+import WindowsIcon from "../../common-components/WindowsIcon/WindowsIcon";
 import type { OcEntry } from "../../App";
+import { useWindowStore } from "../../window-manager/store";
 
 interface CharacterListProps {
   onClose: () => void;
   onFocus?: () => void;
   zIndex?: number;
-  selectedCharacters: OcEntry[];
-  onToggleCharacter: (oc: OcEntry) => void;
   onOpenProfile: (oc: OcEntry) => void;
 }
 
@@ -25,10 +27,20 @@ function CharacterList({
   onClose,
   onFocus,
   zIndex,
-  selectedCharacters,
-  onToggleCharacter,
   onOpenProfile,
 }: CharacterListProps) {
+  const profileSlugList = useWindowStore(
+    useShallow((s) =>
+      Object.values(s.windows)
+        .filter((w) => w.type === "profile")
+        .map((w) => w.payload.slug),
+    ),
+  );
+  const openProfileSlugs = useMemo(
+    () => new Set(profileSlugList),
+    [profileSlugList],
+  );
+
   return (
     <FileExplorer
       title="Characters"
@@ -43,27 +55,23 @@ function CharacterList({
       <div className="explorer-content-header">Characters</div>
       <div className="explorer-file-grid">
         {ocData.map((oc) => {
-          const isSelected = selectedCharacters.some((c) => c.slug === oc.slug);
+          const isSelected = openProfileSlugs.has(oc.slug);
           return (
-            <button
+            <WindowsIcon
               key={oc.slug}
-              className={`explorer-file${isSelected ? " selected" : ""}`}
-              onClick={() => { onToggleCharacter(oc); onOpenProfile(oc); }}
+              label={oc.name}
+              selected={isSelected}
+              onClick={() => onOpenProfile(oc)}
             >
               {oc.avatar ? (
-                <img
-                  src={oc.avatar}
-                  alt={oc.name}
-                  className="explorer-file-icon has-avatar"
-                />
+                <img src={oc.avatar} alt={oc.name} className="windows-icon-avatar" />
               ) : (
-                <div className="explorer-file-icon placeholder">
+                <div className="windows-icon-placeholder">
                   <span>oc</span>
                   <span>photo</span>
                 </div>
               )}
-              <span className="explorer-file-name">{oc.name}</span>
-            </button>
+            </WindowsIcon>
           );
         })}
       </div>

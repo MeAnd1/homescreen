@@ -22,6 +22,7 @@ interface FileExplorerProps {
   hidden?: boolean;
   onClose: () => void;
   onFocus?: () => void;
+  onMinimize?: () => void;
   zIndex?: number;
   children: React.ReactNode;
 }
@@ -39,6 +40,7 @@ function FileExplorer({
   hidden,
   onClose,
   onFocus,
+  onMinimize,
   zIndex,
   children,
 }: FileExplorerProps) {
@@ -53,6 +55,7 @@ function FileExplorer({
       hidden={hidden}
       onClose={onClose}
       onFocus={onFocus}
+      onMinimize={onMinimize}
       zIndex={zIndex}
     >
       {/* Toolbar */}

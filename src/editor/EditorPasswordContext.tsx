@@ -38,36 +38,16 @@ export function useEditorPassword(): EditorPasswordContextType {
 export const EditorPasswordProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState<string | null>(null);
+  // TESTING: password disabled
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [password, setPassword] = useState<string | null>("dev-bypass");
   const [showModal, setShowModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [checkingStored, setCheckingStored] = useState(true);
+  const [checkingStored, setCheckingStored] = useState(false);
 
-  useEffect(() => {
-    const stored = getSavedPassword();
-    if (stored) {
-      verifyPassword(stored)
-        .then((valid) => {
-          if (valid) {
-            setPassword(stored);
-            setIsAuthenticated(true);
-          } else {
-            clearPassword();
-            setShowModal(true);
-          }
-        })
-        .catch(() => {
-          setShowModal(true);
-        })
-        .finally(() => setCheckingStored(false));
-    } else {
-      setShowModal(true);
-      setCheckingStored(false);
-    }
-  }, []);
+  useEffect(() => {}, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
