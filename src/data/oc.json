@@ -70,7 +70,13 @@
     "slug": "kioki",
     "name": "Kioki",
     "avatar": "https://i.pinimg.com/736x/12/bf/78/12bf78b78f2d99271834bda8e929a05c.jpg",
-    "images": [],
+    "images": [
+      {
+        "thumbnail": "https://pin.it/4Qygt6oTK",
+        "full": "https://i.pinimg.com/736x/12/bf/78/12bf78b78f2d99271834bda8e929a05c.jpg",
+        "fileName": "???.jpg"
+      }
+    ],
     "designs": []
   }
 ]
