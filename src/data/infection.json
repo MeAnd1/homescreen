@@ -6,5 +6,29 @@
   {
     "slug": "shadow-infection",
     "name": "Shadow infection"
+  },
+  {
+    "slug": "fire-infection",
+    "name": "Fire infection"
+  },
+  {
+    "slug": "eye-infection",
+    "name": "Eye infection"
+  },
+  {
+    "slug": "infinite-infection",
+    "name": "Infinite infection"
+  },
+  {
+    "slug": "fossil-infection",
+    "name": "Fossil infection"
+  },
+  {
+    "slug": "blood-infection",
+    "name": "Blood infection"
+  },
+  {
+    "slug": "bipolar-infection",
+    "name": "Bipolar infection"
   }
 ]
