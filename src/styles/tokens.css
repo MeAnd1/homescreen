@@ -1,0 +1,73 @@
+/* ==========================================================================
+   Design tokens — the Windows 10 palette and metrics.
+   Every other stylesheet references these; do not hardcode a colour or a
+   chrome metric in a component stylesheet. A restyle is this file.
+   ========================================================================== */
+
+:root {
+  /* ---------- Typography ---------- */
+  --font-ui: "Noto Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-size-chrome: 11px;
+  --font-size-body: 12px;
+
+  /* ---------- Metrics ---------- */
+  /* --taskbar-height is mirrored as TASKBAR_HEIGHT in window-system/placement.ts.
+     Change both together. */
+  --taskbar-height: 40px;
+  --titlebar-height: 30px;
+  --toolbar-height: 26px;
+  --statusbar-height: 22px;
+  --sidebar-width: 160px;
+
+  /* ---------- Text ---------- */
+  --text-primary: #1a1a1a;
+  --text-default: #333;
+  --text-muted: #666;
+  --text-inverse: #ffffff;
+
+  /* ---------- Accent / state ---------- */
+  --accent: #0078d4;
+  --accent-taskbar: rgba(76, 194, 255, 0.8);
+  --danger: #e81123;
+  --select-bg: #cce8ff;
+  --select-border: #99d1ff;
+  --select-bg-hover: #b8deff;
+  --select-border-hover: #80c4ff;
+
+  /* ---------- Window chrome ---------- */
+  --win-bg: #b5b6b4;
+  --win-border: #bfc4cb;
+  --win-titlebar-bg: #b5b6b4;
+  --win-titlebar-border: #898a90;
+  --win-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --win-control-hover: rgba(0, 0, 0, 0.08);
+
+  /* ---------- Surfaces ---------- */
+  --surface-toolbar: #c8c9cc;
+  --surface-toolbar-hover: #b8b9bc;
+  --surface-sidebar: #d8d9dc;
+  --surface-sidebar-active: #bfc0c4;
+  --surface-content: #e0e1e4;
+  --surface-content-header: #e8e9ec;
+  --surface-tile-hover: #d0d1d4;
+  --surface-tile-active: #c4c5c8;
+
+  /* ---------- Borders ---------- */
+  --border-default: #bbbcc0;
+  --border-strong: #a8a9ad;
+
+  /* ---------- Taskbar ---------- */
+  --taskbar-bg: rgba(0, 0, 0, 0.85);
+  --taskbar-hover: rgba(255, 255, 255, 0.1);
+  --taskbar-active: rgba(255, 255, 255, 0.15);
+  --taskbar-search-bg: rgba(255, 255, 255, 0.12);
+  --taskbar-search-bg-hover: rgba(255, 255, 255, 0.18);
+  --taskbar-menu-bg: #2b2b2b;
+  --taskbar-menu-border: #454545;
+  --taskbar-menu-hover: #3d3d3d;
+  --taskbar-menu-active: #333333;
+
+  /* ---------- Layering ---------- */
+  --z-windows: 500;
+  --z-taskbar: 100000;
+}

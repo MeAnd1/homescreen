@@ -1,4 +1,4 @@
-.app {
+.desktop {
   width: 100vw;
   height: 100vh;
   background-size: cover;
@@ -6,4 +6,5 @@
   background-repeat: no-repeat;
   position: relative;
   overflow: hidden;
+  font-family: var(--font-ui);
 }

@@ -3,7 +3,7 @@
   top: 16px;
   left: 16px;
   right: 16px;
-  max-height: calc(100dvh - 40px - 32px);
+  max-height: calc(100dvh - var(--taskbar-height) - 32px);
   display: flex;
   flex-flow: column wrap;
   align-content: flex-start;
@@ -12,6 +12,6 @@
   pointer-events: none;
 }
 
-.desktop-icons > .windows-icon {
+.desktop-icons > .icon-tile {
   pointer-events: auto;
 }

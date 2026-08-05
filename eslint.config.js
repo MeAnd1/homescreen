@@ -5,7 +5,18 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  {
+    // Mirrors the "exclude" block in tsconfig.app.json: pre-refactor components
+    // kept as phase-2 source material, no longer part of the app.
+    ignores: [
+      'dist',
+      'src/window',
+      'src/file-explorer',
+      'src/single-windows',
+      'src/common-components',
+      'src/explorer-icons',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

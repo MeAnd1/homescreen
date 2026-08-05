@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import {
-  getSavedPassword,
   savePassword as persistPassword,
   clearPassword,
   verifyPassword,
@@ -45,7 +44,7 @@ export const EditorPasswordProvider: React.FC<{
   const [passwordInput, setPasswordInput] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [checkingStored, setCheckingStored] = useState(false);
+  const [checkingStored] = useState(false);
 
   useEffect(() => {}, []);
 

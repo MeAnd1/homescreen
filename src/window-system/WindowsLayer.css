@@ -1,0 +1,11 @@
+.windows-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--taskbar-height);
+  /* Click-through: the desktop below stays clickable. `.window` re-enables
+     pointer events for the windows themselves. */
+  pointer-events: none;
+  z-index: var(--z-windows);
+}

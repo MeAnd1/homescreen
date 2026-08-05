@@ -23,5 +23,18 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+
+  /* PHASE 1 -> 2: pre-refactor window components, unreachable since the old
+     window manager was deleted. Kept on disk as the source material phase 2
+     ports from (docs/phases/phase-2-vfs.md section 2.4) and excluded from the
+     build because their entry point is gone. Phase 2 deletes these folders and
+     this block with them. */
+  "exclude": [
+    "src/window",
+    "src/file-explorer",
+    "src/single-windows",
+    "src/common-components",
+    "src/explorer-icons"
+  ]
 }

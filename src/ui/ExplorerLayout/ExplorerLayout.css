@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Windows 10 File Explorer chrome — renders inside a window body.
+   ========================================================================== */
+
+/* ---------- Toolbar / Ribbon ---------- */
+
+.explorer-toolbar {
+  display: flex;
+  align-items: center;
+  height: var(--toolbar-height);
+  padding: 0 8px;
+  background: var(--surface-toolbar);
+  border-bottom: 1px solid var(--border-strong);
+  flex-shrink: 0;
+}
+
+.explorer-toolbar-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.explorer-tab {
+  padding: 4px 12px;
+  font-size: var(--font-size-chrome);
+  color: #444;
+  cursor: default;
+  border-bottom: 2px solid transparent;
+}
+
+.explorer-tab:hover {
+  background: var(--surface-toolbar-hover);
+}
+
+.explorer-tab.active {
+  border-bottom-color: var(--accent);
+  color: #222;
+}
+
+/* ---------- Body (sidebar + content) ---------- */
+
+.explorer-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Sidebar / Navigation pane */
+.explorer-sidebar {
+  width: var(--sidebar-width);
+  min-width: 120px;
+  background: var(--surface-sidebar);
+  border-right: 1px solid var(--border-default);
+  padding: 12px 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.explorer-sidebar-item {
+  padding: 5px 16px;
+  font-size: var(--font-size-body);
+  color: var(--text-default);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.explorer-sidebar-item:hover {
+  background: var(--surface-toolbar);
+}
+
+.explorer-sidebar-item.active {
+  background: var(--surface-sidebar-active);
+  font-weight: 600;
+}
+
+.explorer-sidebar-item.star {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.explorer-star {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* Content area */
+.explorer-content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface-content);
+}
+
+/* ---------- Status bar ---------- */
+
+.explorer-statusbar {
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-height);
+  padding: 0 12px;
+  background: var(--surface-toolbar);
+  border-top: 1px solid var(--border-strong);
+  font-size: var(--font-size-chrome);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Responsive — Mobile
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .explorer-sidebar {
+    width: 130px;
+    min-width: 100px;
+  }
+}

@@ -1,10 +1,4 @@
-:root {
-  --text-primary: #1a1a1a;
-  --text-default: #333;
-  --text-inverse: #ffffff;
-  --border-default: #bbbcc0;
-  --surface-toolbar: #c8c9cc;
-}
+@import "./styles/tokens.css";
 
 * {
   margin: 0;
