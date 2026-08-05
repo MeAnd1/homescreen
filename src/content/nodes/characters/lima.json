@@ -1,0 +1,50 @@
+{
+  "name": "Lima",
+  "icon": "https://i.pinimg.com/736x/67/ba/0b/67ba0b06e81be5c55be51e7ff8762898.jpg",
+  "view": "fileExplorer",
+  "tabs": [
+    {
+      "label": "Chara…",
+      "active": true
+    },
+    {
+      "label": "Menu"
+    }
+  ],
+  "sidebar": [
+    {
+      "label": "Strongest to weakest"
+    },
+    {
+      "label": "Important"
+    },
+    {
+      "label": "Favourites",
+      "star": true
+    },
+    {
+      "label": "All",
+      "active": true
+    }
+  ],
+  "children": [
+    {
+      "key": "lore",
+      "name": "Lore",
+      "view": "msWord",
+      "icon": "ms-word",
+      "src": "backstory/lima"
+    },
+    {
+      "key": "powers",
+      "name": "Powers",
+      "view": "msWord",
+      "icon": "powers"
+    },
+    {
+      "key": "about",
+      "name": "About",
+      "view": "msWord"
+    }
+  ]
+}

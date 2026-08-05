@@ -1,0 +1,9 @@
+{
+  "name": "Fossil infection",
+  "view": "notepad",
+  "src": "infection-text/fossil-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

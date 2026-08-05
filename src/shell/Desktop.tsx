@@ -3,9 +3,12 @@ import DesktopIcons from "./DesktopIcons/DesktopIcons";
 import Taskbar from "./Taskbar/Taskbar";
 import WindowsLayer from "../window-system/WindowsLayer";
 import { useWindowStore } from "../window-system/store";
+import { useDeepLinks } from "./useDeepLinks";
 import "./Desktop.css";
 
 function Desktop() {
+  useDeepLinks();
+
   return (
     <div
       className="desktop"

@@ -1,0 +1,41 @@
+{
+  "name": "Favourites",
+  "icon": "favourites",
+  "view": "favourites",
+  "window": {
+    "width": 760,
+    "height": 500
+  },
+  "items": [
+    {
+      "name": "013",
+      "spriteUrl": "https://i.pinimg.com/736x/d6/71/d5/d671d5f4794832339b7d4573307a4774.jpg",
+      "namePlatePosition": {
+        "x": 23,
+        "y": 52
+      },
+      "opens": "characters/o013",
+      "shortDescription": "A half zombie girl who is used as a punching bag!"
+    },
+    {
+      "name": "Another long cat",
+      "spriteUrl": "https://raw.githubusercontent.com/mattn/longcat/master/screenshot.png",
+      "namePlatePosition": {
+        "x": 10,
+        "y": 20
+      },
+      "opens": "characters/hollow",
+      "shortDescription": "Another long cat"
+    },
+    {
+      "name": "Tacgnol",
+      "spriteUrl": "https://origin.giantbomb.com/a/uploads/scale_super/4/45471/1137172-tacgnol.jpg",
+      "namePlatePosition": {
+        "x": 50,
+        "y": 30
+      },
+      "opens": "characters/hollow",
+      "shortDescription": "Long cat but black"
+    }
+  ]
+}

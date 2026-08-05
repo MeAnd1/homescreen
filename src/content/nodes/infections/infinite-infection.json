@@ -1,0 +1,9 @@
+{
+  "name": "Infinite infection",
+  "view": "notepad",
+  "src": "infection-text/infinite-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

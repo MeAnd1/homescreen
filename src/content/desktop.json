@@ -1,0 +1,15 @@
+{
+  "desktopIcons": [
+    "characters",
+    "infections",
+    "favourites",
+    "me-and-i",
+    "info",
+    "mystery"
+  ],
+  "quickSearch": [
+    "info",
+    "favourites",
+    "infections/light-infection"
+  ]
+}

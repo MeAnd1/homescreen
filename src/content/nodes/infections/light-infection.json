@@ -1,0 +1,9 @@
+{
+  "name": "Light infection",
+  "view": "notepad",
+  "src": "infection-text/light-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

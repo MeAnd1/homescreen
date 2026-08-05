@@ -1,0 +1,39 @@
+{
+  "name": "Characters",
+  "icon": "characters",
+  "view": "fileExplorer",
+  "childOrder": [
+    "o013",
+    "hollow",
+    "m1a",
+    "lilith",
+    "lima",
+    "kioki",
+    "lul"
+  ],
+  "tabs": [
+    {
+      "label": "Chara…",
+      "active": true
+    },
+    {
+      "label": "Menu"
+    }
+  ],
+  "sidebar": [
+    {
+      "label": "Strongest to weakest"
+    },
+    {
+      "label": "Important"
+    },
+    {
+      "label": "Favourites",
+      "star": true
+    },
+    {
+      "label": "All",
+      "active": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Blood infection",
+  "view": "notepad",
+  "src": "infection-text/blood-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

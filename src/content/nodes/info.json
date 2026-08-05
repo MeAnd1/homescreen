@@ -1,0 +1,6 @@
+{
+  "name": "Info",
+  "icon": "info",
+  "view": "msWord",
+  "src": "text/info"
+}

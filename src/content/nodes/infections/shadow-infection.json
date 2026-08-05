@@ -1,0 +1,9 @@
+{
+  "name": "Shadow infection",
+  "view": "notepad",
+  "src": "infection-text/shadow-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

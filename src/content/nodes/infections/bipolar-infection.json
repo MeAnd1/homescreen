@@ -1,0 +1,9 @@
+{
+  "name": "Bipolar infection",
+  "view": "notepad",
+  "src": "infection-text/bipolar-infection",
+  "window": {
+    "width": 420,
+    "height": 480
+  }
+}

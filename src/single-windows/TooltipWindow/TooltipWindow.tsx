@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import BBCodeDisplay from "../../common-components/BBCodeDisplay";
+import BBCodeDisplay from "../../ui/BBCode/BBCode";
 import "./TooltipWindow.css";
 
 interface TooltipWindowProps {

@@ -1,0 +1,79 @@
+{
+  "name": "013",
+  "icon": "https://i.pinimg.com/736x/2b/80/2d/2b802dfe06fb71fd4940cc66047d3461.jpg",
+  "view": "fileExplorer",
+  "tabs": [
+    {
+      "label": "Chara…",
+      "active": true
+    },
+    {
+      "label": "Menu"
+    }
+  ],
+  "sidebar": [
+    {
+      "label": "Strongest to weakest"
+    },
+    {
+      "label": "Important"
+    },
+    {
+      "label": "Favourites",
+      "star": true
+    },
+    {
+      "label": "All",
+      "active": true
+    }
+  ],
+  "children": [
+    {
+      "key": "images",
+      "name": "Images",
+      "view": "imageGallery",
+      "images": [
+        {
+          "thumbnail": "https://pin.it/3OvZm1OF1",
+          "full": "https://i.pinimg.com/736x/2b/80/2d/2b802dfe06fb71fd4940cc66047d3461.jpg",
+          "fileName": "013fun.jpg"
+        },
+        {
+          "thumbnail": "https://pin.it/4Q93osgoE",
+          "full": "https://i.pinimg.com/736x/c3/23/8d/c3238d4f22f3241bdb25cd91714b8e43.jpg",
+          "fileName": "baby013.jpg"
+        }
+      ]
+    },
+    {
+      "key": "lore",
+      "name": "Lore",
+      "view": "msWord",
+      "icon": "ms-word",
+      "src": "backstory/o013"
+    },
+    {
+      "key": "design",
+      "name": "Design",
+      "view": "imageGallery",
+      "images": [
+        {
+          "thumbnail": "https://pin.it/3OvZm1OF1",
+          "full": "https://i.pinimg.com/736x/d6/71/d5/d671d5f4794832339b7d4573307a4774.jpg",
+          "fileName": "013.jpg"
+        }
+      ]
+    },
+    {
+      "key": "powers",
+      "name": "Powers",
+      "view": "msWord",
+      "icon": "powers"
+    },
+    {
+      "key": "about",
+      "name": "About",
+      "view": "msWord"
+    }
+  ]
+}

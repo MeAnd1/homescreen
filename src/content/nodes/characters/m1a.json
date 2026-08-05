@@ -1,0 +1,74 @@
+{
+  "name": "M1a",
+  "icon": "https://i.pinimg.com/736x/6a/cc/af/6accafa1d9cb5090ae3b2ab31030fc3b.jpg",
+  "view": "fileExplorer",
+  "tabs": [
+    {
+      "label": "Chara…",
+      "active": true
+    },
+    {
+      "label": "Menu"
+    }
+  ],
+  "sidebar": [
+    {
+      "label": "Strongest to weakest"
+    },
+    {
+      "label": "Important"
+    },
+    {
+      "label": "Favourites",
+      "star": true
+    },
+    {
+      "label": "All",
+      "active": true
+    }
+  ],
+  "children": [
+    {
+      "key": "images",
+      "name": "Images",
+      "view": "imageGallery",
+      "images": [
+        {
+          "thumbnail": "https://pin.it/7wVBmBc5a",
+          "full": "https://i.pinimg.com/736x/98/03/00/98030005e3595fca8f87940a68ea5422.jpg",
+          "fileName": "Pray.jpg"
+        }
+      ]
+    },
+    {
+      "key": "lore",
+      "name": "Lore",
+      "view": "msWord",
+      "icon": "ms-word",
+      "src": "backstory/m1a"
+    },
+    {
+      "key": "design",
+      "name": "Design",
+      "view": "imageGallery",
+      "images": [
+        {
+          "thumbnail": "https://pin.it/7wVBmBc5a",
+          "full": "https://i.pinimg.com/736x/3d/a7/76/3da776af134d0aed6ec1c917f8d4241a.jpg",
+          "fileName": "M1adesign.jpg"
+        }
+      ]
+    },
+    {
+      "key": "powers",
+      "name": "Powers",
+      "view": "msWord",
+      "icon": "powers"
+    },
+    {
+      "key": "about",
+      "name": "About",
+      "view": "msWord"
+    }
+  ]
+}

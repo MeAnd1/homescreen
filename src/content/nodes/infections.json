@@ -1,0 +1,20 @@
+{
+  "name": "Infections",
+  "icon": "infections",
+  "view": "notepad",
+  "asLinkList": true,
+  "childOrder": [
+    "light-infection",
+    "shadow-infection",
+    "fire-infection",
+    "eye-infection",
+    "infinite-infection",
+    "fossil-infection",
+    "blood-infection",
+    "bipolar-infection"
+  ],
+  "window": {
+    "width": 280,
+    "height": 400
+  }
+}

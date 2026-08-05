@@ -31,31 +31,60 @@ export interface SaveResult {
   message: string;
   warnings?: string[];
   error?: string;
+  /** Set on 429 so the UI can offer a retry rather than reporting a hard failure. */
+  rateLimited?: boolean;
 }
 
-export async function saveAndPush(
-  fileId: string,
-  content: unknown,
-  password: string,
+async function post(
+  path: string,
+  body: Record<string, unknown>,
 ): Promise<SaveResult> {
-  const response = await fetch(`${EDITOR_API_URL}/save`, {
+  const response = await fetch(`${EDITOR_API_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectId: PROJECT_ID,
-      fileId,
-      content,
-      password,
-      timestamp: new Date().toISOString(),
-    }),
+    body: JSON.stringify({ projectId: PROJECT_ID, ...body }),
   });
-
-  const data = await response.json();
 
   if (response.status === 401) {
     clearPassword();
     return { success: false, message: "", error: "Invalid password" };
   }
 
-  return data as SaveResult;
+  if (response.status === 429) {
+    return {
+      success: false,
+      message: "",
+      error: "Too many requests. Wait a moment and try again.",
+      rateLimited: true,
+    };
+  }
+
+  return (await response.json()) as SaveResult;
+}
+
+export function saveAndPush(
+  fileId: string,
+  content: unknown,
+  password: string,
+): Promise<SaveResult> {
+  return post("/save", {
+    fileId,
+    content,
+    password,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/**
+ * Removes a file and pushes the removal. Sibling of saveAndPush.
+ *
+ * Only fileIds the server marks deletable can be removed; others return 400. A 404 means
+ * the file was already gone, and is reported rather than swallowed. Callers must confirm
+ * with the user first.
+ */
+export function deleteAndPush(
+  fileId: string,
+  password: string,
+): Promise<SaveResult> {
+  return post("/delete", { fileId, password });
 }

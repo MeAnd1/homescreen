@@ -1,43 +1,37 @@
+import { useMemo } from "react";
+import desktopConfig from "../../content/desktop.json";
+import { openNode } from "../../content/openNode";
+import { getNode } from "../../content/vfs";
 import IconTile from "../../ui/IconTile/IconTile";
-import { useWindowStore } from "../../window-system/store";
-import charactersIcon from "../../assets/icons/characters.webp";
-import infectionsIcon from "../../assets/icons/infections.webp";
-import favouritesIcon from "../../assets/icons/favourites.webp";
-import meAndIIcon from "../../assets/icons/me-and-i.webp";
-import infoIcon from "../../assets/icons/info.webp";
-import mysteryIcon from "../../assets/icons/mystery.webp";
+import { resolveIcon } from "../../ui/icons";
 import "./DesktopIcons.css";
 
 /**
- * PHASE-1 TEMPORARY: a literal list with one live entry. Phase 2 reads
- * content/desktop.json and every icon calls openNode(id).
+ * The desktop icon row, straight from content/desktop.json. An id that does not
+ * resolve is dropped with a warning — a missing icon beats a dead desktop.
  */
-const icons: { name: string; src: string; nodeId?: string }[] = [
-  { name: "Characters", src: charactersIcon, nodeId: "characters" },
-  { name: "Infections", src: infectionsIcon },
-  { name: "Favourites", src: favouritesIcon },
-  { name: "Me and I", src: meAndIIcon },
-  { name: "Info", src: infoIcon },
-  { name: "???", src: mysteryIcon },
-];
-
 function DesktopIcons() {
+  const icons = useMemo(
+    () =>
+      desktopConfig.desktopIcons
+        .map((id) => {
+          const node = getNode(id);
+          if (!node) console.warn(`[desktop] icon "${id}" resolves to nothing`);
+          return node;
+        })
+        .filter((node) => node !== undefined),
+    [],
+  );
+
   return (
     <div className="desktop-icons">
-      {icons.map(({ name, src, nodeId }) => (
+      {icons.map((node) => (
         <IconTile
-          key={name}
+          key={node.id}
           variant="desktop"
-          label={name}
-          src={src}
-          onClick={
-            nodeId
-              ? () =>
-                  useWindowStore
-                    .getState()
-                    .openWindow({ type: "fileExplorer", payload: { nodeId } })
-              : undefined
-          }
+          label={node.name}
+          src={resolveIcon(node.icon)}
+          onClick={() => openNode(node.id)}
         />
       ))}
     </div>

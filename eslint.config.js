@@ -6,16 +6,9 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    // Mirrors the "exclude" block in tsconfig.app.json: pre-refactor components
-    // kept as phase-2 source material, no longer part of the app.
-    ignores: [
-      'dist',
-      'src/window',
-      'src/file-explorer',
-      'src/single-windows',
-      'src/common-components',
-      'src/explorer-icons',
-    ],
+    // Mirrors the "exclude" block in tsconfig.app.json: unrouted code kept on
+    // disk for phase 3 (hotspot prototypes) and phase 5 (the parked editor).
+    ignores: ['dist', 'src/single-windows', 'src/common-components', 'src/editor'],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { FileText } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
+import { openNode } from "../../content/openNode";
+import { getChildren, getNode } from "../../content/vfs";
+import type { VNode } from "../../content/types";
 import ExplorerLayout from "../../ui/ExplorerLayout/ExplorerLayout";
 import IconTile from "../../ui/IconTile/IconTile";
 import IconImageStack from "../../ui/IconImageStack/IconImageStack";
-import folderEmptyIcon from "../../assets/icons/folder-empty.webp";
+import { ICONS, isPhotoIcon, resolveIcon } from "../../ui/icons";
 import { useWindowStore } from "../../window-system/store";
-import { getPhase1Children, getPhase1Node, type Phase1Node } from "./phase1-data";
 import "./FileExplorer.css";
 
 /**
@@ -14,8 +16,8 @@ import "./FileExplorer.css";
  * character's folder are this component with a different nodeId.
  */
 function FileExplorer({ payload }: { payload: { nodeId: string } }) {
-  const node = getPhase1Node(payload.nodeId);
-  const children = useMemo(() => getPhase1Children(payload.nodeId), [payload.nodeId]);
+  const node = getNode(payload.nodeId);
+  const children = useMemo(() => getChildren(payload.nodeId), [payload.nodeId]);
 
   // A tile is highlighted while a window on that node is open.
   const openNodeIds = useWindowStore(
@@ -35,10 +37,12 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
     );
   }
 
+  const folder = node.view === "fileExplorer" ? node : undefined;
+
   return (
     <ExplorerLayout
-      tabs={node.tabs}
-      sidebar={node.sidebar}
+      tabs={folder?.tabs}
+      sidebar={folder?.sidebar}
       statusText={`${children.length} items`}
     >
       <div className="explorer-content-header">{node.name}</div>
@@ -48,7 +52,7 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
             key={child.id}
             label={child.name}
             selected={openNodes.has(child.id)}
-            onClick={() => openChild(child)}
+            onClick={() => openNode(child.id)}
           >
             <ChildGraphic node={child} />
           </IconTile>
@@ -58,42 +62,42 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
   );
 }
 
-function openChild(node: Phase1Node) {
-  // In phase 2 this becomes openNode(node.id) — the view lives on the data,
-  // never on the click site.
-  if (!node.view) return;
-  useWindowStore.getState().openWindow({ type: node.view, payload: { nodeId: node.id } });
-}
-
 /**
  * Icon rule, in order: an explicit icon, else a fanned stack of the node's own
  * images, else a folder icon, else a generic document icon.
  *
  * A remote URL is a photo (an avatar) and fills the tile; a bundled asset is a
- * symbol and is drawn at its own size. Phase 2's resolveIcon() draws the same
- * line between a URL and an icon key.
+ * symbol drawn at its own size.
  */
-function ChildGraphic({ node }: { node: Phase1Node }) {
-  if (node.icon) {
-    const isPhoto = node.icon.startsWith("http");
+function ChildGraphic({ node }: { node: VNode }) {
+  const resolved = resolveIcon(node.icon);
+  if (resolved) {
     return (
       <img
-        src={node.icon}
+        src={resolved}
         alt=""
-        className={isPhoto ? "explorer-tile-photo" : "explorer-tile-symbol"}
+        className={isPhotoIcon(resolved) ? "explorer-tile-photo" : "explorer-tile-symbol"}
       />
     );
   }
-  if (node.images?.length) {
+
+  const images =
+    node.view === "imageGallery" || node.view === "imageViewer" ? node.images : undefined;
+  if (images?.length) {
     return (
       <div className="explorer-tile-graphic">
-        <IconImageStack images={node.images} alt={node.name} size={64} />
+        <IconImageStack images={images} alt={node.name} size={64} />
       </div>
     );
   }
-  if (node.folder) {
-    return <img src={folderEmptyIcon} alt="" className="explorer-tile-folder" />;
+
+  // A container with nothing in it still reads as a folder, not a document —
+  // an empty gallery is the case the migration would otherwise have hidden.
+  const isContainer = node.view === "fileExplorer" || node.view === "imageGallery";
+  if (isContainer || getChildren(node.id).length > 0) {
+    return <img src={ICONS["folder-empty"]} alt="" className="explorer-tile-folder" />;
   }
+
   return (
     <div className="explorer-tile-graphic">
       <FileText size={32} strokeWidth={1.5} />
