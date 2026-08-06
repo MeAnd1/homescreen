@@ -6,9 +6,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    // Mirrors the "exclude" block in tsconfig.app.json: the parked editor,
-    // rebuilt in phase 5.
-    ignores: ['dist', 'src/editor'],
+    ignores: ['dist'],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

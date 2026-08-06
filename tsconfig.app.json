@@ -23,10 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"],
-
-  /* PHASE 2 -> 5: editor/ is parked until phase 5 and still reads the deleted
-     src/data/ JSON. Phase 5 rebuilds it against content/types.ts and removes
-     this entry; do not "fix" its imports before then. */
-  "exclude": ["src/editor"]
+  "include": ["src"]
 }

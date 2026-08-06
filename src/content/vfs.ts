@@ -6,6 +6,11 @@ import type { BoardNode, ImageSetNode, TreeProblem, VNode } from "./types";
  *
  * A node's id is derived, never stored: a top-level entity's id is its file
  * path, a nested child's is `parentId + "/" + key`.
+ *
+ * `materialize` and `validateNodes` are exported because the phase-5 editor
+ * builds a *draft* tree that has to be checked with exactly these rules — a
+ * second validator would drift from this one and start writing trees the app
+ * quarantines.
  */
 const files = import.meta.glob<{ default: unknown }>("./nodes/**/*.json", {
   eager: true,
@@ -27,37 +32,54 @@ const push = (map: Map<string, string[]>, key: string, value: string) => {
   else map.set(key, [value]);
 };
 
-/** Assign derived ids down an inline subtree and register every node. */
-function build(raw: Record<string, unknown>, id: string): VNode | undefined {
-  if (index.has(id)) {
-    loadProblems.push({ nodeId: id, message: "duplicate node id", severity: "error" });
-    return undefined;
-  }
+/**
+ * Assigns derived ids down an inline subtree and returns the node. Pure: it
+ * touches no module state, so the editor can call it on a draft entity.
+ * Structural problems (a child with no `key`, two children sharing one) are
+ * appended to `problems`.
+ */
+export function materialize(
+  raw: Record<string, unknown>,
+  id: string,
+  problems: TreeProblem[],
+): VNode {
   const node = { ...raw, id } as VNode;
-  index.set(id, node);
 
   const rawChildren = raw.children;
   if (Array.isArray(rawChildren)) {
     const kids: VNode[] = [];
+    const seen = new Set<string>();
     for (const rawChild of rawChildren as Record<string, unknown>[]) {
       const key = typeof rawChild.key === "string" ? rawChild.key : undefined;
       if (!key) {
-        loadProblems.push({
+        problems.push({
           nodeId: id,
           message: "inline child is missing a `key`",
           severity: "error",
         });
         continue;
       }
-      const child = build(rawChild, `${id}/${key}`);
-      if (child) {
-        kids.push(child);
-        push(inlineChildren, id, child.id);
+      if (seen.has(key)) {
+        problems.push({
+          nodeId: `${id}/${key}`,
+          message: "two inline children share one `key`",
+          severity: "error",
+        });
+        continue;
       }
+      seen.add(key);
+      kids.push(materialize(rawChild, `${id}/${key}`, problems));
     }
     node.children = kids;
   }
   return node;
+}
+
+/** A node and its whole inline subtree, depth first. */
+export function flatten(node: VNode): VNode[] {
+  const out = [node];
+  for (const child of node.children ?? []) out.push(...flatten(child));
+  return out;
 }
 
 // Sorted for deterministic ids across environments; glob key order is not
@@ -67,10 +89,20 @@ for (const path of Object.keys(files).sort()) {
   if (!raw || typeof raw !== "object") continue;
   // "./nodes/characters/m1a.json" → "characters/m1a"
   const id = path.replace(/^\.\/nodes\//, "").replace(/\.json$/, "");
-  if (build(raw as Record<string, unknown>, id)) {
-    const parent = parentIdOf(id);
-    if (parent) push(globChildren, parent, id);
+  if (index.has(id)) {
+    loadProblems.push({ nodeId: id, message: "duplicate node id", severity: "error" });
+    continue;
   }
+
+  const entity = materialize(raw as Record<string, unknown>, id, loadProblems);
+  for (const node of flatten(entity)) {
+    index.set(node.id, node);
+    // Nested children only — an entity root's id comes from its file path, not
+    // from a `key`, so it is never an inline child of anything.
+    if (node !== entity) push(inlineChildren, parentIdOf(node.id), node.id);
+  }
+  const parent = parentIdOf(id);
+  if (parent) push(globChildren, parent, id);
 }
 
 export function getNode(id: string): VNode | undefined {
@@ -108,23 +140,32 @@ export function getChildren(id: string): VNode[] {
     .map((childId) => index.get(childId))
     .filter((n): n is VNode => Boolean(n));
 
-  const hint = parent?.childOrder ?? [];
-  const rank = (node: VNode) => {
-    const i = hint.indexOf(node.id.slice(id.length + 1));
-    return i === -1 ? Number.POSITIVE_INFINITY : i;
-  };
-
   const discovered = (globChildren.get(id) ?? [])
     .map((childId) => index.get(childId))
     .filter((n): n is VNode => Boolean(n))
-    .sort(
-      (a, b) =>
-        rank(a) - rank(b) ||
-        (a.order ?? Number.POSITIVE_INFINITY) - (b.order ?? Number.POSITIVE_INFINITY) ||
-        a.name.localeCompare(b.name),
-    );
+    .sort(sortDiscovered(id, parent?.childOrder));
 
   return [...inline, ...discovered];
+}
+
+/**
+ * The sort applied to glob-discovered siblings: the parent's soft `childOrder`
+ * hint first, then `order`, then `name`. Exported so the editor's childOrder
+ * field lists entities the way the desktop will.
+ */
+export function sortDiscovered(
+  parentId: string,
+  childOrder: string[] | undefined,
+): (a: VNode, b: VNode) => number {
+  const hint = childOrder ?? [];
+  const rank = (node: VNode) => {
+    const i = hint.indexOf(node.id.slice(parentId.length + 1));
+    return i === -1 ? Number.POSITIVE_INFINITY : i;
+  };
+  return (a, b) =>
+    rank(a) - rank(b) ||
+    (a.order ?? Number.POSITIVE_INFINITY) - (b.order ?? Number.POSITIVE_INFINITY) ||
+    a.name.localeCompare(b.name);
 }
 
 /** Name substring match, case-insensitive. */
@@ -147,18 +188,21 @@ function subtreeIds(id: string): string[] {
 }
 
 /**
- * Checks the tree and **quarantines** every node with an `error` problem — it
- * and its subtree are dropped from the index so the rest of the desktop still
- * works. The caller decides what to do with the report: `main.tsx` throws in
- * dev and logs in production. Never throw from here.
- *
- * `registeredViews` is injected rather than imported: content/ must not depend
- * on apps/.
+ * The content rules, applied to any set of nodes. `exists` resolves an id
+ * against the tree those nodes belong to — the live index at runtime, the draft
+ * tree in the editor.
  */
-export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[] {
-  const problems: TreeProblem[] = [...loadProblems];
+export function validateNodes(
+  nodes: Iterable<VNode>,
+  registeredViews: ReadonlySet<string>,
+  exists: (id: string) => boolean,
+): TreeProblem[] {
+  const problems: TreeProblem[] = [];
 
-  for (const node of index.values()) {
+  for (const node of nodes) {
+    if (!node.name) {
+      problems.push({ nodeId: node.id, message: "`name` is required", severity: "error" });
+    }
     if (!registeredViews.has(node.view)) {
       problems.push({
         nodeId: node.id,
@@ -171,7 +215,7 @@ export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[
     // — see DATA-MODEL.md "Constraints the editor must respect".
     if (node.view === "favourites") {
       (node as BoardNode).items?.forEach((item, i) => {
-        if (!index.has(item.opens)) {
+        if (!exists(item.opens)) {
           problems.push({
             nodeId: node.id,
             message: `items[${i}].opens → unknown node "${item.opens}"`,
@@ -192,7 +236,7 @@ export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[
               message: `${where} has no action`,
               severity: "warning",
             });
-          } else if (action.do === "openNode" && !index.has(action.opens)) {
+          } else if (action.do === "openNode" && !exists(action.opens)) {
             problems.push({
               nodeId: node.id,
               message: `${where}.opens → unknown node "${action.opens}"`,
@@ -210,7 +254,7 @@ export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[
     }
 
     for (const key of node.childOrder ?? []) {
-      if (!index.has(`${node.id}/${key}`)) {
+      if (!exists(`${node.id}/${key}`)) {
         problems.push({
           nodeId: node.id,
           message: `childOrder entry "${key}" resolves to nothing`,
@@ -219,6 +263,24 @@ export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[
       }
     }
   }
+
+  return problems;
+}
+
+/**
+ * Checks the live tree and **quarantines** every node with an `error` problem —
+ * it and its subtree are dropped from the index so the rest of the desktop still
+ * works. The caller decides what to do with the report: `main.tsx` throws in
+ * dev and logs in production. Never throw from here.
+ *
+ * `registeredViews` is injected rather than imported: content/ must not depend
+ * on apps/.
+ */
+export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[] {
+  const problems: TreeProblem[] = [
+    ...loadProblems,
+    ...validateNodes(index.values(), registeredViews, (id) => index.has(id)),
+  ];
 
   for (const problem of problems) {
     if (problem.severity !== "error") continue;

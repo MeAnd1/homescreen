@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { EDITOR_API_URL, PROJECT_ID } from "../editor/editor-api";
 import "./PageSetPassword.css";
 
-const PROJECT_SLUG = "kataa-homescreen";
-const ENDPOINT_BASE = `https://09176645.xyz/github-pages-editor/set-password/${PROJECT_SLUG}`;
+const ENDPOINT_BASE = `${EDITOR_API_URL}/set-password/${PROJECT_ID}`;
 
 function readKeyFromHash(): string {
   const raw = window.location.hash;
@@ -80,7 +80,7 @@ function PageSetPassword() {
     <div className="set-password-page">
       <div className="set-password-card">
         <h1 className="set-password-title">Set password</h1>
-        <p className="set-password-subtitle">Project: {PROJECT_SLUG}</p>
+        <p className="set-password-subtitle">Project: {PROJECT_ID}</p>
 
         {status.kind === "success" && (
           <div className="set-password-banner set-password-banner--success">

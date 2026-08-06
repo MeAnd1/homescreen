@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import CopyToClipboardButton from "./CopyToClipboardButton";
-import "./EditorCommon.css";
-import "./EditorPinImageUrl.css";
 
 interface PinApiResponse {
   source: string;
@@ -55,8 +53,6 @@ const EditorPinImageUrl: React.FC = () => {
 
   return (
     <div className="editor-pin-container">
-      <Toaster position="top-right" />
-
       <div className="editor-section">
         <div className="editor-section-header"></div>
         <div className="editor-section-content">

@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
@@ -7,9 +7,9 @@ import { APP_REGISTRY } from "./apps/registry.ts";
 import { formatProblems, validateTree } from "./content/vfs.ts";
 import { registerWindowTypes } from "./window-system/registry.ts";
 
-// PARKED — rebuilt in phase 5. src/editor/ and src/set-password/ stay on disk.
-// const PageSetPassword = lazy(() => import("./set-password/PageSetPassword.tsx"));
-// const Editor = lazy(() => import("./editor/Editor.tsx"));
+// Owner-only routes, lazy so the editor's BBCode editor never loads for a visitor.
+const PageSetPassword = lazy(() => import("./set-password/PageSetPassword.tsx"));
+const Editor = lazy(() => import("./editor/Editor.tsx"));
 
 registerWindowTypes(APP_REGISTRY);
 
@@ -33,9 +33,22 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter basename="/homescreen">
       <Routes>
         <Route path="/" element={<App />} />
-        {/* PARKED — rebuilt in phase 5
-        <Route path="/set-password" element={<PageSetPassword />} />
-        <Route path="/editor" element={<Editor />} /> */}
+        <Route
+          path="/set-password"
+          element={
+            <Suspense fallback={null}>
+              <PageSetPassword />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/editor"
+          element={
+            <Suspense fallback={null}>
+              <Editor />
+            </Suspense>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

@@ -23,8 +23,10 @@ const PROSE_PATHS: Record<string, string> = {
   "infection-text": "infection/{slug}.txt",
 };
 
-/** `src` → public URL, or undefined if the prefix is not one we serve. */
-function resolveProseUrl(src: string): string | undefined {
+/** `src` → public URL, or undefined if the prefix is not one we serve.
+ *  Exported for the editor, which resolves the same string to load a body for
+ *  editing. */
+export function resolveProseUrl(src: string): string | undefined {
   const slash = src.indexOf("/");
   if (slash < 1) return undefined;
   const template = PROSE_PATHS[src.slice(0, slash)];

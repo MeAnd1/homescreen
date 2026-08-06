@@ -1,175 +1,145 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { EditorPasswordContext } from "./editor-auth";
 import {
-  savePassword as persistPassword,
   clearPassword,
-  verifyPassword,
+  deleteAndPush,
+  getSavedPassword,
+  PROJECT_ID,
   saveAndPush,
+  savePassword as persistPassword,
+  verifyPassword,
   type SaveResult,
 } from "./editor-api";
 
-interface EditorPasswordContextType {
-  isAuthenticated: boolean;
-  password: string | null;
-  saveToServer: (fileId: string, content: unknown) => Promise<SaveResult>;
-  logout: () => void;
-}
+type Gate = "checking" | "locked" | "unlocked";
 
-const EditorPasswordContext = createContext<EditorPasswordContextType | null>(
-  null,
-);
-
-export function useEditorPassword(): EditorPasswordContextType {
-  const context = useContext(EditorPasswordContext);
-  if (!context) {
-    throw new Error(
-      "useEditorPassword must be used within EditorPasswordProvider",
-    );
-  }
-  return context;
-}
-
-export const EditorPasswordProvider: React.FC<{
-  children: React.ReactNode;
-}> = ({ children }) => {
-  // TESTING: password disabled
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [password, setPassword] = useState<string | null>("dev-bypass");
-  const [showModal, setShowModal] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
+/**
+ * The editor is password-gated: children never render until the server has
+ * accepted the stored password. A 401 on any later request clears it and drops
+ * back to the lock screen.
+ */
+export function EditorPasswordProvider({ children }: { children: ReactNode }) {
+  const [gate, setGate] = useState<Gate>("checking");
+  const [password, setPassword] = useState<string | null>(null);
+  const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [checkingStored] = useState(false);
 
-  useEffect(() => {}, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passwordInput.trim()) {
-      setError("Password is required");
+  useEffect(() => {
+    const stored = getSavedPassword();
+    if (!stored) {
+      setGate("locked");
       return;
     }
-
-    setError("");
-    setVerifying(true);
-
-    try {
-      const valid = await verifyPassword(passwordInput);
-      if (valid) {
-        persistPassword(passwordInput);
-        setPassword(passwordInput);
-        setIsAuthenticated(true);
-        setShowModal(false);
-        setPasswordInput("");
-      } else {
-        setError("Invalid password");
-      }
-    } catch {
-      setError("Cannot connect to editor API.");
-    } finally {
-      setVerifying(false);
-    }
-  };
+    let cancelled = false;
+    verifyPassword(stored)
+      .then((valid) => {
+        if (cancelled) return;
+        if (valid) {
+          setPassword(stored);
+          setGate("unlocked");
+        } else {
+          clearPassword();
+          setGate("locked");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Cannot reach the editor API.");
+        setGate("locked");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const logout = useCallback(() => {
     clearPassword();
     setPassword(null);
-    setIsAuthenticated(false);
-    setShowModal(true);
+    setGate("locked");
   }, []);
 
-  const saveToServer = useCallback(
-    async (fileId: string, content: unknown): Promise<SaveResult> => {
-      if (!password) {
-        return { success: false, message: "", error: "Not authenticated" };
-      }
-      const result = await saveAndPush(fileId, content, password);
-      if (result.error === "Invalid password") {
-        logout();
-      }
+  const authed = useCallback(
+    async (run: (password: string) => Promise<SaveResult>): Promise<SaveResult> => {
+      if (!password) return { success: false, message: "", error: "Not authenticated" };
+      const result = await run(password);
+      if (result.error === "Invalid password") logout();
       return result;
     },
     [password, logout],
   );
 
-  if (checkingStored) {
-    return (
-      <div
-        className="editor-container"
-        style={{ textAlign: "center", padding: "60px" }}
-      >
-        <div className="editor-loading-spinner" />
-        <p
-          style={{
-            marginTop: "16px",
-            color: "var(--editor-purple-400)",
-          }}
-        >
-          Checking password...
-        </p>
-      </div>
-    );
+  const saveToServer = useCallback(
+    (fileId: string, content: unknown) => authed((p) => saveAndPush(fileId, content, p)),
+    [authed],
+  );
+
+  const deleteFromServer = useCallback(
+    (fileId: string) => authed((p) => deleteAndPush(fileId, p)),
+    [authed],
+  );
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!input.trim()) {
+      setError("Password is required");
+      return;
+    }
+    setError("");
+    setVerifying(true);
+    try {
+      if (await verifyPassword(input)) {
+        persistPassword(input);
+        setPassword(input);
+        setInput("");
+        setGate("unlocked");
+      } else {
+        setError("Invalid password");
+      }
+    } catch {
+      setError("Cannot reach the editor API.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  if (gate === "checking") {
+    return <div className="editor-gate">Checking password…</div>;
   }
 
-  if (showModal) {
+  if (gate === "locked") {
     return (
-      <div className="editor-password-overlay">
-        <div className="editor-password-modal">
-          <h2
-            style={{ margin: "0 0 20px 0", color: "var(--editor-purple-900)" }}
-          >
-            Editor Password
-          </h2>
-          <form onSubmit={handleSubmit} className="editor-password-form">
-            <div className="editor-field">
-              <label className="editor-label" htmlFor="editor-password">
-                Enter password to continue:
-              </label>
-              <input
-                type="password"
-                id="editor-password"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="editor-input"
-                autoFocus
-                disabled={verifying}
-              />
-              {error && (
-                <div
-                  style={{
-                    color: "var(--editor-danger)",
-                    marginTop: "8px",
-                    fontSize: "14px",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="editor-button editor-button-primary editor-button-large"
+      <div className="editor-gate">
+        <form className="editor-gate-form" onSubmit={submit}>
+          <h1>Kataa behind the screen</h1>
+          <p className="editor-hint">Project: {PROJECT_ID}</p>
+          <label className="editor-field">
+            <span className="editor-label">Password</span>
+            <input
+              className="editor-input"
+              type="password"
+              value={input}
+              autoFocus
               disabled={verifying}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {verifying ? "Verifying..." : "Unlock Editor"}
-            </button>
-          </form>
-        </div>
+              onChange={(e) => setInput(e.target.value)}
+            />
+          </label>
+          {error && <p className="editor-warn">{error}</p>}
+          <button
+            type="submit"
+            className="editor-button editor-button-primary"
+            disabled={verifying}
+          >
+            {verifying ? "Verifying…" : "Unlock"}
+          </button>
+        </form>
       </div>
     );
   }
 
   return (
-    <EditorPasswordContext.Provider
-      value={{ isAuthenticated, password, saveToServer, logout }}
-    >
+    <EditorPasswordContext.Provider value={{ saveToServer, deleteFromServer, logout }}>
       {children}
     </EditorPasswordContext.Provider>
   );
-};
+}

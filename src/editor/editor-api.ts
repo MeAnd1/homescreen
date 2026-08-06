@@ -1,5 +1,12 @@
-const EDITOR_API_URL = "https://09176645.xyz/github-pages-editor";
-const PROJECT_ID = "kataa-homescreen";
+/**
+ * Both are overridable so the editor can be pointed at a locally running
+ * static-page-editors instance (and a scratch repo) without touching the code
+ * that ships. Defaults are the deployed server and the real project.
+ */
+export const EDITOR_API_URL =
+  import.meta.env.VITE_EDITOR_API_URL ?? "https://09176645.xyz/github-pages-editor";
+export const PROJECT_ID =
+  import.meta.env.VITE_EDITOR_PROJECT_ID ?? "kataa-homescreen";
 
 function getStorageKey(): string {
   return `editor_password_${PROJECT_ID}`;
@@ -88,3 +95,7 @@ export function deleteAndPush(
 ): Promise<SaveResult> {
   return post("/delete", { fileId, password });
 }
+
+/** Where a save lands, for the UI to show before it happens. */
+export const describeTarget = (fileId: string): string =>
+  `${PROJECT_ID} · ${fileId}`;
