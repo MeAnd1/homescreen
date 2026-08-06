@@ -1,67 +1,84 @@
 # CLAUDE.md
 
+> ## ⚠️ This project is mid-refactor. Read [`docs/README.md`](docs/README.md) first.
+>
+> The desktop UI is being rebuilt across five phases, spanning multiple agent sessions.
+> **[`docs/PROGRESS.md`](docs/PROGRESS.md)** is the single source of truth for what is
+> done and what to do next; it has a `NEXT ACTION` line at the top.
+> **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** is the target design and overrides
+> the "Current code" section below wherever they disagree.
+>
+> Every session must update `docs/PROGRESS.md` before ending.
+
 ## Commands
 
 - **Dev server:** `npm run dev`
-- **Build:** `npm run build` (runs `tsc -b && vite build`)
+- **Build:** `npm run build` (`tsc -b && vite build`)
 - **Lint:** `npm run lint`
 
-All commands run from the `homescreen/` directory.
+Run from the repository root. There is no test framework — verification is
+build + lint + the manual acceptance checklist in the active phase document.
 
-## Architecture
+## Stack
 
-React 19 + TypeScript + Vite. Deployed under the `/homescreen/` base path (configured in `vite.config.ts`).
+React 19 + TypeScript + Vite, deployed to GitHub Pages under the `/homescreen/` base
+path (`vite.config.ts`). Zustand for state, `react-rnd` for window drag/resize,
+`react-zoom-pan-pinch` for the image viewer, `@bbob` for BBCode, `sceditor-react` in the
+editor. No UI component library, and none is being added.
 
-Components follow the `ComponentName/ComponentName.tsx` + `.css` pattern, organized by domain:
-- `src/desktop/` — Taskbar, DesktopIcons
-- `src/window/` — Window, WindowControls (the chrome that wraps every window)
-- `src/file-explorer/` — FileExplorer, CharacterList, CharacterProfile, ImageGallery, Favourites
-- `src/single-windows/` — ImageViewer, MsWordWindow, NotepadWindow, TaggedImageSample, TooltipWindow
-- `src/window-manager/` — global window state (store, registry, layer, URL bootstrap, per-type renderers)
-- `src/explorer-icons/` — IconImageStack
-- `src/common-components/` — shared, domain-agnostic components (BBCodeDisplay, TaggedImage, WindowsIcon)
+Routing: `react-router-dom` `BrowserRouter` with `basename="/homescreen"` in
+`src/main.tsx`. Deep-link refreshes rely on the rafgraph SPA shim (`public/404.html` +
+the decode script in `index.html`).
 
-Character data: `src/data/oc.json`. Infection list: `src/data/infection.json`. Favourites layout data: `src/data/favourite.json`.
+## Target architecture (what we are building)
 
-Async text content (OC backstories at `public/backstory/<slug>.txt`, infection writeups at `public/infection/<slug>.txt`) is fetched on demand and cached inside the Zustand window store (`loreTexts`, `infectionTexts`). Each render is a fire-and-forget `loadLore(slug)` / `loadInfection(slug)` call from the `LoreWindow` / `InfectionWindow` renderer; the cached text is read via a store selector.
+Three layers with a one-way dependency rule — full detail in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md):
 
-Routing: `react-router-dom` `BrowserRouter` with `basename="/homescreen"`, declared in `src/main.tsx`. Standalone pages (`src/set-password/`, `src/editor/`) are lazy-loaded as separate routes. The main `/` route renders `<App />`, which composes `<DesktopIcons />` + `<WindowsLayer />` + `<Taskbar />` — there is no top-level `WindowsProvider` because state lives in Zustand. GitHub Pages deep-link refreshes are handled by the rafgraph SPA shim (`public/404.html` + decode script in `index.html` head).
+- `src/window-system/` — generic window manager. Owns geometry, z-order, focus,
+  minimize/maximize. Contains **no** domain concepts (no OCs, slugs, characters).
+- `src/content/` — one virtual filesystem of nodes (`docs/DATA-MODEL.md`). Each node
+  declares which window type opens it. `openNode(nodeId)` is the universal open action.
+- `src/apps/` — one folder per window type. Content components take exactly one prop,
+  `payload`, and never receive chrome props.
 
-## Window management
+Plus `src/shell/` (Desktop, Taskbar, DesktopIcons, StartMenu), `src/ui/` (dumb
+primitives) and `src/styles/tokens.css` (Win10 palette and metrics).
 
-Global window state lives in a Zustand store at `src/window-manager/store.ts`. Files in this folder:
+See [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) for conventions and the pitfalls that
+already bit this codebase — Zustand selector identity, writing geometry during a drag,
+the HTML-404 guard on fetched `.txt` files, and the `/homescreen/` base path.
 
-- `types.ts` — `WindowInstance` discriminated union (one variant per window kind), `OpenInput`, `WindowControls`, `WindowDef`, `WindowRegistry`, `charGroup(slug)` helper.
-- `store.ts` — the Zustand store: `windows: Record<id, WindowInstance>`, `order: string[]` (last entry = topmost), `minimizedSlugs: Set<string>`, plus `loreTexts` / `infectionTexts` caches. Actions: `open`, `close`, `closeGroup`, `focus`, `focusGroup`, `minimizeProfile`, `restoreGroup`, `loadLore`, `loadInfection`.
-- `registry.tsx` — `REGISTRY: WindowRegistry` mapping each `WindowType` to its `WindowDef`. **This is the only file you edit when adding a new window type.**
-- `renderers.tsx` — small wrapper components (`LoreWindow`, `InfectionWindow`, `InfectionIndexWindow`) for windows that need to subscribe to async text from the store; pulled out of `registry.tsx` so the registry stays as data.
-- `WindowsLayer.tsx` — iterates `store.order` and mounts one `WindowHost` per id. Each `WindowHost` subscribes to its own slice (`windows[id]`, `order.indexOf(id)`, group-minimized flag), so opening / focusing / minimizing one window only re-renders the affected windows.
-- `useUrlBootstrap.ts` — one-shot URL → `open()` calls on first mount. Reads `?oc=slug1,slug2` (opens profiles) and `?open=favourites,characters,info,infections` (opens standalone windows), then strips the params.
+## Current code
 
-### Adding a new window type
+Phases 1, 2 and 3 are done (2026-08-06). Every live folder — `styles/`, `window-system/`,
+`content/`, `ui/`, `apps/`, `shell/` — follows the target architecture above; read
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for what belongs where. The pre-refactor
+architecture is gone: `src/window-manager/`, `src/window/`, `src/desktop/`,
+`src/file-explorer/`, `src/explorer-icons/`, `src/data/` and `src/App.css` were deleted.
 
-1. Add a variant to `WindowInstance` in `types.ts` (give it a `type`, optional `groupId`, and a `payload` shape).
-2. Add an entry to `REGISTRY` in `registry.tsx`:
-   - `singletonKey(payload)` returning a stable id, or `null` for unbounded multi-instance (only `imageViewer` is unbounded today).
-   - `groupOf(payload)` returns a group id (e.g. `charGroup(payload.slug)`) when the window should be tied to an OC; omit otherwise.
-   - `canMinimize: true` only if you intend to add taskbar behavior for it (currently only `profile`).
-   - `render(window, controls)` returns JSX. Wire `controls.{close, focus, minimize, hidden, zIndex}` into the underlying component. If the window needs async data from the store, write a small wrapper component in `renderers.tsx` and call it here.
-3. Trigger from anywhere: `useWindowStore.getState().open({ type, payload })`. Optionally surface in `useUrlBootstrap.ts` if it should be deep-linkable.
+- `src/content/nodes/**/*.json` — the content tree, one file per top-level entity with
+  its subtree nested inline. Ids are **derived from the file path** and are never stored
+  in the file. Adding a character is adding one file.
+- `src/content/desktop.json` — shell config (desktop icon order, quick-search list). Not
+  a node.
+- `scripts/migrate-content.mjs` — the one-shot migration that produced the above from
+  the old `src/data/`. Kept for reference; it is not part of the build.
+- `public/backstory/*.txt`, `public/infection/*.txt` — async prose, fetched on demand
+  via `content/resources.ts`. These **stay** as-is. New prose goes in `public/text/`.
 
-You should not need to edit `App.tsx`, `WindowsLayer.tsx`, `Taskbar.tsx`, or `store.ts` to add a new window type.
+**Excluded from the build** (on disk, but not compiled or linted — see the `exclude`
+block in `tsconfig.app.json` and the matching `ignores` in `eslint.config.js`). Do not
+import from these and do not copy their patterns:
 
-### Minimize / group semantics
+- `src/editor/` (plus the still-compiled `src/set-password/`) — password-protected JSON
+  editor that pushes to `https://09176645.xyz/github-pages-editor`. **Parked**: unrouted
+  during phases 1–4, rebuilt in phase 5 against `content/types.ts`. It still imports the
+  deleted `src/data/` JSON, which is why it is excluded. Leave the files alone until
+  then.
 
-Only profile windows minimize. Minimizing a profile adds its slug to `minimizedSlugs`, which hides **every window in `char:${slug}`** (the profile itself plus its lore, galleries, and image viewers) via the `hidden` flag computed in `WindowsLayer`. The taskbar derives its avatar list directly from `minimizedSlugs`:
+## Design reference
 
-- **Click taskbar avatar** → `restoreGroup(slug)` (un-minimizes + brings the whole group to front via `focusGroup`); the avatar disappears.
-- **Right-click taskbar avatar → "Close all windows"** → `closeGroup(charGroup(slug))` removes every window in that OC's group.
-- **Close button on a profile window** also cascades via `closeGroup` (handled in `WindowsLayer`'s `controls.close`).
-
-Non-profile windows still render their minimize button via `WindowControls`, but it's `disabled` because `onMinimize` is undefined for them — this gives the greyed-out look without conditional rendering.
-
-### Selector pitfalls
-
-When a component reads from the store with a selector that builds a new object/array/Set on each call (e.g. `s => Object.values(s.windows).filter(...)`), wrap the selector with `useShallow` from `zustand/react/shallow`. Without it, every call returns a new reference and Zustand re-renders in an infinite loop. If the consumer needs a `Set` or `Map`, select an array with `useShallow` and `useMemo` it into the desired shape.
-
-State management: Zustand. No testing framework is configured.
+`design/design1.webp` and `design/design2.png` are the source of truth for the look and
+for the window types in scope. Sketch numbering is referenced throughout the phase
+documents (e.g. "design1 sketch 6" is the media player).
