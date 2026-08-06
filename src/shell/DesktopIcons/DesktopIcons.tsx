@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import desktopConfig from "../../content/desktop.json";
 import { openNode } from "../../content/openNode";
+import { useOpenNodes } from "../../content/useOpenNodes";
 import { getNode } from "../../content/vfs";
 import IconTile from "../../ui/IconTile/IconTile";
 import { resolveIcon } from "../../ui/icons";
@@ -22,6 +23,8 @@ function DesktopIcons() {
         .filter((node) => node !== undefined),
     [],
   );
+  // Same rule the explorer follows: a node with a window open is highlighted.
+  const openNodes = useOpenNodes();
 
   return (
     <div className="desktop-icons">
@@ -31,6 +34,7 @@ function DesktopIcons() {
           variant="desktop"
           label={node.name}
           src={resolveIcon(node.icon)}
+          selected={openNodes.has(node.id)}
           onClick={() => openNode(node.id)}
         />
       ))}

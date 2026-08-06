@@ -17,3 +17,80 @@ body {
   width: 100%;
   height: 100%;
 }
+
+/* ==========================================================================
+   Focus ring — one rule for the whole app.
+   Every control inherits it; dark chrome only re-points --focus-ring.
+   ========================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.taskbar,
+.startmenu,
+.taskbar-context-menu {
+  --focus-ring: var(--focus-ring-light);
+  --scrollbar-track: #2c2c2c;
+  --scrollbar-thumb: #5a5a5a;
+  --scrollbar-thumb-hover: #7a7a7a;
+}
+
+/* ==========================================================================
+   Scrollbars — the flat, square Windows 10 explorer bar.
+
+   The order here is load-bearing. Chrome ignores `::-webkit-scrollbar` for any
+   element that also sets `scrollbar-width` or `scrollbar-color`, and the
+   standard properties cannot express a square thumb — macOS rounds it. So the
+   webkit rules are unconditional, and the standard properties are confined to
+   a feature query that only Firefox (no `::-webkit-scrollbar`) enters.
+   Setting them globally would silently downgrade Chrome to a rounded bar.
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  /* A transparent border showing the track through it is how the Win10 bar
+     gets a thin thumb inside a full-width track. */
+  border: 4px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+/* ==========================================================================
+   Motion — chrome transitions are opt-out for anyone who asks.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

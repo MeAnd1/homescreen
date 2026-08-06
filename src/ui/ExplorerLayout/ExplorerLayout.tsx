@@ -46,16 +46,34 @@ function ExplorerLayout({ tabs, sidebar, statusText, children }: ExplorerLayoutP
       <div className="explorer-body">
         {sidebar && sidebar.length > 0 && (
           <div className="explorer-sidebar">
-            {sidebar.map((item) => (
-              <div
-                key={item.label}
-                className={`explorer-sidebar-item${item.active ? " active" : ""}${item.star ? " star" : ""}`}
-                onClick={item.onClick}
-              >
-                {item.star && <img className="explorer-star" src={favouritesIcon} alt="" />}
-                {item.label}
-              </div>
-            ))}
+            {sidebar.map((item) => {
+              const className = `explorer-sidebar-item${item.active ? " active" : ""}${item.star ? " star" : ""}`;
+              const content = (
+                <>
+                  {item.star && <img className="explorer-star" src={favouritesIcon} alt="" />}
+                  {item.label}
+                </>
+              );
+              // Today every entry is decorative (phase 4.3 is deferred), and a
+              // decorative entry must NOT be a tab stop. The moment one gains a
+              // handler it becomes a real button, so it can never end up as a
+              // keyboard-unreachable `div onClick`.
+              return item.onClick ? (
+                <button
+                  key={item.label}
+                  type="button"
+                  className={className}
+                  aria-pressed={item.active}
+                  onClick={item.onClick}
+                >
+                  {content}
+                </button>
+              ) : (
+                <div key={item.label} className={className}>
+                  {content}
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -5,14 +5,18 @@ import StartMenu from "./StartMenu/StartMenu";
 import Taskbar from "./Taskbar/Taskbar";
 import WindowsLayer from "../window-system/WindowsLayer";
 import { useWindowStore } from "../window-system/store";
-import { useDeepLinks } from "./useDeepLinks";
+import { useWindowShortcuts } from "../window-system/useWindowShortcuts";
+import { useSession } from "./useSession";
 import "./Desktop.css";
 
 function Desktop() {
-  useDeepLinks();
+  // Deep links, session restore and session persistence — see useSession.ts.
+  useSession();
   // Shell chrome, so it is local state and not part of the window store.
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const closeStartMenu = useCallback(() => setStartMenuOpen(false), []);
+  // Escape belongs to the panel while it is open, not to the focused window.
+  useWindowShortcuts(!startMenuOpen);
 
   return (
     <div

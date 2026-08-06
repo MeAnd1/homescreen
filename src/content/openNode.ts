@@ -54,6 +54,7 @@ export function openNode(nodeId: string, opts: OpenNodeOptions = {}): string | n
     icon: resolveIcon(node.icon),
     groupId: node.group ?? node.id.split("/").slice(0, 2).join("/"),
     parentId: opts.parentId,
+    resizable: node.window?.resizable,
     ...(Object.keys(size).length > 0 ? { rect: size } : {}),
   });
 }

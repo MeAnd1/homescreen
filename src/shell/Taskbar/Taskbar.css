@@ -29,7 +29,21 @@
   align-items: stretch;
   height: 100%;
   min-width: 0;
-  /* No overflow clipping — it would cut off the button context menu. */
+}
+
+/* Overflow strategy: buttons shrink from 180px down to icon-width, and past
+   that the strip scrolls. Clipping is safe here because the context menu is
+   portalled to document.body rather than nested inside a button. */
+.taskbar-windows {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* The strip scrolls, but a visible bar inside a 40px taskbar is not what
+     Windows does — it just clips. */
+  scrollbar-width: none;
 }
 
 .taskbar-btn {
@@ -91,27 +105,27 @@
 
 /* ---------- One button per open window ---------- */
 
-.taskbar-btn-wrapper {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  height: 100%;
-  min-width: 0;
-}
-
 .taskbar-window-btn {
   gap: 8px;
   padding: 0 10px;
-  max-width: 180px;
+  /* Grow to 180px, shrink to the icon before the strip starts scrolling. */
+  flex: 0 1 180px;
   min-width: 40px;
   justify-content: flex-start;
   background-color: rgba(255, 255, 255, 0.06);
   margin-right: 1px;
+  transition: background-color 90ms linear;
+}
+
+/* The underline means "this window exists" — it is on every open window, dim.
+   The accent underline plus the lighter fill is what marks the focused one. */
+.taskbar-window-btn {
+  border-bottom-color: rgba(255, 255, 255, 0.3);
 }
 
 .taskbar-window-btn--minimized {
   background-color: transparent;
-  opacity: 0.55;
+  opacity: 0.65;
 }
 
 .taskbar-window-btn--focused {
@@ -145,17 +159,18 @@
   text-overflow: ellipsis;
 }
 
-/* Context menu — Windows 10 taskbar style */
+/* Context menu — Windows 10 taskbar style. Portalled to document.body, so it
+   is positioned against the viewport and must clear the taskbar itself. */
 .taskbar-context-menu {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
+  position: fixed;
+  bottom: var(--taskbar-height);
   background: var(--taskbar-menu-bg);
   border: 1px solid var(--taskbar-menu-border);
   padding: 2px 0;
-  min-width: 200px;
-  z-index: 1;
+  width: 200px;
+  z-index: var(--z-menu);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-ui);
 }
 
 .taskbar-context-menu-item {

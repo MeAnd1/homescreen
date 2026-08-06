@@ -52,6 +52,7 @@ function WindowFrame({ window: w, def, zIndex, focused, children }: WindowFrameP
   const classes = [
     "window",
     isMaximized ? "window--maximized" : "",
+    isMinimized ? "window--minimized" : "",
     focused ? "window--focused" : "",
     `window--chrome-${chrome}`,
   ]
@@ -67,14 +68,16 @@ function WindowFrame({ window: w, def, zIndex, focused, children }: WindowFrameP
       bounds={isMaximized ? undefined : "parent"}
       dragHandleClassName="window-titlebar"
       disableDragging={isMaximized || chrome === "none"}
-      enableResizing={def.resizable !== false && !isMaximized}
+      // Per-node override (content's `window.resizable`) beats the type default.
+      enableResizing={(w.resizable ?? def.resizable !== false) && !isMaximized}
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
       onMouseDown={() => store().focus(w.id)}
       onTouchStart={() => store().focus(w.id)}
       // Minimized windows stay mounted — unmounting would lose scroll position
-      // and viewer state. See ARCHITECTURE.md.
-      style={{ zIndex, display: isMinimized ? "none" : undefined }}
+      // and viewer state. See ARCHITECTURE.md. The hiding itself is CSS
+      // (`.window--minimized`) rather than `display: none`, so it can animate.
+      style={{ zIndex }}
       className={classes}
     >
       <div className="window-inner">

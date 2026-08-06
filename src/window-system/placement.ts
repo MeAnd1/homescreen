@@ -21,6 +21,15 @@ export function currentViewport(): Size {
 }
 
 /**
+ * Below the mobile breakpoint a new window opens maximized — owner's choice.
+ * A floating 320px window on a 375px screen leaves no room to drag it and no
+ * room to read it. This is the one rule; no app special-cases it.
+ */
+export function shouldOpenMaximized(viewport: Size): boolean {
+  return viewport.width <= MOBILE_BREAKPOINT;
+}
+
+/**
  * Shrink and shift a rect until it fits the usable area. Below the mobile
  * breakpoint a window is pinned to a margin on the left and allowed to use the
  * full remaining width.

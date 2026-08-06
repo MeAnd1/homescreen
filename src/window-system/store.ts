@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { clampToViewport, computeRect, currentViewport } from "./placement";
+import {
+  clampToViewport,
+  computeRect,
+  currentViewport,
+  shouldOpenMaximized,
+} from "./placement";
 import { getWindowType } from "./registry";
 import type { OpenInput, Rect, WindowInstance, WindowTypeId } from "./types";
 
@@ -10,6 +15,11 @@ interface WindowStore {
   focusedId: string | null;
 
   openWindow: <T extends WindowTypeId>(input: OpenInput<T>) => string;
+  /**
+   * Replace the whole desktop with a validated snapshot (session restore).
+   * `instances` is in **insertion** order — the taskbar reads `Object.keys`.
+   */
+  hydrate: (instances: WindowInstance[], order: string[]) => void;
   close: (id: string) => void;
   closeGroup: (groupId: string) => void;
   closeAll: () => void;
@@ -35,6 +45,17 @@ interface WindowStore {
 
 let idCounter = 0;
 const nextId = () => `w${++idCounter}`;
+
+/**
+ * Restored ids are real ids. Without this a restored `w3` would be handed out
+ * again by the first `openWindow` of the session and silently collide.
+ */
+function reserveIds(ids: readonly string[]): void {
+  for (const id of ids) {
+    const match = /^w(\d+)$/.exec(id);
+    if (match) idCounter = Math.max(idCounter, Number(match[1]));
+  }
+}
 
 /** The window that should hold focus once `excluded` ids are gone or hidden. */
 function nextFocus(
@@ -122,6 +143,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       viewport,
     );
 
+    // Small viewports open maximized (placement.ts owns the rule). `rect` still
+    // holds the windowed geometry, so unmaximizing on a rotated phone works.
+    const maximized = shouldOpenMaximized(viewport);
+
     const instance: WindowInstance = {
       id,
       type: input.type,
@@ -129,7 +154,9 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       title: input.title ?? def.title(payload),
       icon: input.icon ?? def.icon?.(payload),
       rect,
-      state: "normal",
+      state: maximized ? "maximized" : "normal",
+      restoreRect: maximized ? rect : undefined,
+      resizable: input.resizable,
       groupId: input.groupId,
       parentId: input.parentId,
     };
@@ -140,6 +167,19 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       focusedId: id,
     });
     return id;
+  },
+
+  hydrate: (instances, order) => {
+    reserveIds(instances.map((w) => w.id));
+    const windows: Record<string, WindowInstance> = {};
+    for (const w of instances) windows[w.id] = w;
+    set({
+      windows,
+      order,
+      // focusedId is not persisted: the topmost visible window is the sane
+      // resting state, and an empty desktop simply has no focus.
+      focusedId: nextFocus(windows, order, new Set()),
+    });
   },
 
   close: (id) => {

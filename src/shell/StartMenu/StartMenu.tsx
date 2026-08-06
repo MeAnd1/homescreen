@@ -76,14 +76,16 @@ function StartMenu({ onClose }: { onClose: () => void }) {
     };
     // Capture phase: react-rnd stops mousedown propagating out of a window, so
     // a bubble-phase listener never sees a click on one and the panel would
-    // stay open over it. A frame late, so the mousedown that opened the panel
-    // does not immediately close it.
-    const frame = requestAnimationFrame(() => {
+    // stay open over it. Armed one task late, so the mousedown that opened the
+    // panel does not immediately close it — a `setTimeout` rather than a
+    // `requestAnimationFrame`, whose callbacks never run while the tab is
+    // hidden, which would leave the panel undismissable on a background tab.
+    const armed = setTimeout(() => {
       window.addEventListener("mousedown", onMouseDown, true);
-    });
+    }, 0);
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      cancelAnimationFrame(frame);
+      clearTimeout(armed);
       window.removeEventListener("mousedown", onMouseDown, true);
       window.removeEventListener("keydown", onKeyDown);
     };

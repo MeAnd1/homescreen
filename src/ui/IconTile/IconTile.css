@@ -51,10 +51,22 @@
 
 .icon-tile--desktop:hover {
   background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .icon-tile--desktop:active {
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* The Windows-10 selection box. Here it means "this node has a window open",
+   the same rule the explorer grid follows. */
+.icon-tile--desktop.icon-tile--selected {
+  background: rgba(76, 194, 255, 0.28);
+  border-color: rgba(76, 194, 255, 0.7);
+}
+
+.icon-tile--desktop.icon-tile--selected:hover {
+  background: rgba(76, 194, 255, 0.38);
 }
 
 /* ---------- Explorer variant (light panel) ---------- */

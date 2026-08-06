@@ -18,13 +18,61 @@
   box-shadow: none;
 }
 
-/* An unfocused window recedes slightly, Win10 style. */
+/* An unfocused window recedes on all three axes at once, Win10 style. */
 .window:not(.window--focused) {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  border-color: var(--win-border-inactive);
+  box-shadow: var(--win-shadow-inactive);
+}
+
+.window:not(.window--focused) .window-titlebar {
+  background: var(--win-titlebar-bg-inactive);
+  border-bottom-color: var(--win-titlebar-border-inactive);
 }
 
 .window:not(.window--focused) .window-title {
   color: var(--text-muted);
+}
+
+/* ---------- Open / minimize / restore ----------
+   A minimized window is NOT unmounted and NOT display:none — it keeps its
+   scroll position, its viewer index and its playback, and `visibility` is what
+   lets that hiding animate. The delayed `visibility` step is what stops a
+   hidden window from swallowing clicks once the fade is done. */
+
+.window {
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) linear,
+    box-shadow var(--motion-fast) linear;
+}
+
+.window--minimized {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    visibility 0s var(--motion-fast);
+}
+
+/* Scale lives on the inner wrapper, never on .window: react-rnd writes an
+   inline `transform: translate(...)` there for positioning, and animating it
+   would animate every drag. */
+.window-inner {
+  transform-origin: 50% 100%;
+  transition: transform var(--motion-fast) var(--motion-ease);
+  animation: window-open var(--motion-fast) var(--motion-ease);
+}
+
+.window--minimized .window-inner {
+  transform: scale(0.94);
+}
+
+@keyframes window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
 }
 
 /* ---------- Title bar ---------- */
@@ -71,6 +119,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: var(--win-bg);
 }
 
 /* ---------- Body ---------- */

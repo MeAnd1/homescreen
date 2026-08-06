@@ -36,11 +36,17 @@
 
   /* ---------- Window chrome ---------- */
   --win-bg: #b5b6b4;
-  --win-border: #bfc4cb;
+  --win-border: #a9aaa8;
   --win-titlebar-bg: #b5b6b4;
   --win-titlebar-border: #898a90;
-  --win-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --win-shadow: 0 6px 26px rgba(0, 0, 0, 0.38);
   --win-control-hover: rgba(0, 0, 0, 0.08);
+  /* An unfocused window recedes on three axes at once, Windows 10 style:
+     lighter titlebar, lower-contrast border, shallower shadow. */
+  --win-border-inactive: #c3c4c2;
+  --win-titlebar-bg-inactive: #c6c7c5;
+  --win-titlebar-border-inactive: #adaeb2;
+  --win-shadow-inactive: 0 2px 12px rgba(0, 0, 0, 0.22);
 
   /* ---------- Surfaces ---------- */
   --surface-toolbar: #c8c9cc;
@@ -55,6 +61,26 @@
   /* ---------- Borders ---------- */
   --border-default: #bbbcc0;
   --border-strong: #a8a9ad;
+
+  /* ---------- Focus ring ----------
+     One ring everywhere. Dark chrome (taskbar, start menu, context menus)
+     re-points --focus-ring at the light accent; the property inherits, so no
+     component needs its own :focus-visible rule. */
+  --focus-ring: #0078d4;
+  --focus-ring-light: #4cc2ff;
+
+  /* ---------- Scrollbars (Windows 10 explorer) ----------
+     Overridden on dark surfaces the same way as --focus-ring. */
+  --scrollbar-size: 15px;
+  --scrollbar-track: #ebecef;
+  --scrollbar-thumb: #b6b7bb;
+  --scrollbar-thumb-hover: #8f9094;
+
+  /* ---------- Motion ----------
+     Chrome only. Long enough to read as a transition, short enough that a
+     double click never waits on it. */
+  --motion-fast: 110ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* ---------- Taskbar ---------- */
   --taskbar-bg: rgba(0, 0, 0, 0.85);
@@ -91,4 +117,7 @@
      taskbar itself. */
   --z-startmenu: 99999;
   --z-taskbar: 100000;
+  /* Portalled context menus land in document.body, outside the taskbar's
+     stacking context, so they need to out-rank it explicitly. */
+  --z-menu: 100001;
 }

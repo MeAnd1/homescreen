@@ -1,14 +1,13 @@
 import { useMemo } from "react";
 import { FileText } from "lucide-react";
-import { useShallow } from "zustand/react/shallow";
 import { openNode } from "../../content/openNode";
+import { useOpenNodes } from "../../content/useOpenNodes";
 import { getChildren, getNode } from "../../content/vfs";
 import type { VNode } from "../../content/types";
 import ExplorerLayout from "../../ui/ExplorerLayout/ExplorerLayout";
 import IconTile from "../../ui/IconTile/IconTile";
 import IconImageStack from "../../ui/IconImageStack/IconImageStack";
 import { ICONS, isPhotoIcon, resolveIcon } from "../../ui/icons";
-import { useWindowStore } from "../../window-system/store";
 import "./FileExplorer.css";
 
 /**
@@ -20,14 +19,7 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
   const children = useMemo(() => getChildren(payload.nodeId), [payload.nodeId]);
 
   // A tile is highlighted while a window on that node is open.
-  const openNodeIds = useWindowStore(
-    useShallow((s) =>
-      Object.values(s.windows)
-        .map((w) => (w.payload as { nodeId?: string }).nodeId)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  );
-  const openNodes = useMemo(() => new Set(openNodeIds), [openNodeIds]);
+  const openNodes = useOpenNodes();
 
   if (!node) {
     return (

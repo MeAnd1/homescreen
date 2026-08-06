@@ -46,6 +46,9 @@ export interface WindowInstance<T extends WindowTypeId = WindowTypeId> {
    */
   restoreRect?: Rect;
 
+  /** Per-instance override of the type's `resizable`. Undefined = use the type. */
+  resizable?: boolean;
+
   /** "close all related windows" semantics. */
   groupId?: string;
   /** Child window: cascades from and closes with its parent. */
@@ -107,4 +110,6 @@ export interface OpenInput<T extends WindowTypeId = WindowTypeId> {
   parentId?: string;
   /** Overrides computed placement. */
   rect?: Partial<Rect>;
+  /** Overrides def.resizable for this instance only. */
+  resizable?: boolean;
 }

@@ -53,18 +53,31 @@
   border-right: 1px solid var(--border-default);
   padding: 12px 0;
   overflow-y: auto;
+  /* Truncate a long entry rather than growing a horizontal scrollbar, which is
+     what the narrow mobile sidebar was doing. Windows 10 truncates too. */
+  overflow-x: hidden;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
+/* Styled identically whether it renders as a div (decorative) or a button
+   (once it has a handler), hence the button resets. */
 .explorer-sidebar-item {
+  display: block;
+  width: 100%;
   padding: 5px 16px;
+  background: none;
+  border: none;
+  font-family: inherit;
   font-size: var(--font-size-body);
   color: var(--text-default);
+  text-align: left;
   cursor: default;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .explorer-sidebar-item:hover {
