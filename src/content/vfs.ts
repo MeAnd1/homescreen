@@ -181,14 +181,31 @@ export function validateTree(registeredViews: ReadonlySet<string>): TreeProblem[
       });
     }
     if (node.view === "imageGallery" || node.view === "imageViewer") {
-      (node as ImageSetNode).hotspots?.forEach((hotspot, i) => {
-        if (!index.has(hotspot.opens)) {
-          problems.push({
-            nodeId: node.id,
-            message: `hotspots[${i}].opens → unknown node "${hotspot.opens}"`,
-            severity: "warning",
-          });
-        }
+      const set = node as ImageSetNode;
+      set.images?.forEach((image, imageIndex) => {
+        image.hotspots?.forEach((hotspot, i) => {
+          const where = `images[${imageIndex}].hotspots[${i}]`;
+          const action = hotspot.action;
+          if (!action) {
+            problems.push({
+              nodeId: node.id,
+              message: `${where} has no action`,
+              severity: "warning",
+            });
+          } else if (action.do === "openNode" && !index.has(action.opens)) {
+            problems.push({
+              nodeId: node.id,
+              message: `${where}.opens → unknown node "${action.opens}"`,
+              severity: "warning",
+            });
+          } else if (action.do === "swapImage" && !set.images[action.to]) {
+            problems.push({
+              nodeId: node.id,
+              message: `${where}.to → no image at index ${action.to}`,
+              severity: "warning",
+            });
+          }
+        });
       });
     }
 

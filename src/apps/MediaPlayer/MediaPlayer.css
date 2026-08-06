@@ -1,62 +1,232 @@
+/* design1 sketch 6 — video surface above, Windows-10 transport bar below. */
+
 .media-player {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: #1c1c1c;
+  background: var(--media-stage-bg);
 }
 
-.media-player-stage {
+.media-stage {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
+  overflow: hidden;
+  /* Lets .media-embed size itself against the stage in cqw/cqh below. */
+  container-type: size;
 }
 
-.media-player-placeholder {
+.media-video,
+.media-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The crop viewport. It is exactly the box the video occupies — the largest
+   box of the video's aspect ratio that fits the stage — computed in container
+   units so it never letterboxes and never clips the picture. */
+.media-embed {
+  --media-aspect: 1.7778; /* overridden inline from the node's `aspect` */
+  position: relative;
+  overflow: hidden;
+  width: min(100cqw, calc(100cqh * var(--media-aspect)));
+  aspect-ratio: var(--media-aspect);
+}
+
+/* The YouTube API replaces this element's child with its iframe.
+   YouTube anchors its chrome — the title/channel bar, share and watch-later,
+   "More videos", the logo — to the PLAYER's top and bottom edges, and it
+   reappears for a few seconds every time playback starts. No player parameter
+   can turn it off any more (`showinfo` was removed in 2018, `modestbranding`
+   deprecated in 2023), so the iframe is made taller than the crop box and
+   shifted up by half the excess. YouTube centres the video inside the iframe,
+   so the picture still lands exactly in the box while the chrome bands sit
+   outside it and are clipped away.
+
+   The crop is symmetric, which is what keeps the picture centred; it must
+   stay that way. Pointer events go to .media-cover instead, so YouTube never
+   sees a hover either. */
+.media-embed iframe {
+  --yt-crop: max(72px, 30%);
+  position: absolute;
+  left: 0;
+  top: calc(-1 * var(--yt-crop));
+  width: 100%;
+  height: calc(100% + 2 * var(--yt-crop));
+  border: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* Sits over the embed: transparent while playing (the video shows through),
+   opaque while paused (YouTube's paused title / "More videos" / logo chrome is
+   behind it). A `poster` on the node becomes the paused image. */
+.media-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.75);
+  background-color: var(--media-stage-bg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.media-cover--playing {
+  background: transparent;
+}
+
+.media-placeholder {
+  position: absolute;
   color: var(--text-inverse);
   opacity: 0.6;
   font-size: var(--font-size-body);
+  font-family: var(--font-ui);
+  pointer-events: none;
 }
 
-.media-player-transport {
+/* ---------- Transport ---------- */
+
+.media-transport {
   flex-shrink: 0;
   background: var(--surface-toolbar);
   border-top: 1px solid var(--border-strong);
   padding: 6px 10px 8px;
 }
 
-.media-player-scrub {
-  height: 4px;
-  background: var(--surface-tile-active);
-  border: 1px solid var(--border-default);
-  margin-bottom: 8px;
+.media-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-top: 6px;
 }
 
-.media-player-buttons {
+.media-controls-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.media-player-buttons button {
+.media-controls-group--right {
+  justify-content: flex-end;
+}
+
+.media-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 26px;
-  height: 22px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--border-default);
-  background: var(--surface-content-header);
+  border: 1px solid transparent;
+  background: none;
   color: var(--text-default);
+  cursor: pointer;
 }
 
-.media-player-buttons button:disabled {
-  opacity: 0.45;
+.media-btn:hover {
+  background: var(--surface-toolbar-hover);
+  border-color: var(--border-default);
+}
+
+.media-btn--play {
+  width: 34px;
+  height: 28px;
+}
+
+.media-btn--on {
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--text-primary);
+}
+
+.media-time {
+  font-size: var(--font-size-chrome);
+  font-family: var(--font-ui);
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+/* ---------- Sliders ----------
+   `--fill` is set inline as a percentage; the track paints itself from it, so
+   the filled-progress portion needs no extra element. */
+
+.media-scrub,
+.media-volume {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--slider-fill) 0 var(--fill, 0%),
+    var(--media-track) var(--fill, 0%) 100%
+  );
+}
+
+.media-scrub {
+  --slider-fill: var(--media-progress);
+  display: block;
+  width: 100%;
+}
+
+.media-volume {
+  --slider-fill: var(--media-volume-fill);
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.media-scrub:disabled {
   cursor: default;
+  opacity: 0.6;
 }
 
-.media-player-spacer {
-  flex: 1;
+.media-scrub::-webkit-slider-thumb,
+.media-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 1px;
+  background: var(--surface-content-header);
+}
+
+.media-scrub::-moz-range-thumb,
+.media-volume::-moz-range-thumb {
+  width: 10px;
+  height: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 1px;
+  background: var(--surface-content-header);
+}
+
+.media-scrub::-moz-range-progress,
+.media-volume::-moz-range-progress {
+  background: var(--slider-fill);
+  height: 4px;
+}
+
+@media (max-width: 768px) {
+  .media-time {
+    display: none;
+  }
+
+  .media-volume {
+    width: 48px;
+  }
 }

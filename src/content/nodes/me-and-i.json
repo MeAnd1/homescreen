@@ -2,5 +2,48 @@
   "name": "Me and I",
   "icon": "me-and-i",
   "view": "imageViewer",
-  "images": []
+  "infoSrc": "text/me-and-i",
+  "window": { "width": 660, "height": 620 },
+  "images": [
+    {
+      "thumbnail": "https://i.pinimg.com/736x/b9/85/7c/b9857ce0745fa36c33a4006e5238a2d0.jpg",
+      "full": "https://i.pinimg.com/736x/b9/85/7c/b9857ce0745fa36c33a4006e5238a2d0.jpg",
+      "fileName": "me.jpg",
+      "hotspots": [
+        {
+          "x": 34,
+          "y": 16,
+          "width": 30,
+          "height": 22,
+          "shape": "ellipse",
+          "label": "Look closer",
+          "action": { "do": "swapImage", "to": 1 }
+        }
+      ]
+    },
+    {
+      "thumbnail": "https://i.pinimg.com/736x/d6/71/d5/d671d5f4794832339b7d4573307a4774.jpg",
+      "full": "https://i.pinimg.com/736x/d6/71/d5/d671d5f4794832339b7d4573307a4774.jpg",
+      "fileName": "and-i.jpg",
+      "hotspots": [
+        {
+          "x": 34,
+          "y": 16,
+          "width": 30,
+          "height": 22,
+          "shape": "ellipse",
+          "label": "Look away",
+          "action": { "do": "swapImage", "to": 0 }
+        },
+        {
+          "x": 6,
+          "y": 74,
+          "width": 22,
+          "height": 20,
+          "label": "Info",
+          "action": { "do": "openNode", "opens": "info" }
+        }
+      ]
+    }
+  ]
 }

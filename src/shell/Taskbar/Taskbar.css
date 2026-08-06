@@ -52,7 +52,7 @@
   background-color: var(--taskbar-active);
 }
 
-/* Search bar */
+/* Search bar — opens the start menu (design2 sketch 7) */
 .taskbar-search {
   display: flex;
   align-items: center;
@@ -63,6 +63,12 @@
   cursor: text;
   min-width: 0;
   flex-shrink: 0;
+  border: none;
+  font-family: var(--font-ui);
+}
+
+.taskbar-search[aria-expanded="true"] {
+  background-color: var(--taskbar-search-bg-hover);
 }
 
 .taskbar-search:hover {

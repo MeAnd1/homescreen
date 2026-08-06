@@ -25,14 +25,8 @@
   },
   "include": ["src"],
 
-  /* PHASE 2 -> 3/5: unrouted code kept on disk deliberately, excluded because
-     nothing includes it any more.
-
-     - single-windows/TooltipWindow + common-components/TaggedImage are
-       unreferenced prototypes for the phase-3 image hotspots. Phase 3 adopts
-       or deletes them (docs/phases/phase-3-new-apps.md).
-     - editor/ is parked until phase 5 and still reads the deleted src/data/
-       JSON. Phase 5 rebuilds it against content/types.ts and removes this
-       entry; do not "fix" its imports before then. */
-  "exclude": ["src/single-windows", "src/common-components", "src/editor"]
+  /* PHASE 2 -> 5: editor/ is parked until phase 5 and still reads the deleted
+     src/data/ JSON. Phase 5 rebuilds it against content/types.ts and removes
+     this entry; do not "fix" its imports before then. */
+  "exclude": ["src/editor"]
 }

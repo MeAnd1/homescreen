@@ -67,7 +67,28 @@
   --taskbar-menu-hover: #3d3d3d;
   --taskbar-menu-active: #333333;
 
+  /* ---------- Media player (design1 sketch 6) ---------- */
+  --media-stage-bg: #1c1c1c;
+  --media-progress: #d13438;
+  --media-track: #9a9b9e;
+  --media-volume-fill: #5a5b5e;
+
+  /* ---------- Image viewer (design1 sketch 4) ---------- */
+  --viewer-stage-bg: #2b2b2b;
+  --hotspot-outline: rgba(255, 255, 255, 0.85);
+  --hotspot-fill-hover: rgba(255, 255, 255, 0.16);
+
+  /* ---------- Start menu (design2 sketch 7) ---------- */
+  --startmenu-bg: rgba(32, 32, 32, 0.96);
+  --startmenu-border: #454545;
+  --startmenu-tile: rgba(255, 255, 255, 0.07);
+  --startmenu-tile-hover: rgba(255, 255, 255, 0.14);
+  --startmenu-tile-selected: rgba(76, 194, 255, 0.28);
+
   /* ---------- Layering ---------- */
   --z-windows: 500;
+  /* Shell chrome that rises from the taskbar: above every window, below the
+     taskbar itself. */
+  --z-startmenu: 99999;
   --z-taskbar: 100000;
 }

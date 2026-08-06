@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { openNode } from "../../content/openNode";
+import { useResource } from "../../content/resources";
 import { getNode } from "../../content/vfs";
-import type { ImageRef } from "../../content/types";
+import type { Hotspot, HotspotAction, ImageRef } from "../../content/types";
+import BBCode from "../../ui/BBCode/BBCode";
 import { useWindow } from "../../window-system/WindowContext";
 import "./ImageViewer.css";
 
@@ -11,15 +14,49 @@ interface ImageViewerPayload {
   startIndex?: number;
 }
 
-/** The full-size view of an image set. Hotspots arrive in phase 3. */
+interface HotspotContext {
+  /** The viewer's own window id, so an opened window closes with it. */
+  windowId: string;
+  showImage: (index: number) => void;
+}
+
+/** A drag longer than this is a pan, not a hotspot click. */
+const CLICK_SLOP_PX = 5;
+
+/**
+ * Every hotspot effect lives here. Adding one is a new `HotspotAction` variant
+ * plus a case below — no component branches on the action type.
+ */
+function runHotspotAction(action: HotspotAction, ctx: HotspotContext): void {
+  switch (action.do) {
+    case "openNode":
+      openNode(action.opens, { view: action.view, parentId: ctx.windowId });
+      return;
+    case "swapImage":
+      ctx.showImage(action.to);
+      return;
+    default:
+      console.warn("[ImageViewer] unknown hotspot action", action);
+  }
+}
+
+/** The full-size view of an image set — design1 sketch 4. */
 function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const node = getNode(payload.nodeId);
-  const images: ImageRef[] =
-    node?.view === "imageGallery" || node?.view === "imageViewer" ? node.images : [];
+  const isImageSet = node?.view === "imageGallery" || node?.view === "imageViewer";
+  const images: ImageRef[] = isImageSet ? node.images : [];
+  const infoSrc = isImageSet ? node.infoSrc : undefined;
 
   const startIndex = payload.startIndex ?? 0;
   const [currentIndex, setCurrentIndex] = useState(startIndex);
+  // Width/height of the loaded image. The frame is given this aspect ratio so
+  // it lands exactly on the picture — a hotspot's percentages are percentages
+  // of the picture, not of the letterboxed window.
+  const [ratio, setRatio] = useState<number | undefined>();
   const self = useWindow();
+  const infoText = useResource(infoSrc);
+  // Where the pointer went down on a hotspot, so a pan is not read as a click.
+  const pressAt = useRef<{ x: number; y: number } | null>(null);
 
   // Re-opening a singleton MERGES the payload rather than remounting, so
   // clicking thumbnail 5 while the viewer is open must move it to image 5.
@@ -27,8 +64,21 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
     setCurrentIndex(startIndex);
   }, [startIndex, payload.nodeId]);
 
+  // A new picture has a new shape; onLoad supplies it again.
+  useEffect(() => {
+    setRatio(undefined);
+  }, [currentIndex, payload.nodeId]);
+
   const total = images.length;
   const current = images[currentIndex];
+
+  const showImage = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < total) setCurrentIndex(index);
+      else console.warn(`[ImageViewer] no image at index ${index}`);
+    },
+    [total],
+  );
 
   const handlePrev = useCallback(() => {
     setCurrentIndex((i) => (i - 1 + total) % total);
@@ -41,6 +91,21 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.stopPropagation();
   }, []);
+
+  const handleHotspotClick = useCallback(
+    (hotspot: Hotspot, e: React.MouseEvent) => {
+      const down = pressAt.current;
+      pressAt.current = null;
+      if (
+        down &&
+        Math.hypot(e.clientX - down.x, e.clientY - down.y) > CLICK_SLOP_PX
+      ) {
+        return; // the pointer was panning the image
+      }
+      runHotspotAction(hotspot.action, { windowId: self.id, showImage });
+    },
+    [self.id, showImage],
+  );
 
   // The titlebar follows the image being viewed, not the node.
   const setTitle = self.setTitle;
@@ -76,12 +141,41 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
               justifyContent: "center",
             }}
           >
-            <img
-              src={current.full}
-              alt={current.fileName}
-              className="image-viewer-img"
-              draggable={false}
-            />
+            {/* Hugs the rendered image so hotspot percentages stay correct at
+                any window size and any zoom level. */}
+            <div className="image-viewer-frame" style={{ aspectRatio: ratio }}>
+              <img
+                src={current.full}
+                alt={current.fileName}
+                className="image-viewer-img"
+                draggable={false}
+                onLoad={(e) =>
+                  setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)
+                }
+                // A broken image still gets a frame, so the placeholder shows.
+                onError={() => setRatio(1)}
+              />
+              {current.hotspots?.map((hotspot, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`image-viewer-hotspot image-viewer-hotspot--${hotspot.shape ?? "rect"}`}
+                  style={{
+                    left: `${hotspot.x}%`,
+                    top: `${hotspot.y}%`,
+                    width: `${hotspot.width}%`,
+                    height: `${hotspot.height}%`,
+                  }}
+                  // aria-label only, never `title`: a tooltip on hover would
+                  // give the secret away.
+                  aria-label={hotspot.label ?? "Image hotspot"}
+                  onPointerDown={(e) => {
+                    pressAt.current = { x: e.clientX, y: e.clientY };
+                  }}
+                  onClick={(e) => handleHotspotClick(hotspot, e)}
+                />
+              ))}
+            </div>
           </TransformComponent>
           {total > 1 && (
             <>
@@ -103,6 +197,12 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
           )}
         </div>
       </TransformWrapper>
+
+      {infoSrc && (
+        <div className="image-viewer-info">
+          <BBCode bbcode={infoText} container="div" />
+        </div>
+      )}
     </div>
   );
 }

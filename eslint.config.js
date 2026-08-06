@@ -6,9 +6,9 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    // Mirrors the "exclude" block in tsconfig.app.json: unrouted code kept on
-    // disk for phase 3 (hotspot prototypes) and phase 5 (the parked editor).
-    ignores: ['dist', 'src/single-windows', 'src/common-components', 'src/editor'],
+    // Mirrors the "exclude" block in tsconfig.app.json: the parked editor,
+    // rebuilt in phase 5.
+    ignores: ['dist', 'src/editor'],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

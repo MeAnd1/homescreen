@@ -1,5 +1,7 @@
+import { useCallback, useState } from "react";
 import background from "../assets/background.webp";
 import DesktopIcons from "./DesktopIcons/DesktopIcons";
+import StartMenu from "./StartMenu/StartMenu";
 import Taskbar from "./Taskbar/Taskbar";
 import WindowsLayer from "../window-system/WindowsLayer";
 import { useWindowStore } from "../window-system/store";
@@ -8,6 +10,9 @@ import "./Desktop.css";
 
 function Desktop() {
   useDeepLinks();
+  // Shell chrome, so it is local state and not part of the window store.
+  const [startMenuOpen, setStartMenuOpen] = useState(false);
+  const closeStartMenu = useCallback(() => setStartMenuOpen(false), []);
 
   return (
     <div
@@ -21,7 +26,11 @@ function Desktop() {
     >
       <DesktopIcons />
       <WindowsLayer />
-      <Taskbar />
+      {startMenuOpen && <StartMenu onClose={closeStartMenu} />}
+      <Taskbar
+        startMenuOpen={startMenuOpen}
+        onToggleStartMenu={() => setStartMenuOpen((open) => !open)}
+      />
     </div>
   );
 }

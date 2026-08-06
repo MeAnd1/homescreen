@@ -6,16 +6,27 @@ export interface ImageRef {
   full: string;
   fileName: string;
   caption?: string;
+  /** Clickable regions on THIS image — design1 sketch 4. */
+  hotspots?: Hotspot[];
 }
 
-/** A clickable region on an image, in percentages of the natural image size. */
+/**
+ * What clicking a hotspot does. Adding an effect is one variant here plus one
+ * case in ImageViewer's `runHotspotAction` — no other code branches on it.
+ */
+export type HotspotAction =
+  /** Open another node in its own window. */
+  | { do: "openNode"; opens: string; view?: ViewId }
+  /** Swap the viewer to another image in the same set (sketch 4's slide flip). */
+  | { do: "swapImage"; to: number };
+
+/** A clickable region on an image, in percentages of the rendered image box. */
 export interface Hotspot {
   x: number;
   y: number;
   width: number;
   height: number;
-  /** Node id. */
-  opens: string;
+  action: HotspotAction;
   label?: string;
   shape?: "rect" | "ellipse";
 }
@@ -85,18 +96,25 @@ export interface ImageSetNode extends VNodeBase {
   view: "imageGallery" | "imageViewer";
   images: ImageRef[];
   startIndex?: number;
-  /** Applied in the viewer — phase 3. */
-  hotspots?: Hotspot[];
-  /** Caption pane in the viewer — phase 3. */
+  /** Prose fileId for the info pane under the image in the viewer. */
   infoSrc?: string;
 }
 
 /** view: "mediaPlayer" — design1 sketch 6. */
 export interface MediaNode extends VNodeBase {
   view: "mediaPlayer";
+  /** A file URL, a YouTube watch/share URL, or an image (`.gif`) URL. */
   src: string;
   poster?: string;
   loop?: boolean;
+  /** Titlebar text, when it differs from `name` — sketch 6's "??????.mp4". */
+  fileName?: string;
+  /**
+   * width ÷ height of the picture. YouTube only: the embed is cropped to this
+   * box to hide YouTube's own overlay chrome, so a non-16:9 video (a vertical
+   * clip is 0.5625) must declare it or it will be cropped. Default 16/9.
+   */
+  aspect?: number;
 }
 
 /** One sprite on the favourites board. */

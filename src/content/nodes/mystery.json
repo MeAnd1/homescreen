@@ -2,5 +2,7 @@
   "name": "???",
   "icon": "mystery",
   "view": "mediaPlayer",
-  "src": ""
+  "fileName": "??????.mp4",
+  "src": "https://www.youtube.com/watch?v=ZTOoY683VCg",
+  "loop": false
 }

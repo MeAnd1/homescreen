@@ -72,7 +72,13 @@ function TaskbarButton({
   );
 }
 
-function Taskbar() {
+interface TaskbarProps {
+  startMenuOpen: boolean;
+  /** Mousedown, not click: see the note on the search button. */
+  onToggleStartMenu: () => void;
+}
+
+function Taskbar({ startMenuOpen, onToggleStartMenu }: TaskbarProps) {
   const [time, setTime] = useState(new Date());
   const [menuId, setMenuId] = useState<string | null>(null);
   // Insertion order, not stacking order — a taskbar button must not jump when
@@ -111,10 +117,30 @@ function Taskbar() {
     <div className="taskbar">
       <div className="taskbar-icons">
         <div className="taskbar-left">
-          <div className="taskbar-search">
+          {/* Toggles on mousedown, not click: the open panel dismisses itself
+              on any mousedown outside it, and a click handler would fire after
+              that dismissal and immediately reopen the panel. preventDefault
+              stops the button taking focus back off the panel's search field.
+              Keyboard activation never emits mousedown, hence the key handler. */}
+          <button
+            type="button"
+            className="taskbar-search"
+            aria-expanded={startMenuOpen}
+            aria-label="Search"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onToggleStartMenu();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggleStartMenu();
+              }
+            }}
+          >
             <Search size={14} color="white" className="taskbar-search-icon" strokeWidth={2} />
             <span className="taskbar-search-text">Search</span>
-          </div>
+          </button>
 
           {ids.map((id) => (
             <TaskbarButton

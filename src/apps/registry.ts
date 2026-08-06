@@ -94,7 +94,10 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
       { key: "images", type: "imageList", label: "Images" },
-      { key: "hotspots", type: "hotspots", label: "Hotspots", imagesKey: "images" },
+      // Hotspots live inside each image (ImageRef.hotspots), so both editors
+      // read the same key — one edits the list, the other draws on a member.
+      { key: "images", type: "hotspots", label: "Hotspots", imagesKey: "images" },
+      { key: "infoSrc", type: "richText", label: "Info text" },
     ],
   },
 
@@ -102,13 +105,15 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     title: nodeTitle("Media Player"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
-    defaultSize: { width: 480, height: 320 },
-    minSize: { width: 280, height: 200 },
+    defaultSize: { width: 560, height: 400 },
+    minSize: { width: 320, height: 240 },
     Content: MediaPlayer,
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
+      { key: "fileName", type: "text", label: "File name (titlebar)" },
       { key: "src", type: "url", label: "Media URL" },
       { key: "poster", type: "url", label: "Poster image" },
+      { key: "aspect", type: "number", label: "Aspect ratio (width ÷ height)" },
     ],
   },
 

@@ -2,6 +2,7 @@ import { resolveIcon } from "../ui/icons";
 import { hasWindowType } from "../window-system/registry";
 import { useWindowStore } from "../window-system/store";
 import type { Rect, ViewId } from "../window-system/types";
+import { recordRecent } from "./recent";
 import { getNode } from "./vfs";
 
 interface OpenNodeOptions {
@@ -38,6 +39,9 @@ export function openNode(nodeId: string, opts: OpenNodeOptions = {}): string | n
     type === "imageViewer"
       ? { nodeId, startIndex: opts.startIndex ?? 0 }
       : { nodeId };
+
+  // Every open goes through here, so this is the one place that has to know.
+  recordRecent(nodeId);
 
   const size: Partial<Rect> = {};
   if (node.window?.width) size.width = node.window.width;
