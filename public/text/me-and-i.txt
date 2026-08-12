@@ -1,10 +1,1 @@
-[b]Me and I[/b]
-
-Placeholder text. This pane is the INFO strip under the image in design1 sketch 4 —
-it scrolls on its own and renders BBCode, so [i]italics[/i] and [b]bold[/b] work here.
-
-Clicking a marked part of the picture above triggers that image's hotspot. The two
-placeholder images swap between each other; a hotspot can also open any other window.
-
-Replace this file (public/text/me-and-i.txt) and the two images in
-src/content/nodes/me-and-i.json with the real artwork and text.
+Lorem ipsum put BBCode here. Placeholder effect: change background color.

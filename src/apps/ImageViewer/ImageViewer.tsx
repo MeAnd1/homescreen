@@ -18,10 +18,15 @@ interface HotspotContext {
   /** The viewer's own window id, so an opened window closes with it. */
   windowId: string;
   showImage: (index: number) => void;
+  flashBackground: (color?: string, ms?: number) => void;
 }
 
 /** A drag longer than this is a pan, not a hotspot click. */
 const CLICK_SLOP_PX = 5;
+
+/** Defaults for the `flashBackground` effect when the node names neither. */
+const FLASH_COLOR = "var(--hotspot-flash-bg)";
+const FLASH_MS = 1200;
 
 /**
  * Every hotspot effect lives here. Adding one is a new `HotspotAction` variant
@@ -34,6 +39,9 @@ function runHotspotAction(action: HotspotAction, ctx: HotspotContext): void {
       return;
     case "swapImage":
       ctx.showImage(action.to);
+      return;
+    case "flashBackground":
+      ctx.flashBackground(action.color, action.ms);
       return;
     default:
       console.warn("[ImageViewer] unknown hotspot action", action);
@@ -57,6 +65,9 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const infoText = useResource(infoSrc);
   // Where the pointer went down on a hotspot, so a pan is not read as a click.
   const pressAt = useRef<{ x: number; y: number } | null>(null);
+  // Set while a `flashBackground` hotspot is running; undefined = the token.
+  const [flashColor, setFlashColor] = useState<string | undefined>();
+  const flashTimer = useRef<number | undefined>(undefined);
 
   // Re-opening a singleton MERGES the payload rather than remounting, so
   // clicking thumbnail 5 while the viewer is open must move it to image 5.
@@ -80,6 +91,19 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
     [total],
   );
 
+  // Re-clicking restarts the hold rather than stacking two timers, so the
+  // second click cannot revert the colour early.
+  const flashBackground = useCallback((color?: string, ms?: number) => {
+    window.clearTimeout(flashTimer.current);
+    setFlashColor(color ?? FLASH_COLOR);
+    flashTimer.current = window.setTimeout(
+      () => setFlashColor(undefined),
+      ms ?? FLASH_MS,
+    );
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
+
   const handlePrev = useCallback(() => {
     setCurrentIndex((i) => (i - 1 + total) % total);
   }, [total]);
@@ -102,9 +126,13 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
       ) {
         return; // the pointer was panning the image
       }
-      runHotspotAction(hotspot.action, { windowId: self.id, showImage });
+      runHotspotAction(hotspot.action, {
+        windowId: self.id,
+        showImage,
+        flashBackground,
+      });
     },
-    [self.id, showImage],
+    [self.id, showImage, flashBackground],
   );
 
   // The titlebar follows the image being viewed, not the node.
@@ -119,7 +147,11 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   }
 
   return (
-    <div className="image-viewer" onWheel={handleWheel}>
+    <div
+      className="image-viewer"
+      onWheel={handleWheel}
+      style={flashColor ? { background: flashColor } : undefined}
+    >
       <TransformWrapper
         key={currentIndex}
         initialScale={1}

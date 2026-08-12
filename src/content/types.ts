@@ -18,7 +18,13 @@ export type HotspotAction =
   /** Open another node in its own window. */
   | { do: "openNode"; opens: string; view?: ViewId }
   /** Swap the viewer to another image in the same set (sketch 4's slide flip). */
-  | { do: "swapImage"; to: number };
+  | { do: "swapImage"; to: number }
+  /**
+   * Tint the viewer's stage for a moment, then fade back to normal.
+   * `color` is any CSS colour (default `--hotspot-flash-bg`), `ms` how long it
+   * holds before reverting (default 1200).
+   */
+  | { do: "flashBackground"; color?: string; ms?: number };
 
 /** A clickable region on an image, in percentages of the rendered image box. */
 export interface Hotspot {

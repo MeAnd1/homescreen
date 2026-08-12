@@ -4,6 +4,7 @@ import type { ViewId } from "../../window-system/types";
 import NodeRefField from "./NodeRefField";
 import ListEditor from "./ListEditor";
 import ScalarField from "./ScalarField";
+import { viewLabel } from "../viewLabel";
 
 interface Props {
   label: string;
@@ -11,6 +12,33 @@ interface Props {
   value: unknown;
   onChange: (value: unknown) => void;
 }
+
+type FlashAction = Extract<HotspotAction, { do: "flashBackground" }>;
+
+/** The empty shape of each action, for the "On click" dropdown. */
+const blankAction = (kind: string): HotspotAction => {
+  switch (kind) {
+    case "openNode":
+      return { do: "openNode", opens: "" };
+    case "flashBackground":
+      return { do: "flashBackground" };
+    default:
+      return { do: "swapImage", to: 0 };
+  }
+};
+
+const actionSummary = (action: HotspotAction | undefined): string => {
+  switch (action?.do) {
+    case "openNode":
+      return `opens ${action.opens}`;
+    case "flashBackground":
+      return "flashes the background";
+    case "swapImage":
+      return `→ image ${action.to + 1}`;
+    default:
+      return "";
+  }
+};
 
 const blank = (): Hotspot => ({
   x: 25,
@@ -81,11 +109,7 @@ export default function HotspotsField({ label, value, onChange }: Props) {
                 onChange={(next) => setHotspots(imageIndex, next)}
                 create={blank}
                 summary={(hotspot, i) =>
-                  hotspot.label ||
-                  (hotspot.action?.do === "openNode"
-                    ? `opens ${hotspot.action.opens}`
-                    : `→ image ${(hotspot.action?.to ?? 0) + 1}`) ||
-                  `Hotspot ${i + 1}`
+                  hotspot.label || actionSummary(hotspot.action) || `Hotspot ${i + 1}`
                 }
               >
                 {(hotspot, _i, patch) => (
@@ -129,16 +153,12 @@ export default function HotspotsField({ label, value, onChange }: Props) {
                         className="editor-input"
                         value={hotspot.action?.do ?? "swapImage"}
                         onChange={(e) =>
-                          patch({
-                            action:
-                              e.target.value === "openNode"
-                                ? ({ do: "openNode", opens: "" } as HotspotAction)
-                                : ({ do: "swapImage", to: 0 } as HotspotAction),
-                          })
+                          patch({ action: blankAction(e.target.value) })
                         }
                       >
                         <option value="swapImage">Swap to another image</option>
                         <option value="openNode">Open a node</option>
+                        <option value="flashBackground">Flash the background</option>
                       </select>
                     </label>
 
@@ -157,7 +177,7 @@ export default function HotspotsField({ label, value, onChange }: Props) {
                           }
                         />
                         <label className="editor-field">
-                          <span className="editor-label">Open as (optional)</span>
+                          <span className="editor-label">Type (optional)</span>
                           <select
                             className="editor-input"
                             value={
@@ -176,14 +196,45 @@ export default function HotspotsField({ label, value, onChange }: Props) {
                               })
                             }
                           >
-                            <option value="">The node's own view</option>
+                            <option value="">The node's own type</option>
                             {Object.keys(APP_REGISTRY).map((view) => (
                               <option key={view} value={view}>
-                                {view}
+                                {viewLabel(view)}
                               </option>
                             ))}
                           </select>
                         </label>
+                      </div>
+                    ) : hotspot.action?.do === "flashBackground" ? (
+                      <div className="editor-grid-2">
+                        <ScalarField
+                          label="Colour (blank = the default tint)"
+                          type="text"
+                          value={hotspot.action.color}
+                          onChange={(v) =>
+                            patch({
+                              action: {
+                                ...(hotspot.action as FlashAction),
+                                do: "flashBackground",
+                                color: String(v ?? "") || undefined,
+                              },
+                            })
+                          }
+                        />
+                        <ScalarField
+                          label="Hold for (ms, blank = 1200)"
+                          type="number"
+                          value={hotspot.action.ms}
+                          onChange={(v) =>
+                            patch({
+                              action: {
+                                ...(hotspot.action as FlashAction),
+                                do: "flashBackground",
+                                ms: v === undefined ? undefined : Number(v),
+                              },
+                            })
+                          }
+                        />
                       </div>
                     ) : (
                       <ScalarField

@@ -17,7 +17,7 @@
           "height": 22,
           "shape": "ellipse",
           "label": "Look closer",
-          "action": { "do": "swapImage", "to": 1 }
+          "action": { "do": "flashBackground", "color": "#8b1030", "ms": 1400 }
         }
       ]
     },
@@ -33,7 +33,7 @@
           "height": 22,
           "shape": "ellipse",
           "label": "Look away",
-          "action": { "do": "swapImage", "to": 0 }
+          "action": { "do": "flashBackground", "color": "#123f52", "ms": 1400 }
         },
         {
           "x": 6,
