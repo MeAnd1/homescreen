@@ -1,3 +1,5 @@
+import { BUILTIN_NODES, isBuiltinNode } from "./builtins";
+import { isHiddenSlot } from "./folderConventions";
 import type { BoardNode, ImageSetNode, TreeProblem, VNode } from "./types";
 
 /**
@@ -105,6 +107,17 @@ for (const path of Object.keys(files).sort()) {
   if (parent) push(globChildren, parent, id);
 }
 
+// Code-defined nodes join the same index — after the glob, so a file that took
+// one of their ids is reported rather than silently shadowed. They are not
+// pushed to `globChildren`: a built-in has no parent and belongs in no explorer.
+for (const [id, raw] of Object.entries(BUILTIN_NODES)) {
+  if (index.has(id)) {
+    loadProblems.push({ nodeId: id, message: "duplicate node id", severity: "error" });
+    continue;
+  }
+  index.set(id, materialize(raw, id, loadProblems));
+}
+
 export function getNode(id: string): VNode | undefined {
   return index.get(id);
 }
@@ -172,7 +185,12 @@ export function sortDiscovered(
 export function searchNodes(query: string): VNode[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return [];
-  return allNodes().filter((n) => n.name.toLowerCase().includes(needle));
+  // Built-ins are unlisted on purpose — see content/builtins.ts. An empty
+  // slot is skipped for the same reason it is off the desktop: the hit would
+  // open onto nothing.
+  return allNodes().filter(
+    (n) => !isBuiltinNode(n.id) && !isHiddenSlot(n) && n.name.toLowerCase().includes(needle),
+  );
 }
 
 /** `id` and every node beneath it. */

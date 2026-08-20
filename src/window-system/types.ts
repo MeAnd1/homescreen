@@ -64,6 +64,13 @@ export type FieldSpec =
   | { key: string; type: "boardItems"; label: string };
 
 export interface WindowTypeDef<T extends WindowTypeId> {
+  /**
+   * Human name for this window type, shown wherever the editor asks the owner
+   * to pick one. Declared here so a new window type never needs a lookup table
+   * added on the editor side. Never shown at runtime.
+   */
+  label: string;
+
   /** Fallback title/icon when the opener does not supply one. */
   title: (payload: WindowPayloadMap[T]) => string;
   icon?: (payload: WindowPayloadMap[T]) => string | undefined;

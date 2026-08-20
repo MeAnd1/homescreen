@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import background from "../assets/background.webp";
+import background from "../assets/400x300.webp";
 import DesktopIcons from "./DesktopIcons/DesktopIcons";
 import StartMenu from "./StartMenu/StartMenu";
 import Taskbar from "./Taskbar/Taskbar";
@@ -25,7 +25,8 @@ function Desktop() {
       // Clicking the wallpaper defocuses without restacking — the reason
       // focusedId is stored rather than derived from `order`.
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) useWindowStore.getState().clearFocus();
+        if (e.target === e.currentTarget)
+          useWindowStore.getState().clearFocus();
       }}
     >
       <DesktopIcons />

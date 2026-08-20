@@ -375,6 +375,10 @@
   gap: 8px;
 }
 
+.editor-list-head-end {
+  justify-content: flex-end;
+}
+
 .editor-count {
   color: var(--text-muted);
   font-weight: 400;
@@ -710,4 +714,9 @@
 .editor-confirm-list {
   margin: 0 0 10px;
   padding-left: 18px;
+}
+
+/* A fixed slot that is not in use yet — listed, but plainly not live. */
+.editor-slot-off {
+  opacity: 0.5;
 }

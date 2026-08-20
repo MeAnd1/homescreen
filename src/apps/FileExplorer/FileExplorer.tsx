@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { FileText } from "lucide-react";
+import { visibleChildren } from "../../content/folderConventions";
 import { openNode } from "../../content/openNode";
 import { useOpenNodes } from "../../content/useOpenNodes";
 import { getChildren, getNode } from "../../content/vfs";
@@ -16,7 +17,12 @@ import "./FileExplorer.css";
  */
 function FileExplorer({ payload }: { payload: { nodeId: string } }) {
   const node = getNode(payload.nodeId);
-  const children = useMemo(() => getChildren(payload.nodeId), [payload.nodeId]);
+  // A character's fixed slots with nothing in them are dropped here — an
+  // empty Images or Lore is simply not on the desktop (folderConventions.ts).
+  const children = useMemo(
+    () => visibleChildren(getChildren(payload.nodeId)),
+    [payload.nodeId],
+  );
 
   // A tile is highlighted while a window on that node is open.
   const openNodes = useOpenNodes();

@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { APP_REGISTRY } from "../apps/registry";
 import type { TreeProblem, VNode } from "../content/types";
+import { isBuiltinNode } from "../content/builtins";
+import { slotFor, slotsOf, type SlotSpec } from "../content/folderConventions";
 import { validateNodes } from "../content/vfs";
 import { indexDraft, loadEntities, ownerOf, rematerialize } from "./entities";
 
@@ -20,6 +22,12 @@ export interface DraftApi {
   /** validateNodes over the whole draft — the pre-save gate. */
   problems: TreeProblem[];
 
+  /**
+   * The node at `id`, or — for a fixed slot the file does not have yet — a
+   * virtual one. The form edits it like any other; the first patch is what
+   * writes it into the file.
+   */
+  nodeAt: (nodeId: string) => VNode | undefined;
   patchNode: (nodeId: string, patch: Record<string, unknown>) => void;
   addChild: (parentId: string, child: Record<string, unknown>) => void;
   removeNode: (nodeId: string) => void;
@@ -27,6 +35,39 @@ export interface DraftApi {
   createEntity: (entityId: string, node: Record<string, unknown>) => void;
   dropEntity: (entityId: string) => void;
   markSaved: (entityId: string) => void;
+}
+
+const parentOf = (nodeId: string) => nodeId.slice(0, nodeId.lastIndexOf("/"));
+
+/** The node a slot holds when it has never been filled in. */
+const emptySlotNode = (nodeId: string, slot: SlotSpec): VNode =>
+  ({
+    id: nodeId,
+    key: slot.key,
+    name: slot.name,
+    view: slot.view,
+    ...(slot.icon ? { icon: slot.icon } : {}),
+    ...(slot.view === "imageGallery" || slot.view === "imageViewer" ? { images: [] } : {}),
+  }) as VNode;
+
+const hasNode = (node: VNode, nodeId: string): boolean =>
+  node.id === nodeId || (node.children?.some((child) => hasNode(child, nodeId)) ?? false);
+
+/**
+ * Appends a slot child and puts the parent's children back in slot order, so a
+ * slot filled in late still lands where the layout says it goes.
+ */
+function insertSlot(parent: VNode, slot: SlotSpec, patch: Record<string, unknown>): VNode {
+  const slots = slotsOf(parent.id) ?? [];
+  const rank = (key: string | undefined) => {
+    const i = slots.findIndex((s) => s.key === key);
+    return i === -1 ? slots.length : i;
+  };
+  const child = { key: slot.key, name: slot.name, view: slot.view, ...patch };
+  if (slot.icon) (child as Record<string, unknown>).icon = slot.icon;
+  const children = [...(parent.children ?? []), child as unknown as VNode];
+  children.sort((a, b) => rank(a.key) - rank(b.key));
+  return { ...parent, children } as VNode;
 }
 
 /** Applies `fn` to one node inside an entity. Returning null removes it. */
@@ -69,9 +110,16 @@ export function useDraft(): DraftApi {
 
   const patchNode = useCallback(
     (nodeId: string, patch: Record<string, unknown>) => {
-      writeEntity(nodeId, (_entityId, entity) =>
-        editNode(entity, nodeId, (node) => ({ ...node, ...patch }) as VNode),
-      );
+      writeEntity(nodeId, (_entityId, entity) => {
+        if (hasNode(entity, nodeId)) {
+          return editNode(entity, nodeId, (node) => ({ ...node, ...patch }) as VNode);
+        }
+        // An unfilled slot: creating it on the first edit is what keeps the
+        // character form identical for every character, whatever its file holds.
+        const slot = slotFor(nodeId);
+        if (!slot) return entity;
+        return editNode(entity, parentOf(nodeId), (parent) => insertSlot(parent, slot, patch));
+      });
     },
     [writeEntity],
   );
@@ -157,10 +205,28 @@ export function useDraft(): DraftApi {
       severity: "error" as const,
     }));
     problems.push(
-      ...validateNodes(index.values(), REGISTERED_VIEWS, (id) => index.has(id)),
+      // Built-ins are not files, so they are absent from the draft — an
+      // `opens` pointing at one is valid even though nothing here holds it.
+      ...validateNodes(
+        index.values(),
+        REGISTERED_VIEWS,
+        (id) => index.has(id) || isBuiltinNode(id),
+      ),
     );
     return { index, problems };
   }, [entities]);
+
+  const nodeAt = useCallback(
+    (nodeId: string): VNode | undefined => {
+      const existing = index.get(nodeId);
+      if (existing) return existing;
+      const slot = slotFor(nodeId);
+      const parentId = parentOf(nodeId);
+      if (!slot || !index.has(parentId)) return undefined;
+      return emptySlotNode(nodeId, slot);
+    },
+    [index],
+  );
 
   return {
     entities,
@@ -169,6 +235,7 @@ export function useDraft(): DraftApi {
     dirty,
     created,
     problems,
+    nodeAt,
     patchNode,
     addChild,
     removeNode,

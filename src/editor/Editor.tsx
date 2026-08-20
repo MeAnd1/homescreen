@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { AlertTriangle, LogOut, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Save, Trash2 } from "lucide-react";
 import desktopConfig from "../content/desktop.json";
 import type { VNode } from "../content/types";
 import { flatten } from "../content/vfs";
@@ -205,7 +205,6 @@ function ProblemList() {
 }
 
 function Workspace() {
-  const { logout } = useEditorPassword();
   const draft = useDraft();
   const [selectedId, setSelectedId] = useState<string>("characters");
   const [tab, setTab] = useState<"content" | "pin">("content");
@@ -215,7 +214,9 @@ function Workspace() {
     [draft],
   );
 
-  const selected: VNode | undefined = draft.index.get(selectedId);
+  // nodeAt, not index.get: a character slot the file has never had is editable
+  // as a virtual node, and written on the first edit (useDraft.ts).
+  const selected: VNode | undefined = draft.nodeAt(selectedId);
   const entityId = ownerOf(draft.entities, selectedId);
 
   return (
@@ -240,9 +241,6 @@ function Workspace() {
             </button>
           </nav>
           <ProblemList />
-          <button type="button" className="editor-button" onClick={logout}>
-            <LogOut size={13} /> Lock
-          </button>
         </header>
 
         {tab === "content" ? (

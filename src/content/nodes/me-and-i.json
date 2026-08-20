@@ -17,7 +17,7 @@
           "height": 22,
           "shape": "ellipse",
           "label": "Look closer",
-          "action": { "do": "flashBackground", "color": "#8b1030", "ms": 1400 }
+          "action": { "do": "openNode", "opens": "rickroll" }
         }
       ]
     },
@@ -33,7 +33,7 @@
           "height": 22,
           "shape": "ellipse",
           "label": "Look away",
-          "action": { "do": "flashBackground", "color": "#123f52", "ms": 1400 }
+          "action": { "do": "openNode", "opens": "rickroll" }
         },
         {
           "x": 6,

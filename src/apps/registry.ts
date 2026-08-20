@@ -36,6 +36,7 @@ const nodeIcon = (p: { nodeId: string }) => resolveIcon(getNode(p.nodeId)?.icon)
 
 export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   fileExplorer: {
+    label: "Folder",
     title: nodeTitle("Explorer"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -46,6 +47,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   msWord: {
+    label: "Document (Word)",
     title: nodeTitle("Document - Word"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -59,6 +61,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   notepad: {
+    label: "Note (Notepad)",
     title: nodeTitle("Untitled - Notepad"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -72,6 +75,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   imageGallery: {
+    label: "Image gallery",
     title: nodeTitle("Images"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -85,6 +89,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   imageViewer: {
+    label: "Image viewer",
     title: nodeTitle("Image"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -102,6 +107,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   mediaPlayer: {
+    label: "Media player",
     title: nodeTitle("Media Player"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,
@@ -118,6 +124,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   },
 
   favourites: {
+    label: "Favourites board",
     title: nodeTitle("Favourites"),
     icon: nodeIcon,
     singletonKey: (p) => p.nodeId,

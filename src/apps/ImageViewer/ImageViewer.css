@@ -4,15 +4,6 @@
   height: 100%;
   overflow: hidden;
   background: var(--viewer-stage-bg);
-  /* A `flashBackground` hotspot sets the colour inline; removing it again is
-     what fades the stage back, so the transition has to run both ways. */
-  transition: background-color 220ms ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .image-viewer {
-    transition: none;
-  }
 }
 
 .image-viewer--empty {

@@ -101,7 +101,6 @@
 
   /* ---------- Image viewer (design1 sketch 4) ---------- */
   --viewer-stage-bg: #2b2b2b;
-  --hotspot-flash-bg: #8b1030;
   --hotspot-outline: rgba(255, 255, 255, 0.85);
   --hotspot-fill-hover: rgba(255, 255, 255, 0.16);
 

@@ -6,6 +6,8 @@
  * A plain module, not a store: it is read once when the panel opens.
  */
 
+import { isBuiltinNode } from "./builtins";
+
 const KEY = "homescreen.recent";
 const LIMIT = 8;
 
@@ -14,7 +16,9 @@ export function getRecent(): string[] {
     const raw = localStorage.getItem(KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((id): id is string => typeof id === "string").slice(0, LIMIT);
+    return parsed
+      .filter((id): id is string => typeof id === "string" && !isBuiltinNode(id))
+      .slice(0, LIMIT);
   } catch {
     // Unparseable or unavailable storage. Recents are a convenience: an empty
     // list is the correct degraded state, and the next write repairs it.
@@ -23,6 +27,9 @@ export function getRecent(): string[] {
 }
 
 export function recordRecent(nodeId: string): void {
+  // A built-in backs an easter egg; listing it under Recent hands the secret
+  // to anyone who opens the panel afterwards. See content/builtins.ts.
+  if (isBuiltinNode(nodeId)) return;
   const next = [nodeId, ...getRecent().filter((id) => id !== nodeId)].slice(0, LIMIT);
   try {
     localStorage.setItem(KEY, JSON.stringify(next));

@@ -5,8 +5,11 @@ import { sortDiscovered } from "../content/vfs";
 import type { ViewId } from "../window-system/types";
 import { APP_REGISTRY } from "../apps/registry";
 import { CATEGORIES, SLUG_PATTERN } from "./entities";
+import { folderConvention, slotFor } from "../content/folderConventions";
 import { useEditor } from "./EditorContext";
 import ScalarField from "./fields/ScalarField";
+import { slugify } from "./slugify";
+import { viewLabel } from "./viewLabel";
 
 const VIEWS = Object.keys(APP_REGISTRY) as ViewId[];
 
@@ -14,10 +17,20 @@ function NewEntity({ onCreated }: { onCreated: (id: string) => void }) {
   const { draft } = useEditor();
   const [open, setOpen] = useState(false);
   const [dir, setDir] = useState("characters");
-  const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
-  const [view, setView] = useState<ViewId>("fileExplorer");
+  const [typedView, setTypedView] = useState<ViewId>("fileExplorer");
 
+  // A directory with a declared convention (folderConventions.ts) fixes the
+  // window type of everything in it — a new character is always a folder — so
+  // the Type question is not asked. Derived per render, so switching Kind can
+  // never leave the previous kind's answer behind.
+  const preset = folderConvention(dir)?.view;
+  const view = preset ?? typedView;
+
+  // The file name is the slugified display name — never typed. `slugify` emits a
+  // strict subset of SLUG_PATTERN, so the test only ever fails on an empty slug
+  // (a name with nothing alphanumeric in it, e.g. "???").
+  const slug = slugify(name);
   const entityId = dir ? `${dir}/${slug}` : slug;
   const taken = draft.entities.has(entityId);
   const valid = SLUG_PATTERN.test(slug) && !taken && Boolean(name);
@@ -50,35 +63,36 @@ function NewEntity({ onCreated }: { onCreated: (id: string) => void }) {
               </select>
             </label>
             <ScalarField
-              label="Slug (the file name, and the node id)"
-              type="text"
-              value={slug}
-              required
-              invalid={Boolean(slug) && !valid}
-              hint={taken ? "already exists" : "letters, digits, . _ - — no slashes"}
-              onChange={(v) => setSlug(String(v ?? ""))}
-            />
-            <ScalarField
               label="Name"
               type="text"
               value={name}
               required
+              invalid={Boolean(name) && !valid}
               onChange={(v) => setName(String(v ?? ""))}
+              hint={
+                name
+                  ? taken
+                    ? `${entityId} already exists`
+                    : `file: ${entityId || "…"}`
+                  : undefined
+              }
             />
-            <label className="editor-field">
-              <span className="editor-label">Opens as</span>
-              <select
-                className="editor-input"
-                value={view}
-                onChange={(e) => setView(e.target.value as ViewId)}
-              >
-                {VIEWS.map((id) => (
-                  <option key={id} value={id}>
-                    {id}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!preset && (
+              <label className="editor-field">
+                <span className="editor-label">Type</span>
+                <select
+                  className="editor-input"
+                  value={typedView}
+                  onChange={(e) => setTypedView(e.target.value as ViewId)}
+                >
+                  {VIEWS.map((id) => (
+                    <option key={id} value={id}>
+                      {viewLabel(id)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button
               type="button"
               className="editor-button editor-button-primary"
@@ -86,7 +100,6 @@ function NewEntity({ onCreated }: { onCreated: (id: string) => void }) {
               onClick={() => {
                 draft.createEntity(entityId, { name, view });
                 setOpen(false);
-                setSlug("");
                 setName("");
                 onCreated(entityId);
               }}
@@ -105,15 +118,20 @@ interface RowProps {
   depth: number;
   selectedId: string;
   childrenOf: (node: VNode) => VNode[];
-  collapsed: ReadonlySet<string>;
-  toggle: (id: string) => void;
+  /* Only rows the user has toggled are in here; everything else falls back to
+     the depth default, so the tree opens on the top level alone. */
+  open: ReadonlyMap<string, boolean>;
+  toggle: (id: string, next: boolean) => void;
 }
 
-function Row({ node, depth, selectedId, childrenOf, collapsed, toggle }: RowProps) {
+function Row({ node, depth, selectedId, childrenOf, open, toggle }: RowProps) {
   const { draft, select } = useEditor();
   const children = childrenOf(node);
-  const isOpen = !collapsed.has(node.id);
+  const isOpen = open.get(node.id) ?? depth === 0;
   const isEntity = draft.entities.has(node.id);
+  // A slot that is not in use yet reads as greyed out here too, so the tree and
+  // the character form agree about what is live.
+  const off = slotFor(node.id)?.disabled;
 
   return (
     <>
@@ -126,7 +144,7 @@ function Row({ node, depth, selectedId, childrenOf, collapsed, toggle }: RowProp
             type="button"
             className="editor-tree-toggle"
             aria-label={isOpen ? "Collapse" : "Expand"}
-            onClick={() => toggle(node.id)}
+            onClick={() => toggle(node.id, !isOpen)}
           >
             {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
           </button>
@@ -134,7 +152,9 @@ function Row({ node, depth, selectedId, childrenOf, collapsed, toggle }: RowProp
           <span className="editor-tree-toggle" />
         )}
         <button type="button" className="editor-tree-label" onClick={() => select(node.id)}>
-          <span className={isEntity ? "editor-tree-entity" : undefined}>
+          <span
+            className={`${isEntity ? "editor-tree-entity" : ""}${off ? " editor-slot-off" : ""}`}
+          >
             {node.name || "(unnamed)"}
           </span>
           {isEntity && draft.dirty.has(node.id) && <span className="editor-dot" title="unsaved" />}
@@ -158,7 +178,7 @@ function Row({ node, depth, selectedId, childrenOf, collapsed, toggle }: RowProp
             depth={depth + 1}
             selectedId={selectedId}
             childrenOf={childrenOf}
-            collapsed={collapsed}
+            open={open}
             toggle={toggle}
           />
         ))}
@@ -168,7 +188,7 @@ function Row({ node, depth, selectedId, childrenOf, collapsed, toggle }: RowProp
 
 export default function EntityTree({ selectedId }: { selectedId: string }) {
   const { draft, select } = useEditor();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set<string>());
+  const [open, setOpen] = useState<ReadonlyMap<string, boolean>>(new Map());
 
   const { roots, childrenOf } = useMemo(() => {
     const byParent = new Map<string, VNode[]>();
@@ -188,12 +208,8 @@ export default function EntityTree({ selectedId }: { selectedId: string }) {
     };
   }, [draft.entities]);
 
-  const toggle = (id: string) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
+  const toggle = (id: string, isOpen: boolean) =>
+    setOpen((prev) => new Map(prev).set(id, isOpen));
 
   return (
     <div className="editor-tree">
@@ -206,7 +222,7 @@ export default function EntityTree({ selectedId }: { selectedId: string }) {
             depth={0}
             selectedId={selectedId}
             childrenOf={childrenOf}
-            collapsed={collapsed}
+            open={open}
             toggle={toggle}
           />
         ))}
