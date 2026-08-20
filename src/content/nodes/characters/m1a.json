@@ -45,7 +45,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/m1a"
+      "src": "text/m1a-lore"
     },
     {
       "key": "design",

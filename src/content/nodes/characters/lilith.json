@@ -33,7 +33,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/lilith"
+      "src": "text/lilith-lore"
     },
     {
       "key": "powers",

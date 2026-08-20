@@ -36,7 +36,7 @@ export default function FieldRenderer({ spec, node }: { spec: FieldSpec; node: V
       return (
         <RichTextField
           label={spec.label}
-          nodeId={node.id}
+          node={node}
           value={values[spec.key]}
           onChange={set(spec.key)}
         />

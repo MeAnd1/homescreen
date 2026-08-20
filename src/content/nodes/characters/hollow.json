@@ -50,7 +50,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/hollow"
+      "src": "text/hollow-lore"
     },
     {
       "key": "design",

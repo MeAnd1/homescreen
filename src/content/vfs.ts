@@ -162,6 +162,17 @@ export function getChildren(id: string): VNode[] {
 }
 
 /**
+ * Whether a node's window puts its children on screen at all: an explorer
+ * always does, a notepad only in its `asLinkList` form, and no other view does.
+ * The editor asks before offering **Add new** — a child under a document is a
+ * file nobody can ever reach.
+ */
+export function showsChildren(node: VNode): boolean {
+  if (node.view === "fileExplorer") return true;
+  return node.view === "notepad" && node.asLinkList === true;
+}
+
+/**
  * The sort applied to glob-discovered siblings: the parent's soft `childOrder`
  * hint first, then `order`, then `name`. Exported so the editor's childOrder
  * field lists entities the way the desktop will.

@@ -10,8 +10,10 @@ import type { ViewId } from "../window-system/types";
  * every item in that folder is the same kind of thing. A folder *not* listed
  * here keeps both.
  *
- * `iconUrl` marks a folder whose items are always pictured by their own image,
- * so the icon field is a bare URL box with no built-in-icon list to pick from.
+ * `icon` says how such an item is pictured, when the folder decides that too:
+ * `"url"` — always its own image, so the icon field is a bare URL box with no
+ * built-in-icon list to pick from; `"none"` — never pictured, so the field is
+ * gone. A folder that leaves it out keeps the full picker.
  *
  * `slots` fixes the item's *children* as well: a character is always the same
  * five files, so the editor shows them as a fixed list rather than an add-what-
@@ -39,7 +41,7 @@ export interface SlotSpec {
 
 export interface FolderConvention {
   view: ViewId;
-  iconUrl?: boolean;
+  icon?: "url" | "none";
   slots?: readonly SlotSpec[];
 }
 
@@ -53,8 +55,8 @@ const CHARACTER_SLOTS: readonly SlotSpec[] = [
 ];
 
 export const FOLDER_CONVENTIONS: Readonly<Record<string, FolderConvention>> = {
-  characters: { view: "fileExplorer", iconUrl: true, slots: CHARACTER_SLOTS },
-  infections: { view: "notepad" },
+  characters: { view: "fileExplorer", icon: "url", slots: CHARACTER_SLOTS },
+  infections: { view: "notepad", icon: "none" },
 };
 
 /** The convention for items added *inside* `folderId`. */

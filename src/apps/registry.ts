@@ -101,7 +101,9 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
       { key: "images", type: "imageList", label: "Images" },
       // Hotspots live inside each image (ImageRef.hotspots), so both editors
       // read the same key — one edits the list, the other draws on a member.
-      { key: "images", type: "hotspots", label: "Hotspots", imagesKey: "images" },
+      // "Easter egg click" is the owner's word for them; the data model and the
+      // code keep saying hotspot.
+      { key: "images", type: "hotspots", label: "Easter egg clicks", imagesKey: "images" },
       { key: "infoSrc", type: "richText", label: "Info text" },
     ],
   },

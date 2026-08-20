@@ -16,11 +16,14 @@ export const TEXT_FALLBACK = "Nothing here...";
  * projects.json. A node's `src` is the backend fileId verbatim
  * (`<prefix>/<slug>`), so one string serves both the fetch and the save.
  * If a prefix is added server-side, add it here too.
+ *
+ * One prefix, since 2026-08-20: prose ids are derived from names now
+ * (`editor/prose.ts`), and scripts/migrate-prose-ids.mjs moved the old
+ * `backstory` / `infection-text` files under `text`. The server still offers
+ * those two prefixes; nothing points at them.
  */
 const PROSE_PATHS: Record<string, string> = {
   text: "text/{slug}.txt",
-  backstory: "backstory/{slug}.txt",
-  "infection-text": "infection/{slug}.txt",
 };
 
 /** `src` → public URL, or undefined if the prefix is not one we serve.

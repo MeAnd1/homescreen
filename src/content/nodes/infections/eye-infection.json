@@ -1,7 +1,7 @@
 {
   "name": "Eye infection",
   "view": "notepad",
-  "src": "infection-text/eye-infection",
+  "src": "text/infections-eye-infection",
   "window": {
     "width": 420,
     "height": 480

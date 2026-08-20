@@ -50,7 +50,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/o013"
+      "src": "text/013-lore"
     },
     {
       "key": "design",

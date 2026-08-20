@@ -45,7 +45,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/kioki"
+      "src": "text/kioki-lore"
     },
     {
       "key": "powers",

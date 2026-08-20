@@ -33,7 +33,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/lima"
+      "src": "text/lima-lore"
     },
     {
       "key": "powers",

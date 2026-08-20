@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import type { VNode } from "../../content/types";
 import BBCode from "../../ui/BBCode/BBCode";
 import { SCEditor } from "../BBCodeEditor";
+import { useEditor } from "../EditorContext";
 import { useEditorPassword } from "../editor-auth";
-import { fetchProse, suggestProseId } from "../prose";
+import { fetchProse, proseIdFor } from "../prose";
 
 const BBCODE_TOOLBAR = "bold,italic,underline,strike|color|image,link|source";
 
 interface Props {
   label: string;
-  nodeId: string;
+  node: VNode;
   /** The node field holding the prose fileId (`src` / `infoSrc`). */
   value: unknown;
   onChange: (value: unknown) => void;
@@ -17,30 +19,35 @@ interface Props {
 
 /**
  * Prose is a **separate file and a separate save** from the node — see
- * DATA-MODEL.md. So this field edits two things: the fileId on the node (saved
- * with the node) and the body behind it (saved on its own button).
+ * DATA-MODEL.md. So this field edits two things: the body, on its own button,
+ * and the fileId on the node, which is *derived from the names* and written on
+ * the first keystroke rather than typed. Pinning it at that moment is what
+ * stops a later rename from pointing the node at a different file and orphaning
+ * the text.
  */
-export default function RichTextField({ label, nodeId, value, onChange }: Props) {
+export default function RichTextField({ label, node, value, onChange }: Props) {
+  const { draft } = useEditor();
   const { saveToServer } = useEditorPassword();
-  const src = typeof value === "string" ? value : "";
+
+  const slash = node.id.lastIndexOf("/");
+  const parentName =
+    slash === -1 ? undefined : draft.index.get(node.id.slice(0, slash))?.name;
+  const stored = typeof value === "string" ? value : "";
+  const fileId = stored || proseIdFor(node.id, node.name, parentName);
 
   const [body, setBody] = useState("");
   const [loaded, setLoaded] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">(
+    "idle",
+  );
   const [error, setError] = useState("");
   const [preview, setPreview] = useState(false);
 
   useEffect(() => {
-    if (!src) {
-      setBody("");
-      setLoaded("");
-      setError("");
-      return;
-    }
     let cancelled = false;
     setStatus("loading");
     setError("");
-    fetchProse(src)
+    fetchProse(fileId)
       .then((text) => {
         if (cancelled) return;
         setBody(text);
@@ -55,15 +62,23 @@ export default function RichTextField({ label, nodeId, value, onChange }: Props)
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, [fileId]);
 
   const dirty = body !== loaded;
 
+  /** Writing the fileId onto the node here, not on mount: merely opening a node
+   *  must never dirty its file. */
+  const editBody = (next: string) => {
+    setBody(next);
+    if (!stored) onChange(fileId);
+  };
+
   const saveBody = async () => {
     setStatus("saving");
-    const result = await saveToServer(src, body);
+    const result = await saveToServer(fileId, body);
     setStatus("idle");
     if (result.success) {
+      if (!stored) onChange(fileId);
       setLoaded(body);
       toast.success(result.message || "Text saved");
       result.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
@@ -76,30 +91,9 @@ export default function RichTextField({ label, nodeId, value, onChange }: Props)
     <div className="editor-field">
       <span className="editor-label">{label}</span>
 
-      <div className="editor-row">
-        <input
-          className="editor-input"
-          value={src}
-          placeholder="prose fileId, e.g. text/m1a-powers"
-          onChange={(e) => onChange(e.target.value)}
-        />
-        {!src && (
-          <button
-            type="button"
-            className="editor-button editor-button-small"
-            onClick={() => onChange(suggestProseId(nodeId))}
-          >
-            Suggest
-          </button>
-        )}
-      </div>
-      <span className="editor-hint">
-        Saved as its own file, on its own button. The node's field above is saved with the node.
-      </span>
-
       {error && <p className="editor-warn">{error}</p>}
 
-      {src && !error && (
+      {!error && (
         <>
           <div className="editor-prose">
             {/* Mounted only once the body has arrived, and keyed by fileId:
@@ -107,11 +101,11 @@ export default function RichTextField({ label, nodeId, value, onChange }: Props)
                 loads after mount would otherwise never appear. */}
             {status !== "loading" && (
               <SCEditor
-                key={src}
+                key={fileId}
                 format="bbcode"
                 toolbar={BBCODE_TOOLBAR}
                 value={body}
-                onChange={setBody}
+                onChange={editBody}
                 height={320}
               />
             )}
@@ -123,7 +117,7 @@ export default function RichTextField({ label, nodeId, value, onChange }: Props)
               onClick={saveBody}
               disabled={!dirty || status === "saving" || status === "loading"}
             >
-              {status === "saving" ? "Pushing…" : `Save text (${src})`}
+              {status === "saving" ? "Pushing…" : `Save text (${fileId})`}
             </button>
             <button
               type="button"

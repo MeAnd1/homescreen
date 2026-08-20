@@ -45,7 +45,7 @@
       "name": "Lore",
       "view": "msWord",
       "icon": "ms-word",
-      "src": "backstory/lul"
+      "src": "text/lulu-lore"
     },
     {
       "key": "design",

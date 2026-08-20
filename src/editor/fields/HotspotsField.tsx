@@ -46,6 +46,9 @@ const blank = (): Hotspot => ({
  * Hotspots hang off each image, not off the node, so this field walks the image
  * list and edits `images[i].hotspots`. Coordinates are percentages of the
  * rendered picture — the preview draws them at the same percentages.
+ *
+ * The form calls them **easter egg clicks**, the owner's word for them and what
+ * they are for. `hotspot` stays the name in the files and in the code.
  */
 export default function HotspotsField({ label, value, onChange }: Props) {
   const images = Array.isArray(value) ? (value as ImageRef[]) : [];
@@ -57,7 +60,9 @@ export default function HotspotsField({ label, value, onChange }: Props) {
     return (
       <div className="editor-field">
         <span className="editor-label">{label}</span>
-        <span className="editor-hint">Add an image first — hotspots live on an image.</span>
+        <span className="editor-hint">
+          Add an image first — an easter egg click lives on an image.
+        </span>
       </div>
     );
   }
@@ -97,13 +102,13 @@ export default function HotspotsField({ label, value, onChange }: Props) {
               )}
 
               <ListEditor
-                label="Hotspots"
-                addLabel="Add hotspot"
+                label="Easter egg clicks"
+                addLabel="Add easter egg click"
                 items={hotspots}
                 onChange={(next) => setHotspots(imageIndex, next)}
                 create={blank}
                 summary={(hotspot, i) =>
-                  hotspot.label || actionSummary(hotspot.action) || `Hotspot ${i + 1}`
+                  hotspot.label || actionSummary(hotspot.action) || `Easter egg click ${i + 1}`
                 }
               >
                 {(hotspot, _i, patch) => (

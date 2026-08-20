@@ -16,6 +16,7 @@ import {
   type SlotSpec,
 } from "../content/folderConventions";
 import ReorderButtons from "./ReorderButtons";
+import { showsChildren } from "../content/vfs";
 import { slugify } from "./slugify";
 import { viewLabel } from "./viewLabel";
 
@@ -282,6 +283,11 @@ function ChildrenSection({ node }: { node: VNode }) {
   const [typedView, setTypedView] = useState<ViewId>("msWord");
   const [name, setName] = useState("");
   const children = node.children ?? [];
+  // A document, a gallery or a plain notepad never renders its children, so
+  // there is nothing to add here. Children it somehow *has* are still listed —
+  // that list is the only way to see and remove them.
+  const canAdd = showsChildren(node);
+  if (!canAdd && children.length === 0) return null;
 
   // The key is never asked for: it is the slugified name, everywhere. A folder
   // with a declared convention (folderConventions.ts) drops the view question
@@ -300,15 +306,17 @@ function ChildrenSection({ node }: { node: VNode }) {
   return (
     <div className="editor-field">
       {/* No label: the head is only the add control, kept flush right. */}
-      <div className="editor-list-head editor-list-head-end">
-        <button
-          type="button"
-          className="editor-button editor-button-small"
-          onClick={() => setAdding((a) => !a)}
-        >
-          {adding ? "Cancel" : "Add new"}
-        </button>
-      </div>
+      {canAdd && (
+        <div className="editor-list-head editor-list-head-end">
+          <button
+            type="button"
+            className="editor-button editor-button-small"
+            onClick={() => setAdding((a) => !a)}
+          >
+            {adding ? "Cancel" : "Add new"}
+          </button>
+        </div>
+      )}
 
       {adding && (
         <div className="editor-card">
@@ -405,12 +413,14 @@ export default function NodeForm({ node }: { node: VNode }) {
   // Its name, icon, view and window shape are fixed by the shell, so the chrome
   // fields are hidden — only its content is editable here.
   const isDesktopEntry = !node.id.includes("/");
-  // The folder this node sits in may fix its window type and its icon shape —
-  // a character is always a folder pictured by its own image. The Type select
-  // is only dropped once the node actually matches, so a node that somehow
-  // holds another view still has the control that repairs it.
+  // The folder this node sits in may fix its window type and how it is pictured
+  // — a character is always a folder shown by its own image, an infection is
+  // never pictured at all. Both controls are only dropped once the node
+  // actually matches, so a node holding something else still has the control
+  // that repairs it: a stray icon on an `icon: "none"` item stays clearable.
   const convention = conventionFor(node.id);
   const fixedView = convention?.view === node.view;
+  const hideIcon = convention?.icon === "none" && !node.icon;
   // The node's own slot, when its parent's folder fixes its children: name,
   // type and icon are then the layout's, not the owner's, so the form is the
   // content and nothing else.
@@ -479,7 +489,7 @@ export default function NodeForm({ node }: { node: VNode }) {
             </label>
           )}
 
-          <IconField node={node} urlOnly={convention?.iconUrl} />
+          {!hideIcon && <IconField node={node} urlOnly={convention?.icon === "url"} />}
         </>
       )}
 

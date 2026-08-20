@@ -1,7 +1,7 @@
 {
   "name": "Fire infection",
   "view": "notepad",
-  "src": "infection-text/fire-infection",
+  "src": "text/infections-fire-infection",
   "window": {
     "width": 420,
     "height": 480
