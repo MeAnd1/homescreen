@@ -17,7 +17,6 @@ interface ImageViewerPayload {
 interface HotspotContext {
   /** The viewer's own window id, so an opened window closes with it. */
   windowId: string;
-  showImage: (index: number) => void;
 }
 
 /** A drag longer than this is a pan, not a hotspot click. */
@@ -31,9 +30,6 @@ function runHotspotAction(action: HotspotAction, ctx: HotspotContext): void {
   switch (action.do) {
     case "openNode":
       openNode(action.opens, { view: action.view, parentId: ctx.windowId });
-      return;
-    case "swapImage":
-      ctx.showImage(action.to);
       return;
     default:
       console.warn("[ImageViewer] unknown hotspot action", action);
@@ -72,14 +68,6 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const total = images.length;
   const current = images[currentIndex];
 
-  const showImage = useCallback(
-    (index: number) => {
-      if (index >= 0 && index < total) setCurrentIndex(index);
-      else console.warn(`[ImageViewer] no image at index ${index}`);
-    },
-    [total],
-  );
-
   const handlePrev = useCallback(() => {
     setCurrentIndex((i) => (i - 1 + total) % total);
   }, [total]);
@@ -102,9 +90,9 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
       ) {
         return; // the pointer was panning the image
       }
-      runHotspotAction(hotspot.action, { windowId: self.id, showImage });
+      runHotspotAction(hotspot.action, { windowId: self.id });
     },
-    [self.id, showImage],
+    [self.id],
   );
 
   // The titlebar follows the image being viewed, not the node.
@@ -159,16 +147,16 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
                 <button
                   key={i}
                   type="button"
-                  className={`image-viewer-hotspot image-viewer-hotspot--${hotspot.shape ?? "rect"}`}
+                  className="image-viewer-hotspot"
                   style={{
                     left: `${hotspot.x}%`,
                     top: `${hotspot.y}%`,
                     width: `${hotspot.width}%`,
                     height: `${hotspot.height}%`,
                   }}
-                  // aria-label only, never `title`: a tooltip on hover would
-                  // give the secret away.
-                  aria-label={hotspot.label ?? "Image hotspot"}
+                  // A fixed label, and never a `title`: a tooltip — or a name
+                  // describing the target — would give the secret away.
+                  aria-label="Image hotspot"
                   onPointerDown={(e) => {
                     pressAt.current = { x: e.clientX, y: e.clientY };
                   }}

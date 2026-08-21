@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local-editor": "VITE_EDITOR_API_URL=http://localhost:3004 VITE_EDITOR_PROJECT_ID=kataa-local vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:all": "bash scripts/dev-local.sh",
+    "dev:all:stop": "bash scripts/dev-local.sh stop"
   },
   "dependencies": {
     "@bbob/preset-react": "^4.3.1",

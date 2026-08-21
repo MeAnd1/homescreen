@@ -25,3 +25,15 @@ export const BUILTIN_NODES: Record<string, Record<string, unknown>> = {
 };
 
 export const isBuiltinNode = (id: string): boolean => id in BUILTIN_NODES;
+
+/**
+ * The built-ins as the editor's "which secret" picker needs them: an id and a
+ * name. This is the *only* place the editor names them — the entity tree, the
+ * node picker and search still know nothing about them, so opening the editor
+ * gives nothing away until someone deliberately makes a click a secret.
+ */
+export const builtinNodeOptions = (): { id: string; name: string }[] =>
+  Object.entries(BUILTIN_NODES).map(([id, node]) => ({
+    id,
+    name: typeof node.name === "string" ? node.name : id,
+  }));

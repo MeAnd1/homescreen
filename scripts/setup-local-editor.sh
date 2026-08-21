@@ -14,7 +14,11 @@ cd "$S/repo"
 git init -q -b main
 mkdir -p src public
 cp -R "$HERE/src/content" src/content
-cp -R "$HERE/public/backstory" "$HERE/public/infection" "$HERE/public/text" public/
+# backstory/ and infection/ were folded into text/ on 2026-08-20 (scripts/migrate-prose-ids.mjs);
+# copy whichever still exist so this keeps working as the legacy dirs disappear.
+for d in backstory infection text; do
+  [ -d "$HERE/public/$d" ] && cp -R "$HERE/public/$d" public/ || true
+done
 git add -A
 git -c user.name=local -c user.email=local@local commit -qm "scratch content"
 git branch content

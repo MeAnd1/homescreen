@@ -9,7 +9,10 @@
 .editor-shell {
   display: flex;
   flex-direction: column;
+  /* dvh, not vh: on a phone the URL bar is inside 100vh, so the last row of
+     the editor would sit under it and the panes would never fit. */
   height: 100vh;
+  height: 100dvh;
   font-family: var(--font-ui);
   font-size: var(--font-size-body);
   color: var(--text-default);
@@ -21,8 +24,9 @@
 .editor-topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 12px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 6px 12px;
   min-height: 44px;
   background: var(--surface-toolbar);
   border-bottom: 1px solid var(--border-strong);
@@ -37,6 +41,7 @@
 
 .editor-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
 }
 
@@ -61,12 +66,23 @@
   font-weight: 600;
 }
 
+/* ---------- The tree drawer (narrow screens only) ----------
+   Above the layout breakpoint the tree is simply the left pane and neither of
+   these exists; below it, the same pane slides over the form. */
+
+.editor-drawer-toggle,
+.editor-drawer-scrim {
+  display: none;
+}
+
 /* ---------- Panes ---------- */
 
 .editor-body {
   display: flex;
   flex: 1;
   min-height: 0;
+  /* The drawer positions against this. */
+  position: relative;
 }
 
 .editor-pane {
@@ -428,36 +444,322 @@
   flex: none;
 }
 
-.editor-hotspot-preview {
-  position: relative;
-  display: inline-block;
-  max-width: 360px;
+/* ---------- Placing something on an image ----------
+   Both places that position something at x%/y% of a picture — the easter egg
+   clicks on an image and a favourite's name plate — use this one stage. The
+   percentages are the runtime's own, so the stage is a true preview. */
+
+.editor-placer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
   margin-bottom: 10px;
+}
+
+/* The form pane is what runs out of room first; below this the panel drops
+   under the stage rather than squeezing the picture to a stamp. */
+@media (max-width: 1000px) {
+  .editor-placer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.editor-placer-stage {
+  max-width: 460px;
+}
+
+.editor-placer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.editor-placer-settings {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border-default);
+  padding-top: 10px;
+}
+
+.editor-stage {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
   border: 1px solid var(--border-strong);
   background: var(--viewer-stage-bg);
 }
 
-.editor-hotspot-preview img {
-  display: block;
-  max-width: 100%;
-  height: auto;
+/* The picture itself. With a bleed it sits inset inside the stage, and the
+   dashed edge marks where the picture ends and "outside it" begins. */
+.editor-stage-frame {
+  position: absolute;
 }
 
-.editor-hotspot-box {
+.editor-stage-frame[data-bleed] {
+  outline: 1px dashed rgba(255, 255, 255, 0.75);
+}
+
+.editor-stage-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.editor-stage-item {
   position: absolute;
+}
+
+.editor-stage-grab {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: move;
+  /* A drag must not scroll the pane under it — but only *on the thing being
+     dragged*. Putting this on the whole stage traps a touch: a picture that
+     fills the screen would then be a region the page cannot be scrolled past. */
+  touch-action: none;
+}
+
+.editor-stage-item-sized .editor-stage-grab {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.editor-stage-grab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.editor-stage-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 1px solid var(--accent);
+  touch-action: none;
+}
+
+.editor-stage-handle-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.editor-stage-handle-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.editor-stage-handle-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.editor-stage-handle-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+/* One easter egg click, drawn as the viewer draws it. */
+.editor-zone {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  color: #fff;
   border: 1px solid var(--hotspot-outline);
   background: var(--hotspot-fill-hover);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.editor-zone-selected {
+  border-color: var(--accent);
+  background: rgba(0, 120, 212, 0.28);
+}
+
+.editor-zone-number {
+  font-size: 11px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+/* The name plate ghost — same paint as .favourite-sprite__nameplate. */
+.editor-plate {
+  display: inline-block;
+  padding: 2px 10px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+  font-size: var(--font-size-body);
+  white-space: nowrap;
+}
+
+.editor-stage-item-selected .editor-plate {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---------- The zone list ---------- */
+
+.editor-zone-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  background: #fff;
+}
+
+.editor-zone-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 4px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.editor-zone-list li:last-child .editor-zone-row {
+  border-bottom: 0;
+}
+
+.editor-zone-row-selected {
+  background: var(--surface-sidebar-active);
+}
+
+.editor-zone-pick {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.editor-zone-badge {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-size: var(--font-size-chrome);
+}
+
+.editor-zone-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- The nudge pad ---------- */
+
+.editor-nudge {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 10px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-content-header);
+}
+
+.editor-nudge-pad {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  grid-template-rows: repeat(3, 28px);
+  gap: 2px;
+}
+
+.editor-nudge-up { grid-area: 1 / 2; }
+.editor-nudge-left { grid-area: 2 / 1; }
+.editor-nudge-centre { grid-area: 2 / 2; }
+.editor-nudge-right { grid-area: 2 / 3; }
+.editor-nudge-down { grid-area: 3 / 2; }
+
+.editor-nudge-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-toolbar);
+  color: var(--text-default);
+  cursor: pointer;
+}
+
+.editor-nudge-button:hover:not(:disabled) {
+  background: var(--surface-toolbar-hover);
+}
+
+.editor-nudge-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.editor-nudge-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.editor-nudge-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editor-nudge-size,
+.editor-nudge-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-nudge-size-label {
+  font-size: var(--font-size-chrome);
+  color: var(--text-muted);
+}
+
+.editor-nudge-size-label + .editor-nudge-button {
+  margin-left: 2px;
+}
+
+.editor-nudge-step {
+  padding: 4px 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-toolbar);
+  font: inherit;
+  font-size: var(--font-size-chrome);
+  color: var(--text-default);
+  cursor: pointer;
+}
+
+.editor-nudge-step:hover {
+  background: var(--surface-toolbar-hover);
+}
+
+.editor-nudge-step-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
 }
 
 .editor-prose {
   border: 1px solid var(--border-strong);
   background: #fff;
   margin-bottom: 8px;
+  /* SCEditor sizes its own container in pixels. On a phone that is wider than
+     the form, and the whole page would scroll sideways. */
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.editor-prose .sceditor-container {
+  max-width: 100%;
 }
 
 .editor-preview {
@@ -573,6 +875,9 @@
   font-family: Consolas, "Courier New", monospace;
   font-size: var(--font-size-chrome);
   color: var(--text-muted);
+  /* Node ids are long and unbreakable; without this one of them widens the
+     whole form past the viewport. */
+  overflow-wrap: anywhere;
 }
 
 .editor-text-muted {
@@ -589,7 +894,7 @@
   right: 0;
   top: 100%;
   z-index: var(--z-menu);
-  width: 460px;
+  width: min(460px, calc(100vw - 24px));
   max-height: 60vh;
   overflow: auto;
   margin: 4px 0 0;
@@ -614,7 +919,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
   height: 100vh;
+  height: 100dvh;
   font-family: var(--font-ui);
   font-size: var(--font-size-body);
   color: var(--text-default);
@@ -622,7 +929,8 @@
 }
 
 .editor-gate-form {
-  width: 320px;
+  width: 100%;
+  max-width: 320px;
   padding: 24px;
   background: var(--surface-content-header);
   border: 1px solid var(--border-strong);
@@ -664,6 +972,19 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.editor-pin-input-row > .editor-input,
+.editor-pin-url-row > .editor-input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.editor-pin-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .editor-pin-results {
@@ -719,4 +1040,298 @@
 /* A fixed slot that is not in use yet — listed, but plainly not live. */
 .editor-slot-off {
   opacity: 0.5;
+}
+
+/* ==========================================================================
+   Touch and narrow screens.
+
+   Two independent axes, deliberately kept apart:
+
+   - `pointer: coarse` grows what a finger has to hit. A tablet in landscape is
+     wide and still has no cursor, so this must not be tied to a width. It also
+     puts every text box at 16px, which is the size below which iOS Safari
+     zooms the page on focus and leaves the form half off-screen.
+   - `max-width` changes the layout. 768px / 480px are the breakpoints the rest
+     of the app already uses (IconTile, Taskbar, FileExplorer …).
+   ========================================================================== */
+
+@media (pointer: coarse) {
+  .editor-input {
+    /* 16px or iOS zooms in the moment this is focused. */
+    font-size: 16px;
+    padding: 8px;
+    min-height: 38px;
+  }
+
+  .editor-prose textarea {
+    font-size: 16px;
+  }
+
+  .editor-button {
+    padding: 8px 12px;
+  }
+
+  .editor-button-small {
+    padding: 6px 9px;
+    font-size: var(--font-size-chrome);
+  }
+
+  .editor-tab {
+    padding: 10px 14px;
+  }
+
+  /* Declared in the width block below; this only grows it. */
+  .editor-drawer-toggle {
+    min-height: 40px;
+  }
+
+  .editor-link {
+    /* A bare underlined word is a hard target; this pads the line box without
+       moving it, so nothing around it shifts. */
+    padding: 4px 0;
+  }
+
+  .editor-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* --- the tree --- */
+
+  .editor-tree-toggle {
+    width: 34px;
+    height: 36px;
+  }
+
+  .editor-tree-label {
+    padding: 9px 0;
+  }
+
+  /* --- list rows --- */
+
+  .editor-order-row {
+    padding: 8px;
+  }
+
+  .editor-zone-pick {
+    padding: 10px 8px;
+  }
+
+  .editor-reorder-button {
+    padding: 5px 9px;
+    font-size: 9px;
+  }
+
+  /* --- placing something on an image --- */
+
+  .editor-nudge-pad {
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+  }
+
+  .editor-nudge-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .editor-nudge-step {
+    padding: 8px 12px;
+  }
+
+  /* A 10px corner is smaller than a fingertip; the stage is the one place
+     where missing the target silently moves the thing instead. */
+  .editor-stage-handle {
+    width: 20px;
+    height: 20px;
+  }
+
+  .editor-stage-handle-nw { top: -10px; left: -10px; }
+  .editor-stage-handle-ne { top: -10px; right: -10px; }
+  .editor-stage-handle-sw { bottom: -10px; left: -10px; }
+  .editor-stage-handle-se { bottom: -10px; right: -10px; }
+}
+
+@media (max-width: 768px) {
+  /* ---------- Top bar: title and status on one row, tabs on the next ---------- */
+
+  .editor-topbar {
+    gap: 6px 10px;
+    padding: 6px 10px;
+  }
+
+  .editor-topbar h1 {
+    font-size: 13px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Ordered last so it takes the second row whole. `.editor-problems` keeps
+     its `margin-left: auto` and stays on the first row, hard against the right
+     edge — which is what its dropdown is positioned from. */
+  .editor-tabs {
+    order: 1;
+    flex: 1 0 100%;
+  }
+
+  .editor-tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* ---------- The tree, as a drawer over the form ---------- */
+
+  .editor-drawer-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    font: inherit;
+    padding: 7px 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-toolbar);
+    color: var(--text-default);
+    cursor: pointer;
+  }
+
+  .editor-drawer-scrim:not([hidden]) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
+
+  .editor-pane-left {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 4;
+    width: min(300px, 86%);
+    flex: none;
+    box-shadow: var(--win-shadow);
+    /* Off-screen rather than unmounted, so the tree keeps its scroll position
+       and its expanded rows between openings. `visibility` is what takes it
+       out of the tab order while it is out there. */
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--motion-fast) var(--motion-ease),
+      visibility var(--motion-fast);
+  }
+
+  .editor-pane-left-open {
+    transform: none;
+    visibility: visible;
+  }
+
+  /* ---------- Entity bar: the two pushes get a full-width row ---------- */
+
+  .editor-entity-bar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .editor-entity-actions {
+    width: 100%;
+  }
+
+  .editor-entity-actions .editor-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  /* ---------- Form ---------- */
+
+  .editor-form {
+    /* The bottom padding is deep on purpose: the last field must be reachable
+       above a phone's on-screen keyboard. */
+    padding: 12px 12px 96px;
+  }
+
+  .editor-form-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  /* Two number boxes side by side are unusable at this width. */
+  .editor-grid-2,
+  .editor-grid-3,
+  .editor-grid-4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-check {
+    align-self: start;
+    margin-bottom: 14px;
+  }
+
+  .editor-order-row,
+  .editor-list-head,
+  .editor-card-head {
+    flex-wrap: wrap;
+  }
+
+  .editor-media-row {
+    flex-wrap: wrap;
+  }
+
+  .editor-thumb {
+    width: 64px;
+    height: 64px;
+  }
+
+  .editor-empty {
+    padding: 16px 12px;
+  }
+
+  /* ---------- Pinterest helper ---------- */
+
+  .editor-pin-container {
+    padding: 12px;
+  }
+
+  .editor-section-content {
+    padding: 10px;
+  }
+
+  .editor-pin-input-row > .editor-button,
+  .editor-pin-url-row > .editor-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  /* ---------- Password gate ---------- */
+
+  .editor-gate-form {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-topbar h1 {
+    font-size: 12px;
+  }
+
+  .editor-tab {
+    padding: 9px 6px;
+    font-size: var(--font-size-chrome);
+  }
+
+  .editor-form {
+    padding: 10px 10px 96px;
+  }
+
+  .editor-card-body {
+    padding: 8px;
+  }
+
+  .editor-nudge {
+    gap: 10px;
+    padding: 8px;
+  }
 }

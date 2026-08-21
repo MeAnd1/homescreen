@@ -11,24 +11,21 @@ export interface ImageRef {
 }
 
 /**
- * What clicking a hotspot does. Adding an effect is one variant here plus one
- * case in ImageViewer's `runHotspotAction` — no other code branches on it.
+ * What clicking a hotspot does: open another node in its own window. A union of
+ * one — adding an effect is one variant here plus one case in ImageViewer's
+ * `runHotspotAction`, and no other code branches on it.
  */
-export type HotspotAction =
-  /** Open another node in its own window. */
-  | { do: "openNode"; opens: string; view?: ViewId }
-  /** Swap the viewer to another image in the same set (sketch 4's slide flip). */
-  | { do: "swapImage"; to: number };
+export type HotspotAction = { do: "openNode"; opens: string; view?: ViewId };
 
-/** A clickable region on an image, in percentages of the rendered image box. */
+/** A clickable region on an image, in percentages of the rendered image box.
+ *  Always a rectangle: an easter egg is invisible, so a second shape bought
+ *  nothing but a control to get wrong. */
 export interface Hotspot {
   x: number;
   y: number;
   width: number;
   height: number;
   action: HotspotAction;
-  label?: string;
-  shape?: "rect" | "ellipse";
 }
 
 interface VNodeBase {

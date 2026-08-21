@@ -120,10 +120,6 @@
   cursor: inherit;
 }
 
-.image-viewer-hotspot--ellipse {
-  border-radius: 50%;
-}
-
 .image-viewer-hotspot:focus-visible {
   border-color: var(--hotspot-outline);
   background: var(--hotspot-fill-hover);

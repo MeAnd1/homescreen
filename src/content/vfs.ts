@@ -271,12 +271,6 @@ export function validateNodes(
               message: `${where}.opens → unknown node "${action.opens}"`,
               severity: "warning",
             });
-          } else if (action.do === "swapImage" && !set.images[action.to]) {
-            problems.push({
-              nodeId: node.id,
-              message: `${where}.to → no image at index ${action.to}`,
-              severity: "warning",
-            });
           }
         });
       });
