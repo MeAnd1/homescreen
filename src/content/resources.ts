@@ -9,7 +9,7 @@ import { create } from "zustand";
  */
 
 export const TEXT_LOADING = "Loading...";
-export const TEXT_FALLBACK = "Nothing here...";
+export const TEXT_FALLBACK = "";
 
 /**
  * Mirrors the `text` dynamicFiles prefixes in the editor server's
@@ -56,7 +56,9 @@ export function loadResource(src: string): void {
   const url = resolveProseUrl(src);
   if (!url) {
     console.warn(`[resources] "${src}" is not a valid prose fileId`);
-    useResourceStore.setState((s) => ({ texts: { ...s.texts, [src]: TEXT_FALLBACK } }));
+    useResourceStore.setState((s) => ({
+      texts: { ...s.texts, [src]: TEXT_FALLBACK },
+    }));
     return;
   }
 
@@ -74,7 +76,9 @@ export function loadResource(src: string): void {
     })
     .catch(() => TEXT_FALLBACK)
     .then((text) => {
-      useResourceStore.setState((s) => ({ texts: { ...s.texts, [src]: text } }));
+      useResourceStore.setState((s) => ({
+        texts: { ...s.texts, [src]: text },
+      }));
     });
 }
 

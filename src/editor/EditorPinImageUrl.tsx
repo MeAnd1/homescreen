@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import CopyToClipboardButton from "./CopyToClipboardButton";
 
@@ -17,7 +18,7 @@ const EditorPinImageUrl: React.FC = () => {
 
   const fetchPinImage = async () => {
     if (!pinUrl.trim()) {
-      toast.error("Please enter a Pinterest URL");
+      toast.error("Enter a Pinterest URL");
       return;
     }
 
@@ -34,10 +35,10 @@ const EditorPinImageUrl: React.FC = () => {
 
       const data: PinApiResponse = await response.json();
       setResult(data);
-      toast.success("Fetched Pinterest image");
+      toast.success("Got it");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch pin image",
+        error instanceof Error ? error.message : "Fetch failed",
       );
     } finally {
       setIsLoading(false);
@@ -74,12 +75,11 @@ const EditorPinImageUrl: React.FC = () => {
                 disabled={isLoading}
                 className="editor-button editor-button-primary"
               >
-                {isLoading ? "Loading..." : "Get links"}
+                <Link2 size={13} /> {isLoading ? "Loading…" : "Get links"}
               </button>
             </div>
             <p className="editor-text-muted" style={{ marginTop: "4px" }}>
-              You get this by clicking "Share" on a Pinterest pin, then "Copy
-              link".
+              On a pin: Share, then Copy link.
             </p>
           </div>
 

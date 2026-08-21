@@ -2,7 +2,7 @@ import { resolveProseUrl } from "../content/resources";
 import { slugify } from "./slugify";
 
 /**
- * Prose bodies, read raw. `content/resources.ts` substitutes "Nothing here..."
+ * Prose bodies, read raw. `content/resources.ts` substitutes ""
  * for a missing file, which is right for the desktop and wrong here — saving
  * that placeholder back would write it into the repo as real text.
  */
@@ -33,7 +33,11 @@ const PROSE_PREFIX = "text";
  * a slash. A view with **two** richText fields would need the field key in here
  * as well — none has one.
  */
-export function proseIdFor(nodeId: string, name: string, parentName?: string): string {
+export function proseIdFor(
+  nodeId: string,
+  name: string,
+  parentName?: string,
+): string {
   const slug = [parentName, name]
     .map((part) => (part ? slugify(part) : ""))
     .filter(Boolean)

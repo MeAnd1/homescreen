@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface ReorderButtonsProps {
   index: number;
@@ -24,7 +25,7 @@ const ReorderButtons: React.FC<ReorderButtonsProps> = ({
         aria-label="Move up"
         title="Move up"
       >
-        ▲
+        <ChevronUp size={12} />
       </button>
       <button
         type="button"
@@ -34,7 +35,7 @@ const ReorderButtons: React.FC<ReorderButtonsProps> = ({
         aria-label="Move down"
         title="Move down"
       >
-        ▼
+        <ChevronDown size={12} />
       </button>
     </div>
   );

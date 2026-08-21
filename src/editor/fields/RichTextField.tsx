@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Eye, EyeOff, RotateCcw, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import type { VNode } from "../../content/types";
 import BBCode from "../../ui/BBCode/BBCode";
@@ -80,7 +81,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
     if (result.success) {
       if (!stored) onChange(fileId);
       setLoaded(body);
-      toast.success(result.message || "Text saved");
+      toast.success(result.message || "Saved");
       result.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
     } else {
       toast.error(result.error || "Save failed");
@@ -117,7 +118,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
               onClick={saveBody}
               disabled={!dirty || status === "saving" || status === "loading"}
             >
-              {status === "saving" ? "Pushing…" : `Save text (${fileId})`}
+              <Save size={13} /> {status === "saving" ? "Saving…" : "Save"}
             </button>
             <button
               type="button"
@@ -125,16 +126,17 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
               onClick={() => setBody(loaded)}
               disabled={!dirty}
             >
-              Revert text
+              <RotateCcw size={13} /> Revert
             </button>
             <button
               type="button"
               className="editor-button"
               onClick={() => setPreview((p) => !p)}
             >
-              {preview ? "Hide preview" : "Preview"}
+              {preview ? <EyeOff size={13} /> : <Eye size={13} />}
+              {preview ? "Hide" : "Preview"}
             </button>
-            {dirty && <span className="editor-dirty">unsaved text</span>}
+            {dirty && <span className="editor-dirty">unsaved</span>}
           </div>
           {preview && (
             <div className="editor-preview">

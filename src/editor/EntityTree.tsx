@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, FilePlus2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus2, X } from "lucide-react";
 import type { VNode } from "../content/types";
 import { sortDiscovered } from "../content/vfs";
 import type { ViewId } from "../window-system/types";
@@ -42,7 +42,8 @@ function NewEntity({ onCreated }: { onCreated: (id: string) => void }) {
         className="editor-button editor-button-small"
         onClick={() => setOpen((o) => !o)}
       >
-        <FilePlus2 size={13} /> {open ? "Cancel" : "New file"}
+        {open ? <X size={13} /> : <FilePlus2 size={13} />}
+        {open ? "Cancel" : "New"}
       </button>
 
       {open && (
@@ -104,7 +105,7 @@ function NewEntity({ onCreated }: { onCreated: (id: string) => void }) {
                 onCreated(entityId);
               }}
             >
-              Create (unsaved until you push it)
+              <FilePlus2 size={13} /> Create
             </button>
           </div>
         </div>

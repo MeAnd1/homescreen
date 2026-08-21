@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, PanelLeftClose, PanelLeftOpen, Save, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FolderTree,
+  Image,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import desktopConfig from "../content/desktop.json";
 import type { VNode } from "../content/types";
 import { flatten } from "../content/vfs";
@@ -11,9 +21,12 @@ import { useEditorPassword } from "./editor-auth";
 import EditorPinImageUrl from "./EditorPinImageUrl";
 import EntityTree from "./EntityTree";
 import NodeForm from "./NodeForm";
-import { fileIdOf, inboundRefs, ownerOf, stripIds } from "./entities";
+import { fileIdOf, inboundRefs, isShellEntity, ownerOf, stripIds } from "./entities";
 import { useDraft } from "./useDraft";
 import "./editor.css";
+
+/** "1 error", "2 errors" — the editor counts things in several places. */
+const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 
 /**
  * The bar above the form. It names the **file** every button here writes,
@@ -28,6 +41,8 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
   const entity = draft.entities.get(entityId);
   const fileId = fileIdOf(entityId);
   const damaged = draft.broken.get(entityId);
+  // A top-level directory the desktop opens is not the editor's to remove.
+  const locked = isShellEntity(entityId);
 
   const ids = useMemo(
     () => new Set(entity ? flatten(entity).map((node) => node.id) : []),
@@ -69,6 +84,10 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
   );
 
   const remove = async () => {
+    if (locked) {
+      toast.error(`"${entityId}" is a desktop folder — it cannot be deleted here.`);
+      return;
+    }
     if (!fileId) {
       toast.error(`No server prefix for "${entityId}".`);
       return;
@@ -101,7 +120,7 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
       <div className="editor-entity-actions">
         {errors.length > 0 && (
           <span className="editor-error">
-            <AlertTriangle size={13} /> {errors.length} error(s) — save blocked
+            <AlertTriangle size={13} /> {plural(errors.length, "error")} — save blocked
           </span>
         )}
         <button
@@ -110,16 +129,18 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
           onClick={save}
           disabled={busy !== "idle" || !dirty || errors.length > 0 || Boolean(damaged)}
         >
-          <Save size={13} /> {busy === "saving" ? "Pushing…" : "Save file"}
+          <Save size={13} /> {busy === "saving" ? "Saving…" : "Save"}
         </button>
-        <button
-          type="button"
-          className="editor-button editor-button-danger"
-          onClick={() => setConfirming(true)}
-          disabled={busy !== "idle" || confirming}
-        >
-          <Trash2 size={13} /> Delete file
-        </button>
+        {!locked && (
+          <button
+            type="button"
+            className="editor-button editor-button-danger"
+            onClick={() => setConfirming(true)}
+            disabled={busy !== "idle" || confirming}
+          >
+            <Trash2 size={13} /> Delete
+          </button>
+        )}
       </div>
 
       {confirming && (
@@ -127,12 +148,12 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
            breaks, which a one-line browser dialog cannot. */
         <div className="editor-confirm">
           <p>
-            Delete <span className="editor-text-mono">{fileId}</span> and everything nested
-            in it? This pushes a commit and cannot be undone from here.
+            Delete <span className="editor-text-mono">{fileId}</span> and everything in it?
+            This commits, and cannot be undone from here.
           </p>
           {(refs.length > 0 || onDesktop.length > 0) && (
             <>
-              <p className="editor-warn">These will point at nothing afterwards:</p>
+              <p className="editor-warn">These will point at nothing:</p>
               <ul className="editor-confirm-list">
                 {refs.map((ref) => (
                   <li key={ref} className="editor-text-mono">
@@ -154,7 +175,7 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
               onClick={remove}
               disabled={busy !== "idle"}
             >
-              {busy === "deleting" ? "Deleting…" : "Delete and push"}
+              <Trash2 size={13} /> {busy === "deleting" ? "Deleting…" : "Delete"}
             </button>
             <button
               type="button"
@@ -162,7 +183,7 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
               onClick={() => setConfirming(false)}
               disabled={busy !== "idle"}
             >
-              Cancel
+              <X size={13} /> Cancel
             </button>
           </div>
         </div>
@@ -176,12 +197,22 @@ function ProblemList() {
   const [open, setOpen] = useState(false);
   const errors = draft.problems.filter((p) => p.severity === "error");
   const warnings = draft.problems.filter((p) => p.severity === "warning");
-  if (draft.problems.length === 0) return <span className="editor-ok">Tree is valid</span>;
+  if (draft.problems.length === 0)
+    return (
+      <span className="editor-ok">
+        <CheckCircle2 size={13} /> Valid
+      </span>
+    );
 
   return (
     <div className="editor-problems">
-      <button type="button" className="editor-link" onClick={() => setOpen((o) => !o)}>
-        {errors.length} error(s), {warnings.length} warning(s)
+      <button
+        type="button"
+        className="editor-link editor-link-icon"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <AlertTriangle size={13} /> {plural(errors.length, "error")},{" "}
+        {plural(warnings.length, "warning")}
       </button>
       {open && (
         <ul className="editor-problem-list">
@@ -287,14 +318,14 @@ function Workspace() {
               className={`editor-tab${tab === "content" ? " editor-tab-active" : ""}`}
               onClick={() => go({ tab: "content" })}
             >
-              Content
+              <FolderTree size={13} /> Content
             </button>
             <button
               type="button"
               className={`editor-tab${tab === "pin" ? " editor-tab-active" : ""}`}
               onClick={() => go({ tab: "pin" })}
             >
-              Pinterest image URLs
+              <Image size={13} /> Pinterest image URLs
             </button>
           </nav>
           <ProblemList />

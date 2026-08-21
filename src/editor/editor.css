@@ -46,6 +46,9 @@
 }
 
 .editor-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   border: 1px solid transparent;
   border-radius: 0;
@@ -834,18 +837,28 @@
   text-align: left;
 }
 
+/* A link that carries an icon: without this the glyph sits on the baseline and
+   the underline runs through it. */
+.editor-link-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .editor-reorder-buttons {
   display: flex;
   flex-direction: column;
 }
 
 .editor-reorder-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border-strong);
   background: var(--surface-toolbar);
   color: var(--text-default);
   line-height: 1;
-  font-size: 8px;
-  padding: 1px 4px;
+  padding: 0 3px;
   cursor: pointer;
 }
 
@@ -1118,8 +1131,7 @@
   }
 
   .editor-reorder-button {
-    padding: 5px 9px;
-    font-size: 9px;
+    padding: 4px 8px;
   }
 
   /* --- placing something on an image --- */

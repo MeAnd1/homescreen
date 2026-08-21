@@ -31,12 +31,12 @@ export default function NodeRefField({ label, value, onChange }: Props) {
             type="button"
             className="editor-button editor-button-small"
             onClick={() => select(target.id)}
-            title="Jump to this node"
+            title="Open"
           >
             {target.name}
           </button>
         ) : (
-          id && <span className="editor-warn">unknown node</span>
+          id && <span className="editor-warn">unknown</span>
         )}
       </div>
       <datalist id={listId}>

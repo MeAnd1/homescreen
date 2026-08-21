@@ -8,7 +8,6 @@ interface Props<T> {
   onChange: (items: T[]) => void;
   /** A blank member, for the add button. */
   create: () => T;
-  addLabel?: string;
   summary: (item: T, index: number) => string;
   children: (item: T, index: number, patch: (changes: Partial<T>) => void) => React.ReactNode;
 }
@@ -22,7 +21,6 @@ export default function ListEditor<T>({
   items,
   onChange,
   create,
-  addLabel = "Add",
   summary,
   children,
 }: Props<T>) {
@@ -48,7 +46,7 @@ export default function ListEditor<T>({
           className="editor-button editor-button-small"
           onClick={() => onChange([...items, create()])}
         >
-          <Plus size={13} /> {addLabel}
+          <Plus size={13} /> Add
         </button>
       </div>
 

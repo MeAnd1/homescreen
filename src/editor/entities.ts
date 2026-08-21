@@ -1,3 +1,4 @@
+import desktopConfig from "../content/desktop.json";
 import type { BoardNode, ImageSetNode, TreeProblem, VNode } from "../content/types";
 import { flatten, materialize } from "../content/vfs";
 
@@ -156,3 +157,14 @@ export function inboundRefs(
   }
   return refs;
 }
+
+/**
+ * The top-level files the shell hard-depends on: `desktop.json` names them by
+ * id, so deleting one leaves a desktop icon pointing at nothing that no edit
+ * from here could repair. They stay editable — only the delete is refused.
+ * A top-level file nobody put on the desktop is not protected: it is ordinary
+ * content, and a mistyped new one has to stay removable.
+ */
+export const isShellEntity = (entityId: string): boolean =>
+  !entityId.includes("/") &&
+  (desktopConfig.desktopIcons as readonly string[]).includes(entityId);

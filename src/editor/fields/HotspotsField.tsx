@@ -229,9 +229,7 @@ function ImageZones({
             )}
           />
         ) : (
-          <span className="editor-hint">
-            This image has no URL yet — add one and the zones become draggable.
-          </span>
+          <span className="editor-hint">Add an image URL first.</span>
         )}
       </div>
 
@@ -251,10 +249,7 @@ function ImageZones({
         </div>
 
         {hotspots.length === 0 ? (
-          <span className="editor-hint">
-            No easter egg clicks on this image yet. Add one, then drag it where
-            it belongs.
-          </span>
+          <span className="editor-hint">None yet. Add one, then drag it into place.</span>
         ) : (
           <ul className="editor-zone-list">
             {hotspots.map((hotspot, i) => (
@@ -319,12 +314,11 @@ function ImageZones({
               picker, which would only ever call one an unknown node. */}
           {SECRETS.length === 0 ? (
             <span className="editor-hint">
-              There are no secrets to open yet — they are declared in code, in
-              content/builtins.ts.
+              No secrets yet — they are declared in content/builtins.ts.
             </span>
           ) : (
             <label className="editor-field">
-              <span className="editor-label">Opens which secret</span>
+              <span className="editor-label">Opens</span>
               <select
                 className="editor-input"
                 value={current.action?.opens ?? ""}

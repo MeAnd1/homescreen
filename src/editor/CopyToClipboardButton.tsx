@@ -1,4 +1,5 @@
 import React from "react";
+import { Copy } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Props {
@@ -15,15 +16,15 @@ const CopyToClipboardButton: React.FC<Props> = ({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Copied to clipboard!");
+      toast.success("Copied");
     } catch {
-      toast.error("Failed to copy");
+      toast.error("Copy failed");
     }
   };
 
   return (
     <button type="button" onClick={handleCopy} className={className}>
-      {label}
+      <Copy size={13} /> {label}
     </button>
   );
 };

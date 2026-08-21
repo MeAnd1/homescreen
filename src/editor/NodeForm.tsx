@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus, X } from "lucide-react";
 import { APP_REGISTRY } from "../apps/registry";
 import type { VNode } from "../content/types";
 import { ICONS } from "../ui/icons";
@@ -201,7 +202,7 @@ function ChildOrderField({ node }: { node: VNode }) {
       ))}
       {stale.length > 0 && (
         <p className="editor-warn">
-          Stale entries (ignored at runtime): {stale.join(", ")}{" "}
+          Ignored at runtime: {stale.join(", ")}{" "}
           <button
             type="button"
             className="editor-button editor-button-small"
@@ -244,10 +245,7 @@ function SlotSection({
   return (
     <div className="editor-field">
       <span className="editor-label">Files</span>
-      <p className="editor-hint">
-        Fixed for every character. One with nothing in it is hidden on the
-        desktop.
-      </p>
+      <p className="editor-hint">Fixed for every character. An empty one is hidden.</p>
       {slots.map((slot) => {
         const id = `${node.id}/${slot.key}`;
         const child = draft.index.get(id);
@@ -313,7 +311,8 @@ function ChildrenSection({ node }: { node: VNode }) {
             className="editor-button editor-button-small"
             onClick={() => setAdding((a) => !a)}
           >
-            {adding ? "Cancel" : "Add new"}
+            {adding ? <X size={13} /> : <Plus size={13} />}
+            {adding ? "Cancel" : "Add"}
           </button>
         </div>
       )}
@@ -365,7 +364,7 @@ function ChildrenSection({ node }: { node: VNode }) {
                 select(`${node.id}/${key}`);
               }}
             >
-              Add
+              <Plus size={13} /> Add
             </button>
           </div>
         </div>
@@ -395,7 +394,7 @@ function ChildrenSection({ node }: { node: VNode }) {
                 draft.removeNode(child.id);
                 select(node.id);
               }}
-              title="Remove child (not saved until you push the file)"
+              title="Remove"
             />
           </div>
         </div>
@@ -447,8 +446,7 @@ export default function NodeForm({ node }: { node: VNode }) {
 
       {slot?.disabled && (
         <p className="editor-hint">
-          {slot.name} is under construction: it is hidden on the desktop and not
-          editable here.
+          {slot.name} is under construction — hidden, and not editable here.
         </p>
       )}
 
@@ -494,10 +492,7 @@ export default function NodeForm({ node }: { node: VNode }) {
       )}
 
       {slot && !slot.disabled && (
-        <p className="editor-hint">
-          Name, type and icon come from the character layout — only what is
-          below is yours.
-        </p>
+        <p className="editor-hint">Name, type and icon come from the character layout.</p>
       )}
 
       {!slot?.disabled &&

@@ -16,7 +16,6 @@ export default function ImageListField({ label, value, onChange }: Props) {
   return (
     <ListEditor
       label={label}
-      addLabel="Add image"
       items={images}
       onChange={onChange}
       create={blank}

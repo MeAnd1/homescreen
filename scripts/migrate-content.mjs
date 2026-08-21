@@ -69,8 +69,13 @@ async function migrateCharacters() {
         images: oc.designs,
       });
     }
-    // No `src` yet — these render "Nothing here..." until prose is written.
-    children.push({ key: "powers", name: "Powers", view: "msWord", icon: "powers" });
+    // No `src` yet — these render "" until prose is written.
+    children.push({
+      key: "powers",
+      name: "Powers",
+      view: "msWord",
+      icon: "powers",
+    });
     children.push({ key: "about", name: "About", view: "msWord" });
 
     await writeJson(`nodes/characters/${oc.slug}.json`, {
@@ -134,7 +139,9 @@ async function migrateFavourites() {
       spriteUrl: entry.spriteUrl,
       namePlatePosition: entry.namePlatePosition,
       opens: `characters/${entry.linkedOcSlug}`,
-      ...(entry.shortDescription ? { shortDescription: entry.shortDescription } : {}),
+      ...(entry.shortDescription
+        ? { shortDescription: entry.shortDescription }
+        : {}),
     })),
   });
 }

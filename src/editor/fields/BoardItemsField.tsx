@@ -33,7 +33,6 @@ export default function BoardItemsField({ label, value, onChange }: Props) {
   return (
     <ListEditor
       label={label}
-      addLabel="Add sprite"
       items={items}
       onChange={onChange}
       create={blank}
@@ -113,8 +112,8 @@ function NamePlatePlacer({
           </div>
           <div className="editor-placer-panel">
             <span className="editor-hint">
-              Drag the plate, or nudge it with the buttons and the arrow keys. It may sit
-              outside the sprite — the dashed edge is where the sprite ends.
+              Drag or nudge the plate. It may sit outside the sprite — the dashed edge is
+              where the sprite ends.
             </span>
             <NudgePad
               step={step}
@@ -133,9 +132,7 @@ function NamePlatePlacer({
           </div>
         </div>
       ) : (
-        <span className="editor-hint">
-          Add a sprite URL first — the plate is placed on the sprite.
-        </span>
+        <span className="editor-hint">Add a sprite URL first.</span>
       )}
     </div>
   );
