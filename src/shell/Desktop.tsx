@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import background from "../assets/400x300.webp";
+import background from "../assets/background.webp";
 import DesktopIcons from "./DesktopIcons/DesktopIcons";
 import StartMenu from "./StartMenu/StartMenu";
 import Taskbar from "./Taskbar/Taskbar";
