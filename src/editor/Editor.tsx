@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { AlertTriangle, Save, Trash2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { AlertTriangle, PanelLeftClose, PanelLeftOpen, Save, Trash2 } from "lucide-react";
 import desktopConfig from "../content/desktop.json";
 import type { VNode } from "../content/types";
 import { flatten } from "../content/vfs";
@@ -204,14 +205,57 @@ function ProblemList() {
   );
 }
 
+type Tab = "content" | "pin";
+
 function Workspace() {
   const draft = useDraft();
-  const [selectedId, setSelectedId] = useState<string>("characters");
-  const [tab, setTab] = useState<"content" | "pin">("content");
+  const [params, setParams] = useSearchParams();
+  const selectedId = params.get("node") ?? "characters";
+  const tab: Tab = params.get("tab") === "pin" ? "pin" : "content";
+  /**
+   * Narrow screens cannot afford a permanent 280px tree beside the form, so
+   * below the layout breakpoint the tree becomes a drawer over it. The state is
+   * kept unconditionally — CSS decides whether it means anything — because a
+   * JS breakpoint would have to be duplicated in two places to stay in sync.
+   */
+  const [treeOpen, setTreeOpen] = useState(false);
+
+  // On the window, not on the drawer: once it is open, focus is as likely to be
+  // inside the tree as on the button that opened it.
+  useEffect(() => {
+    if (!treeOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTreeOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [treeOpen]);
+
+  /**
+   * Where you are in the editor lives in the query string, so the browser's
+   * Back button walks back through the nodes you opened instead of leaving the
+   * editor for the desktop. Nothing is remounted by it — same route, same
+   * component — so the draft and its dirty files survive going back.
+   */
+  const go = useCallback(
+    (next: { node?: string; tab?: Tab; replace?: boolean }) => {
+      const node = next.node ?? selectedId;
+      const nextTab = next.tab ?? tab;
+      const search = new URLSearchParams();
+      search.set("node", node);
+      if (nextTab === "pin") search.set("tab", "pin");
+      // Re-opening what is already on screen must not stack an identical
+      // entry, or Back would need several presses to move anywhere.
+      const unchanged = node === selectedId && nextTab === tab;
+      setParams(search, { replace: Boolean(next.replace) || unchanged });
+      setTreeOpen(false);
+    },
+    [selectedId, tab, setParams],
+  );
 
   const context = useMemo(
-    () => ({ draft, select: setSelectedId }),
-    [draft],
+    () => ({ draft, select: (nodeId: string) => go({ node: nodeId }) }),
+    [draft, go],
   );
 
   // nodeAt, not index.get: a character slot the file has never had is editable
@@ -223,19 +267,32 @@ function Workspace() {
     <EditorContext.Provider value={context}>
       <div className="editor-shell">
         <header className="editor-topbar">
+          {/* Only the tree drawer needs it, so it goes when the tree does. */}
+          {tab === "content" && (
+            <button
+              type="button"
+              className="editor-drawer-toggle"
+              aria-expanded={treeOpen}
+              aria-controls="editor-tree-pane"
+              onClick={() => setTreeOpen((open) => !open)}
+            >
+              {treeOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+              <span>Files</span>
+            </button>
+          )}
           <h1>Kataa behind the screen</h1>
           <nav className="editor-tabs">
             <button
               type="button"
               className={`editor-tab${tab === "content" ? " editor-tab-active" : ""}`}
-              onClick={() => setTab("content")}
+              onClick={() => go({ tab: "content" })}
             >
               Content
             </button>
             <button
               type="button"
               className={`editor-tab${tab === "pin" ? " editor-tab-active" : ""}`}
-              onClick={() => setTab("pin")}
+              onClick={() => go({ tab: "pin" })}
             >
               Pinterest image URLs
             </button>
@@ -245,12 +302,28 @@ function Workspace() {
 
         {tab === "content" ? (
           <div className="editor-body">
-            <aside className="editor-pane editor-pane-left">
+            {/* Only ever hit on a narrow screen: the drawer is the pane itself
+                everywhere else, and the scrim is display:none over it. */}
+            <button
+              type="button"
+              className="editor-drawer-scrim"
+              aria-label="Close the file tree"
+              hidden={!treeOpen}
+              onClick={() => setTreeOpen(false)}
+            />
+            <aside
+              id="editor-tree-pane"
+              className={`editor-pane editor-pane-left${treeOpen ? " editor-pane-left-open" : ""}`}
+            >
               <EntityTree selectedId={selectedId} />
             </aside>
             <main className="editor-pane editor-pane-right">
               {entityId && (
-                <EntityBar entityId={entityId} onDeleted={() => setSelectedId("")} />
+                <EntityBar
+                  entityId={entityId}
+                  // The file is gone: replace, so Back does not land on it.
+                  onDeleted={() => go({ node: "", replace: true })}
+                />
               )}
               {selected ? (
                 /* Keyed: every form-local state (add-child draft, prose body,
