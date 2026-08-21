@@ -132,28 +132,6 @@
   text-align: center;
 }
 
-.editor-empty-art {
-  width: min(100%, 320px);
-  /* The source is 590x350: never scale it past that, and never let it push the
-     caption off a short viewport. */
-  max-width: 320px;
-  max-height: 40vh;
-  object-fit: contain;
-  border: 1px solid var(--border-strong);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-  opacity: 0.85;
-  filter: saturate(0.75);
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* Landscape phones: the caption is the part that matters. */
-@media (max-height: 480px) {
-  .editor-empty-art {
-    display: none;
-  }
-}
-
 /* ---------- Tree ---------- */
 
 .editor-tree {
@@ -989,12 +967,9 @@
      own text below. */
   color: var(--text-inverse);
   background-color: var(--editor-field);
-  background-image: var(--editor-photo-veil), url("../assets/physical-window.webp");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: var(--editor-backdrop);
   /* Dark chrome, same swap as the taskbar: the default ring is navy and would
-     vanish against the photo. */
+     vanish against the backdrop. */
   --focus-ring: var(--focus-ring-light);
 }
 
@@ -1387,14 +1362,6 @@
   }
 
   /* ---------- Password gate ---------- */
-
-  .editor-gate {
-    /* Cropping a 590px-wide source to a tall phone upscales it hard. A heavier
-       veil reads the softness as atmosphere, and the offset keeps the lit
-       frame in shot instead of centring on the grip stands. */
-    --editor-photo-veil: linear-gradient(180deg, rgba(4, 10, 28, 0.68), rgba(4, 10, 28, 0.86));
-    background-position: 60% center;
-  }
 
   .editor-gate-form {
     padding: 18px;
