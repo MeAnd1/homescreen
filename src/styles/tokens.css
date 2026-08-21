@@ -111,6 +111,20 @@
   --startmenu-tile-hover: rgba(255, 255, 255, 0.14);
   --startmenu-tile-selected: rgba(76, 194, 255, 0.28);
 
+  /* ---------- Editor (src/assets/physical-window.webp) ----------
+     Sampled off the practical-window photo the editor is dressed with: the
+     dark studio it stands in, the beam, and the blown-out core of the frame.
+     Only /editor and /set-password use these — the desktop stays Win10 grey. */
+  --editor-field: #0a1a3c;
+  --editor-beam: #4aa3ff;
+  --editor-beam-core: #dfefff;
+  /* The rake of light, for hairlines and the primary button. Its lightest
+     stop is --accent, so white-on-it is never worse than a flat accent fill. */
+  --editor-beam-rake: linear-gradient(100deg, var(--editor-field) 0%, #0a4f9e 48%, var(--accent) 100%);
+  --editor-beam-hairline: linear-gradient(90deg, var(--editor-field) 0%, var(--editor-beam) 55%, var(--editor-beam-core) 100%);
+  /* Laid over the photo so form text keeps its contrast on top of it. */
+  --editor-photo-veil: linear-gradient(180deg, rgba(4, 10, 28, 0.55), rgba(4, 10, 28, 0.78));
+
   /* ---------- Layering ---------- */
   --z-windows: 500;
   /* Shell chrome that rises from the taskbar: above every window, below the

@@ -12,6 +12,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import physicalWindow from "../assets/physical-window.webp";
 import desktopConfig from "../content/desktop.json";
 import type { VNode } from "../content/types";
 import { flatten } from "../content/vfs";
@@ -361,7 +362,10 @@ function Workspace() {
                    icon mode) belongs to the node being edited, not to the pane. */
                 <NodeForm key={selected.id} node={selected} />
               ) : (
-                <p className="editor-hint editor-empty">Pick something on the left.</p>
+                <div className="editor-empty">
+                  <img className="editor-empty-art" src={physicalWindow} alt="" />
+                  <p className="editor-hint">Pick something on the left.</p>
+                </div>
               )}
             </main>
           </div>
