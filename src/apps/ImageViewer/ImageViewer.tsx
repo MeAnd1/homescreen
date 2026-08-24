@@ -95,9 +95,13 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
     [self.id],
   );
 
-  // The titlebar follows the image being viewed, not the node.
+  // The titlebar follows the image only when the viewer is the *alternate* view
+  // of a gallery node: there the user clicked a named thumbnail, so the file
+  // name is what they asked for. A node whose own view is `imageViewer` is one
+  // window standing for the whole set, so it keeps its own name however many
+  // images it holds and whichever one is on screen.
   const setTitle = self.setTitle;
-  const fileName = current?.fileName;
+  const fileName = node?.view === "imageViewer" ? undefined : current?.fileName;
   useEffect(() => {
     if (fileName) setTitle(fileName);
   }, [fileName, setTitle]);
