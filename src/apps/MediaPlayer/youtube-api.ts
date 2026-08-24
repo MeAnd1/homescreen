@@ -9,6 +9,8 @@
 export interface YTPlayer {
   playVideo(): void;
   pauseVideo(): void;
+  /** Answered from the parent's cache, so it works even on a deaf player. */
+  getPlayerState(): number;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   getCurrentTime(): number;
   getDuration(): number;
