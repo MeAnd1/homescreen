@@ -18,7 +18,7 @@ export const BUILTIN_NODES: Record<string, Record<string, unknown>> = {
     name: "Never gonna give you up",
     icon: "mystery",
     view: "mediaPlayer",
-    fileName: "??????.mp4",
+    fileName: "you-got-rick-rolled.mp4",
     src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     loop: false,
   },
