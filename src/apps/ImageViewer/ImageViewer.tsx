@@ -23,6 +23,13 @@ interface HotspotContext {
 const CLICK_SLOP_PX = 5;
 
 /**
+ * Scale added per pixel of wheel delta. The library's `smooth` mode multiplies
+ * the step by `|deltaY|`, so a mouse notch (~100px) zooms by ~0.25 and a
+ * trackpad's many small deltas add up gradually.
+ */
+const WHEEL_STEP = 0.0025;
+
+/**
  * Every hotspot effect lives here. Adding one is a new `HotspotAction` variant
  * plus a case below — no component branches on the action type.
  */
@@ -53,6 +60,9 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const infoText = useResource(infoSrc);
   // Where the pointer went down on a hotspot, so a pan is not read as a click.
   const pressAt = useRef<{ x: number; y: number } | null>(null);
+  // Toggled by hand rather than through state: it flips on every wheel gesture
+  // and only switches a CSS transition, so it should not re-render the viewer.
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Re-opening a singleton MERGES the payload rather than remounting, so
   // clicking thumbnail 5 while the viewer is open must move it to image 5.
@@ -78,6 +88,10 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.stopPropagation();
+  }, []);
+
+  const stopWheelEasing = useCallback(() => {
+    canvasRef.current?.classList.remove("is-wheel-zooming");
   }, []);
 
   const handleHotspotClick = useCallback(
@@ -118,11 +132,19 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
         minScale={0.5}
         maxScale={5}
         centerOnInit
-        wheel={{ step: 0.1 }}
+        wheel={{ step: WHEEL_STEP }}
         pinch={{ step: 5 }}
         doubleClick={{ mode: "reset" }}
+        // Wheel zoom lands in discrete jumps; easing the transform only while
+        // the wheel is active smooths them without making panning lag.
+        onWheelStart={() => canvasRef.current?.classList.add("is-wheel-zooming")}
+        onWheelStop={stopWheelEasing}
+        // The library skips onWheelStop when a wheel event never changed the
+        // scale (e.g. a purely sideways scroll), so drop it here too.
+        onPanningStart={stopWheelEasing}
+        onPinchStart={stopWheelEasing}
       >
-        <div className="image-viewer-canvas">
+        <div className="image-viewer-canvas" ref={canvasRef}>
           <TransformComponent
             wrapperStyle={{ width: "100%", height: "100%" }}
             contentStyle={{
