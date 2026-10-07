@@ -54,10 +54,10 @@ function ExplorerLayout({ tabs, sidebar, statusText, children }: ExplorerLayoutP
                   {item.label}
                 </>
               );
-              // Today every entry is decorative (phase 4.3 is deferred), and a
-              // decorative entry must NOT be a tab stop. The moment one gains a
-              // handler it becomes a real button, so it can never end up as a
-              // keyboard-unreachable `div onClick`.
+              // Most entries are decorative (phase 4.3 is deferred), and a
+              // decorative entry must NOT be a tab stop. One with a handler is
+              // a real button, so it can never end up as a keyboard-unreachable
+              // `div onClick`.
               return item.onClick ? (
                 <button
                   key={item.label}

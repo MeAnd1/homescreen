@@ -23,6 +23,11 @@
   position: relative;
 }
 
+/* Set from ImageViewer.tsx while a wheel zoom is in progress. */
+.image-viewer-canvas.is-wheel-zooming .react-transform-component {
+  transition: transform 120ms ease-out;
+}
+
 .image-viewer-nav {
   position: absolute;
   top: 50%;
