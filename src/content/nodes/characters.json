@@ -35,5 +35,13 @@
       "label": "All",
       "active": true
     }
+  ],
+  "children": [
+    {
+      "key": "misaki",
+      "name": "Misaki",
+      "view": "fileExplorer",
+      "icon": "https://i.pinimg.com/736x/59/bd/5a/59bd5af14a1e180dc04674a49646d273.jpg"
+    }
   ]
 }
