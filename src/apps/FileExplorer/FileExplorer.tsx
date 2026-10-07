@@ -11,6 +11,8 @@ import IconImageStack from "../../ui/IconImageStack/IconImageStack";
 import { ICONS, isPhotoIcon, resolveIcon } from "../../ui/icons";
 import "./FileExplorer.css";
 
+const FAVOURITES_NODE_ID = "favourites";
+
 /**
  * One generic explorer for every folder-ish node — the character list and a
  * character's folder are this component with a different nodeId.
@@ -36,11 +38,16 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
   }
 
   const folder = node.view === "fileExplorer" ? node : undefined;
+  // The starred entry is the Favourites shortcut — the same open as the
+  // desktop icon. Every other entry is still decorative.
+  const sidebar = folder?.sidebar?.map((item) =>
+    item.star ? { ...item, onClick: () => openNode(FAVOURITES_NODE_ID) } : item,
+  );
 
   return (
     <ExplorerLayout
       tabs={folder?.tabs}
-      sidebar={folder?.sidebar}
+      sidebar={sidebar}
       statusText={`${children.length} items`}
     >
       <div className="explorer-content-header">{node.name}</div>
