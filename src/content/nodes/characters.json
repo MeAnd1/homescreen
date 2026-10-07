@@ -44,19 +44,14 @@
       "icon": "https://i.pinimg.com/736x/59/bd/5a/59bd5af14a1e180dc04674a49646d273.jpg",
       "children": [
         {
-          "key": "images",
-          "name": "Images",
-          "view": "imageGallery"
-        },
-        {
           "key": "design",
           "name": "Design",
           "view": "imageGallery",
           "images": [
             {
-              "thumbnail": "https://i.pinimg.com/736x/46/4f/2f/464f2fd90fd89ba7c8020c6a43f2e930.jpg",
               "full": "https://pin.it/3vPQgOBDz",
-              "fileName": "Misaki Design"
+              "thumbnail": "https://i.pinimg.com/736x/46/4f/2f/464f2fd90fd89ba7c8020c6a43f2e930.jpg",
+              "fileName": "Misaki design"
             }
           ]
         }
