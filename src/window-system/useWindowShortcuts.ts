@@ -16,8 +16,9 @@ function isTextEntry(target: EventTarget | null): boolean {
  * Desktop-level keyboard shortcuts. Today: `Escape` closes the focused window.
  * Alt/Cmd+Tab is deliberately out of scope — the browser owns it.
  *
- * `enabled` is false while the start menu is open, so its own Escape handler
- * closes the panel without also closing whatever window was focused behind it.
+ * `enabled` is false while a taskbar panel (start menu, network flyout) is
+ * open, so its own Escape handler closes the panel without also closing
+ * whatever window was focused behind it.
  */
 export function useWindowShortcuts(enabled: boolean): void {
   useEffect(() => {

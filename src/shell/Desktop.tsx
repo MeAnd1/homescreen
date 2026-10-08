@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import background from "../assets/background.webp";
 import DesktopIcons from "./DesktopIcons/DesktopIcons";
+import NetworkFlyout from "./NetworkFlyout/NetworkFlyout";
 import StartMenu from "./StartMenu/StartMenu";
 import Taskbar from "./Taskbar/Taskbar";
 import WindowsLayer from "../window-system/WindowsLayer";
@@ -13,10 +14,13 @@ function Desktop() {
   // Deep links, session restore and session persistence — see useSession.ts.
   useSession();
   // Shell chrome, so it is local state and not part of the window store.
-  const [startMenuOpen, setStartMenuOpen] = useState(false);
-  const closeStartMenu = useCallback(() => setStartMenuOpen(false), []);
+  // At most one taskbar panel is open at a time, as in Windows.
+  const [panel, setPanel] = useState<"start" | "network" | null>(null);
+  const closePanel = useCallback(() => setPanel(null), []);
+  const togglePanel = (which: "start" | "network") =>
+    setPanel((open) => (open === which ? null : which));
   // Escape belongs to the panel while it is open, not to the focused window.
-  useWindowShortcuts(!startMenuOpen);
+  useWindowShortcuts(panel === null);
 
   return (
     <div
@@ -31,10 +35,13 @@ function Desktop() {
     >
       <DesktopIcons />
       <WindowsLayer />
-      {startMenuOpen && <StartMenu onClose={closeStartMenu} />}
+      {panel === "start" && <StartMenu onClose={closePanel} />}
+      {panel === "network" && <NetworkFlyout onClose={closePanel} />}
       <Taskbar
-        startMenuOpen={startMenuOpen}
-        onToggleStartMenu={() => setStartMenuOpen((open) => !open)}
+        startMenuOpen={panel === "start"}
+        onToggleStartMenu={() => togglePanel("start")}
+        networkOpen={panel === "network"}
+        onToggleNetwork={() => togglePanel("network")}
       />
     </div>
   );

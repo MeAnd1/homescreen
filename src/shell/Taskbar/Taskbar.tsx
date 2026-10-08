@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
-import { Search, ChevronUp, Wifi, Volume2 } from "lucide-react";
+import { Search, ChevronUp, Plane, Wifi, WifiOff, Volume2 } from "lucide-react";
 import { useWindowStore } from "../../window-system/store";
+import { useNetworkStore } from "../NetworkFlyout/networkStore";
 import "./Taskbar.css";
 
 /** Where the context menu wants to sit, in viewport coordinates. */
@@ -173,9 +174,27 @@ interface TaskbarProps {
   startMenuOpen: boolean;
   /** Mousedown, not click: see the note on the search button. */
   onToggleStartMenu: () => void;
+  networkOpen: boolean;
+  /** Mousedown, not click, for the same reason. */
+  onToggleNetwork: () => void;
 }
 
-function Taskbar({ startMenuOpen, onToggleStartMenu }: TaskbarProps) {
+/** The tray glyph follows the pretend radios, Windows 10 style. */
+function NetworkTrayIcon() {
+  const wifi = useNetworkStore((s) => s.wifi);
+  const airplane = useNetworkStore((s) => s.airplane);
+  const connected = useNetworkStore((s) => s.connected !== null);
+  if (airplane && !wifi) return <Plane size={16} color="white" strokeWidth={1.5} />;
+  if (!wifi || !connected) return <WifiOff size={16} color="white" strokeWidth={1.5} />;
+  return <Wifi size={16} color="white" strokeWidth={1.5} />;
+}
+
+function Taskbar({
+  startMenuOpen,
+  onToggleStartMenu,
+  networkOpen,
+  onToggleNetwork,
+}: TaskbarProps) {
   const [time, setTime] = useState(new Date());
   const [menu, setMenu] = useState<MenuState | null>(null);
   // Stable identity is load-bearing: the clock re-renders this component every
@@ -246,8 +265,26 @@ function Taskbar({ startMenuOpen, onToggleStartMenu }: TaskbarProps) {
           <button className="taskbar-btn taskbar-small" aria-label="Show hidden icons">
             <ChevronUp size={14} color="white" strokeWidth={2} />
           </button>
-          <button className="taskbar-btn taskbar-small" aria-label="Network">
-            <Wifi size={16} color="white" strokeWidth={1.5} />
+          {/* Mousedown toggling, as for the search box. data-network-toggle
+              tells the flyout's outside-click listener to leave this to us. */}
+          <button
+            type="button"
+            className="taskbar-btn taskbar-small"
+            aria-label="Network"
+            aria-expanded={networkOpen}
+            data-network-toggle
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onToggleNetwork();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggleNetwork();
+              }
+            }}
+          >
+            <NetworkTrayIcon />
           </button>
           <button className="taskbar-btn taskbar-small" aria-label="Volume">
             <Volume2 size={16} color="white" strokeWidth={1.5} />

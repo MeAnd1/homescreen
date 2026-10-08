@@ -111,6 +111,17 @@
   --startmenu-tile-hover: rgba(255, 255, 255, 0.14);
   --startmenu-tile-selected: rgba(76, 194, 255, 0.28);
 
+  /* ---------- Network flyout (tray Wi-Fi icon) ----------
+     Same dark glass as the start menu; these are only what it adds. */
+  --netfly-width: 360px;
+  --netfly-row-expanded: rgba(255, 255, 255, 0.1);
+  --netfly-arc-dim: rgba(255, 255, 255, 0.28);
+  --netfly-link: #99ebff;
+  --netfly-tile-on: var(--accent);
+  --netfly-tile-on-hover: #1a86d9;
+  /* The network that should not be there. */
+  --netfly-ominous: #d4475c;
+
   /* ---------- Editor ----------
      The dark studio the editor stands in, the beam raking through it, and the
      blown-out core of the light. Only /editor and /set-password use these —

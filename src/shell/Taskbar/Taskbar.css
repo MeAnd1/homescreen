@@ -211,6 +211,11 @@
   height: 100%;
 }
 
+/* A tray button whose flyout is open stays lit, as in Windows. */
+.taskbar-small[aria-expanded="true"] {
+  background-color: var(--taskbar-active);
+}
+
 /* Date & Time */
 .taskbar-datetime {
   display: flex;
