@@ -1,3 +1,4 @@
+import wallpaper from "../assets/background.webp";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
@@ -296,7 +297,10 @@ function Workspace() {
 
   return (
     <EditorContext.Provider value={context}>
-      <div className="editor-shell">
+      <div
+        className="editor-shell"
+        style={{ "--editor-wallpaper": `url(${wallpaper})` } as React.CSSProperties}
+      >
         <header className="editor-topbar">
           {/* Only the tree drawer needs it, so it goes when the tree does. */}
           {tab === "content" && (
