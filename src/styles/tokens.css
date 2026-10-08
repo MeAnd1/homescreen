@@ -4,9 +4,44 @@
    chrome metric in a component stylesheet. A restyle is this file.
    ========================================================================== */
 
+/* Selawik — Microsoft's open-source (SIL OFL 1.1) stand-in for Segoe UI, self-hosted
+   from src/assets/fonts/selawik/. Latin only, so Noto Sans (Google Fonts, index.html)
+   stays in the stack for anything it lacks. Relative url()s let Vite add the
+   /homescreen/ base path. */
+@font-face {
+  font-family: "Selawik";
+  src: url("../assets/fonts/selawik/selawkl.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Selawik";
+  src: url("../assets/fonts/selawik/selawksl.woff2") format("woff2");
+  font-weight: 350;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Selawik";
+  src: url("../assets/fonts/selawik/selawk.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Selawik";
+  src: url("../assets/fonts/selawik/selawksb.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Selawik";
+  src: url("../assets/fonts/selawik/selawkb.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   /* ---------- Typography ---------- */
-  --font-ui: "Noto Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-ui: "Selawik", "Segoe UI", "Noto Sans", Tahoma, Geneva, Verdana, sans-serif;
   --font-size-chrome: 11px;
   --font-size-body: 12px;
 
