@@ -245,8 +245,8 @@ function Taskbar({
               }
             }}
           >
-            <Search size={14} color="white" className="taskbar-search-icon" strokeWidth={2} />
-            <span className="taskbar-search-text">Search</span>
+            <Search size={16} color="white" className="taskbar-search-icon" strokeWidth={2} />
+            <span className="taskbar-search-text">Type here to search</span>
           </button>
 
           <div className="taskbar-windows" role="group" aria-label="Open windows">

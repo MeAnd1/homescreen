@@ -71,6 +71,9 @@
   display: flex;
   align-items: center;
   height: 100%;
+  /* Win10 is ~344px at 100%; clamp so mid-size screens keep room for window
+     buttons. The mobile media queries below override this. */
+  width: clamp(200px, 25vw, 344px);
   background-color: var(--taskbar-search-bg);
   padding: 0 12px;
   gap: 10px;
