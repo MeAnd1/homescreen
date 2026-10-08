@@ -37,9 +37,7 @@ const EditorPinImageUrl: React.FC = () => {
       setResult(data);
       toast.success("Got it");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Fetch failed",
-      );
+      toast.error(error instanceof Error ? error.message : "Fetch failed");
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +73,7 @@ const EditorPinImageUrl: React.FC = () => {
                 disabled={isLoading}
                 className="editor-button editor-button-primary"
               >
-                <Link2 size={13} /> {isLoading ? "Loading…" : "Get links"}
+                <Link2 size={13} /> {isLoading ? "Loading…" : "Get image links"}
               </button>
             </div>
             <p className="editor-text-muted" style={{ marginTop: "4px" }}>
@@ -108,9 +106,9 @@ const EditorPinImageUrl: React.FC = () => {
               </div>
 
               <div className="editor-pin-result-block">
-                <h4>Original</h4>
+                <h4>Full size image</h4>
                 <div className="editor-pin-preview">
-                  <img src={result.original} alt="Original preview" />
+                  <img src={result.original} alt="Full size image preview" />
                 </div>
                 <div className="editor-pin-url-row">
                   <input
