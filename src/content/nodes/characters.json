@@ -44,6 +44,13 @@
       "icon": "https://i.pinimg.com/736x/59/bd/5a/59bd5af14a1e180dc04674a49646d273.jpg",
       "children": [
         {
+          "key": "lore",
+          "name": "Lore",
+          "view": "msWord",
+          "src": "text/misaki-lore",
+          "icon": "ms-word"
+        },
+        {
           "key": "design",
           "name": "Design",
           "view": "imageGallery",
