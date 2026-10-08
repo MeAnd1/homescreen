@@ -57,7 +57,7 @@ export interface WindowInstance<T extends WindowTypeId = WindowTypeId> {
 
 export type FieldSpec =
   | { key: string; type: "text" | "url" | "number"; label: string; required?: boolean }
-  | { key: string; type: "richText"; label: string }
+  | { key: string; type: "richText"; label?: string }
   | { key: string; type: "imageList"; label: string }
   | { key: string; type: "nodeRef"; label: string }
   | { key: string; type: "hotspots"; label: string; imagesKey: string }

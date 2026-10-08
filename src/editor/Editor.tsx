@@ -1,3 +1,4 @@
+import wallpaper from "../assets/background.webp";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
@@ -21,7 +22,13 @@ import { useEditorPassword } from "./editor-auth";
 import EditorPinImageUrl from "./EditorPinImageUrl";
 import EntityTree from "./EntityTree";
 import NodeForm from "./NodeForm";
-import { fileIdOf, inboundRefs, isShellEntity, ownerOf, stripIds } from "./entities";
+import {
+  fileIdOf,
+  inboundRefs,
+  isShellEntity,
+  ownerOf,
+  stripIds,
+} from "./entities";
 import { useDraft } from "./useDraft";
 import "./editor.css";
 
@@ -32,7 +39,13 @@ const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
  * The bar above the form. It names the **file** every button here writes,
  * because one entity is exactly one save and that is the model's whole point.
  */
-function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () => void }) {
+function EntityBar({
+  entityId,
+  onDeleted,
+}: {
+  entityId: string;
+  onDeleted: () => void;
+}) {
   const { draft, select } = useEditor();
   const { saveToServer, deleteFromServer } = useEditorPassword();
   const [busy, setBusy] = useState<"idle" | "saving" | "deleting">("idle");
@@ -48,25 +61,50 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
     () => new Set(entity ? flatten(entity).map((node) => node.id) : []),
     [entity],
   );
-  const errors = draft.problems.filter((p) => p.severity === "error" && ids.has(p.nodeId));
+  const errors = draft.problems.filter(
+    (p) => p.severity === "error" && ids.has(p.nodeId),
+  );
   const dirty = draft.dirty.has(entityId);
 
   if (!entity) return null;
 
   const save = async () => {
     if (!fileId) {
-      toast.error(`No server prefix for "${entityId}" — add one to projects.json first.`);
+      toast.error(
+        `No server prefix for "${entityId}" — add one to projects.json first.`,
+      );
       return;
     }
     if (damaged) {
-      toast.error("This file has structural damage; fix it in git before saving from here.");
+      toast.error(
+        "This file has structural damage; fix it in git before saving from here.",
+      );
       return;
     }
     if (errors.length > 0) {
-      toast.error(`Not saved — ${errors.length} error(s) in this file. Fix them first.`);
+      toast.error(
+        `Not saved — ${errors.length} error(s) in this file. Fix them first.`,
+      );
       return;
     }
     setBusy("saving");
+    // The text goes first: the node file points at it, so it must never land
+    // first and leave a node naming a file that is not there.
+    for (const [proseId, edit] of draft.prose) {
+      if (edit.entityId !== entityId) continue;
+      const proseResult = await saveToServer(proseId, edit.body);
+      if (!proseResult.success) {
+        setBusy("idle");
+        toast.error(proseResult.error || "Save failed");
+        return;
+      }
+      draft.markProseSaved(proseId);
+    }
+    if (!draft.nodeDirty.has(entityId)) {
+      setBusy("idle");
+      toast.success("Saved");
+      return;
+    }
     const result = await saveToServer(fileId, stripIds(entity));
     setBusy("idle");
     if (result.success) {
@@ -79,13 +117,16 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
   };
 
   const refs = inboundRefs(draft.index, ids);
-  const onDesktop = [...desktopConfig.desktopIcons, ...desktopConfig.quickSearch].filter((id) =>
-    ids.has(id),
-  );
+  const onDesktop = [
+    ...desktopConfig.desktopIcons,
+    ...desktopConfig.quickSearch,
+  ].filter((id) => ids.has(id));
 
   const remove = async () => {
     if (locked) {
-      toast.error(`"${entityId}" is a desktop folder — it cannot be deleted here.`);
+      toast.error(
+        `"${entityId}" is a desktop folder — it cannot be deleted here.`,
+      );
       return;
     }
     if (!fileId) {
@@ -109,25 +150,36 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
   return (
     <div className="editor-entity-bar">
       <div className="editor-entity-what">
-        <button type="button" className="editor-link" onClick={() => select(entityId)}>
+        <button
+          type="button"
+          className="editor-link"
+          onClick={() => select(entityId)}
+        >
           {entity.name}
         </button>
-        <span className="editor-text-mono">{fileId ?? `${entityId} — not addressable`}</span>
+        <span className="editor-text-mono">
+          {fileId ?? `${entityId} — not addressable`}
+        </span>
         {dirty && <span className="editor-dirty">unsaved</span>}
-        {draft.created.has(entityId) && <span className="editor-badge">new file</span>}
+        {draft.created.has(entityId) && (
+          <span className="editor-badge">new file</span>
+        )}
       </div>
 
       <div className="editor-entity-actions">
         {errors.length > 0 && (
           <span className="editor-error">
-            <AlertTriangle size={13} /> {plural(errors.length, "error")} — save blocked
+            <AlertTriangle size={13} /> {plural(errors.length, "error")} — save
+            blocked
           </span>
         )}
         <button
           type="button"
           className="editor-button editor-button-primary"
           onClick={save}
-          disabled={busy !== "idle" || !dirty || errors.length > 0 || Boolean(damaged)}
+          disabled={
+            busy !== "idle" || !dirty || errors.length > 0 || Boolean(damaged)
+          }
         >
           <Save size={13} /> {busy === "saving" ? "Saving…" : "Save"}
         </button>
@@ -148,8 +200,8 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
            breaks, which a one-line browser dialog cannot. */
         <div className="editor-confirm">
           <p>
-            Delete <span className="editor-text-mono">{fileId}</span> and everything in it?
-            This commits, and cannot be undone from here.
+            Delete <span className="editor-text-mono">{fileId}</span> and
+            everything in it? This commits, and cannot be undone from here.
           </p>
           {(refs.length > 0 || onDesktop.length > 0) && (
             <>
@@ -175,7 +227,8 @@ function EntityBar({ entityId, onDeleted }: { entityId: string; onDeleted: () =>
               onClick={remove}
               disabled={busy !== "idle"}
             >
-              <Trash2 size={13} /> {busy === "deleting" ? "Deleting…" : "Delete"}
+              <Trash2 size={13} />{" "}
+              {busy === "deleting" ? "Deleting…" : "Delete"}
             </button>
             <button
               type="button"
@@ -225,7 +278,11 @@ function ProblemList() {
               >
                 {problem.nodeId}
               </button>
-              <span className={problem.severity === "error" ? "editor-error" : "editor-warn"}>
+              <span
+                className={
+                  problem.severity === "error" ? "editor-error" : "editor-warn"
+                }
+              >
                 {problem.message}
               </span>
             </li>
@@ -296,7 +353,12 @@ function Workspace() {
 
   return (
     <EditorContext.Provider value={context}>
-      <div className="editor-shell">
+      <div
+        className="editor-shell"
+        style={
+          { "--editor-wallpaper": `url(${wallpaper})` } as React.CSSProperties
+        }
+      >
         <header className="editor-topbar">
           {/* Only the tree drawer needs it, so it goes when the tree does. */}
           {tab === "content" && (
@@ -307,7 +369,11 @@ function Workspace() {
               aria-controls="editor-tree-pane"
               onClick={() => setTreeOpen((open) => !open)}
             >
-              {treeOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+              {treeOpen ? (
+                <PanelLeftClose size={16} />
+              ) : (
+                <PanelLeftOpen size={16} />
+              )}
               <span>Files</span>
             </button>
           )}
@@ -325,7 +391,7 @@ function Workspace() {
               className={`editor-tab${tab === "pin" ? " editor-tab-active" : ""}`}
               onClick={() => go({ tab: "pin" })}
             >
-              <Image size={13} /> Pinterest image URLs
+              <Image size={13} /> Get Pinterest image link
             </button>
           </nav>
           <ProblemList />

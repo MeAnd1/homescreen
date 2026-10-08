@@ -16,7 +16,9 @@
   font-family: var(--font-ui);
   font-size: var(--font-size-body);
   color: var(--text-default);
-  background: var(--surface-content);
+  /* The desktop wallpaper, set inline by Editor.tsx. The right pane is
+     transparent, so it shows through wherever no form is drawn. */
+  background: var(--surface-content) var(--editor-wallpaper, none) center / cover no-repeat;
 }
 
 /* ---------- Top bar ---------- */
@@ -113,6 +115,7 @@
 
 .editor-pane-right {
   flex: 1;
+  background: transparent;
   display: flex;
   flex-direction: column;
 }
@@ -257,6 +260,14 @@
 .editor-form {
   padding: 16px 20px 64px;
   max-width: 900px;
+  /* A frosted sheet of the content grey over the wallpaper: the fields keep
+     their contrast, the empty margins show the desktop. */
+  margin: 16px;
+  background: rgba(224, 225, 228, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .editor-form-head {
@@ -327,6 +338,12 @@
   flex: 1;
 }
 
+.editor-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-style: italic;
+}
+
 .editor-grid-2,
 .editor-grid-3,
 .editor-grid-4 {
@@ -387,6 +404,8 @@
 }
 
 .editor-card-title {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -441,6 +460,27 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
+}
+
+/* Pinterest quick-fill strip at the top of an image card. */
+.editor-quick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px 10px;
+  margin-bottom: 14px;
+  border: 1px dashed var(--border-strong);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.editor-quick-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.editor-quick-row > .editor-input {
+  flex: 1;
 }
 
 .editor-thumb {
@@ -966,8 +1006,7 @@
   /* Light, for the bare "Checking password…" line; the card re-darkens its
      own text below. */
   color: var(--text-inverse);
-  background-color: var(--editor-field);
-  background-image: var(--editor-backdrop);
+  background: var(--surface-content) var(--editor-wallpaper, none) center / cover no-repeat;
   /* Dark chrome, same swap as the taskbar: the default ring is navy and would
      vanish against the backdrop. */
   --focus-ring: var(--focus-ring-light);
@@ -1000,11 +1039,52 @@
   color: var(--text-primary);
 }
 
+.editor-password-wrap {
+  position: relative;
+  display: flex;
+}
+
+.editor-password-wrap .editor-input {
+  flex: 1;
+  padding-right: 32px;
+}
+
+.editor-password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.editor-password-toggle:hover {
+  color: var(--text-default);
+}
+
+/* Always rendered so an error never shifts the button. */
+.editor-gate-warn {
+  display: flex;
+  min-height: 1.4em;
+  margin: 8px 0;
+}
+
 /* ---------- Pinterest helper ---------- */
 
 .editor-pin-container {
   padding: 20px;
-  max-width: 720px;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 960px;
+  box-sizing: border-box;
 }
 
 .editor-section {
@@ -1045,19 +1125,21 @@
 }
 
 .editor-pin-results {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .editor-pin-result-block {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .editor-pin-preview {
-  max-width: 240px;
+  max-width: 320px;
   border: 1px solid var(--border-strong);
 }
 
@@ -1306,6 +1388,7 @@
     /* The bottom padding is deep on purpose: the last field must be reachable
        above a phone's on-screen keyboard. */
     padding: 12px 12px 96px;
+    margin: 8px;
   }
 
   .editor-form-head {
@@ -1333,12 +1416,23 @@
   }
 
   .editor-media-row {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .editor-thumb {
-    width: 64px;
-    height: 64px;
+    width: 100%;
+    height: 120px;
+    object-fit: contain;
+  }
+
+  .editor-quick-row {
+    flex-direction: column;
+  }
+
+  .editor-quick-row > .editor-button {
+    justify-content: center;
+    min-height: 36px;
   }
 
   .editor-empty {
@@ -1380,6 +1474,7 @@
 
   .editor-form {
     padding: 10px 10px 96px;
+    margin: 6px;
   }
 
   .editor-card-body {
@@ -1390,4 +1485,166 @@
     gap: 10px;
     padding: 8px;
   }
+}
+
+/* Glass for the chrome that sits over the wallpaper. */
+.editor-topbar,
+.editor-entity-bar {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.editor-topbar {
+  background: rgba(200, 201, 205, 0.88);
+}
+
+.editor-entity-bar {
+  background: rgba(232, 233, 236, 0.88);
+}
+
+.editor-pane-left {
+  background: rgba(216, 217, 220, 0.9);
+}
+
+.editor-empty .editor-hint {
+  padding: 8px 14px;
+  background: rgba(232, 233, 236, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.editor-pin-container .editor-section {
+  background: rgba(232, 233, 236, 0.85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Character page: big avatar on top, files as cards ---------- */
+
+.editor-profile {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.editor-profile-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.editor-avatar {
+  width: 160px;
+  height: 160px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  background: var(--surface-content-header);
+  color: var(--text-muted);
+  overflow: hidden;
+}
+
+.editor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editor-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.editor-slot-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "name arrow" "status arrow";
+  align-items: center;
+  column-gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-content-header);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.editor-slot-card {
+  cursor: pointer;
+}
+
+button.editor-slot-card:hover {
+  border-color: var(--accent);
+}
+
+.editor-slot-card > svg {
+  grid-area: arrow;
+  color: var(--accent);
+}
+
+.editor-slot-name {
+  grid-area: name;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.editor-slot-status {
+  grid-area: status;
+  font-size: var(--font-size-chrome);
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .editor-profile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .editor-avatar {
+    align-self: center;
+  }
+}
+
+.editor-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-content-header);
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.editor-back:hover {
+  border-color: var(--accent);
+}
+
+.editor-profile {
+  margin-bottom: 20px;
+}
+
+.editor-slot-grid {
+  margin-top: 6px;
+}
+
+.editor-button-large {
+  padding: 8px 16px;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.editor-label-note {
+  margin-left: 8px;
+  font-size: 0.85em;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
 }

@@ -3,7 +3,10 @@ import DeleteButton from "../DeleteButton";
 import ReorderButtons from "../ReorderButtons";
 
 interface Props<T> {
-  label: string;
+  /** Left out when the page already says what the list is. */
+  label?: string;
+  /** Words for the add button; given, the button is drawn large and primary. */
+  addLabel?: string;
   items: T[];
   onChange: (items: T[]) => void;
   /** A blank member, for the add button. */
@@ -18,6 +21,7 @@ interface Props<T> {
  */
 export default function ListEditor<T>({
   label,
+  addLabel,
   items,
   onChange,
   create,
@@ -37,25 +41,31 @@ export default function ListEditor<T>({
 
   return (
     <div className="editor-field">
-      <div className="editor-list-head">
-        <span className="editor-label">
-          {label} <span className="editor-count">({items.length})</span>
-        </span>
+      <div className={`editor-list-head${label ? "" : " editor-list-head-end"}`}>
+        {label && (
+          <span className="editor-label">
+            {label} <span className="editor-count">({items.length})</span>
+          </span>
+        )}
         <button
           type="button"
-          className="editor-button editor-button-small"
+          className={
+            addLabel
+              ? "editor-button editor-button-primary editor-button-large"
+              : "editor-button editor-button-small"
+          }
           onClick={() => onChange([...items, create()])}
         >
-          <Plus size={13} /> Add
+          <Plus size={addLabel ? 16 : 13} /> {addLabel ?? "Add"}
         </button>
       </div>
 
       {items.map((item, index) => (
         <div className="editor-card" key={index}>
           <div className="editor-card-head">
+            <ReorderButtons index={index} total={items.length} onMove={move} />
             <span className="editor-card-title">{summary(item, index) || `#${index + 1}`}</span>
             <div className="editor-card-actions">
-              <ReorderButtons index={index} total={items.length} onMove={move} />
               <DeleteButton
                 onClick={() => onChange(items.filter((_, i) => i !== index))}
                 title="Remove"

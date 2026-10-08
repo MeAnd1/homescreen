@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, User, X } from "lucide-react";
 import { APP_REGISTRY } from "../apps/registry";
 import type { VNode } from "../content/types";
 import { ICONS } from "../ui/icons";
@@ -47,7 +47,20 @@ const VIEWS = Object.keys(APP_REGISTRY) as ViewId[];
  */
 const SHOW_ADVANCED = false;
 
-function IconField({ node, urlOnly }: { node: VNode; urlOnly?: boolean }) {
+function IconField({
+  node,
+  urlOnly,
+  label = "Icon",
+  hint,
+  hidePreview,
+}: {
+  node: VNode;
+  urlOnly?: boolean;
+  label?: string;
+  hint?: string;
+  /** The caller already shows the picture, bigger, somewhere else. */
+  hidePreview?: boolean;
+}) {
   const { draft } = useEditor();
   const icon = node.icon ?? "";
   const isKey = icon in ICONS;
@@ -60,7 +73,7 @@ function IconField({ node, urlOnly }: { node: VNode; urlOnly?: boolean }) {
 
   return (
     <div className="editor-field">
-      <span className="editor-label">Icon</span>
+      <span className="editor-label">{label}</span>
       <div className="editor-row">
         {/* A urlOnly folder has no built-in-icon list to offer, so the picker is
             gone and the box is the URL one. Its value is whatever is stored,
@@ -95,7 +108,7 @@ function IconField({ node, urlOnly }: { node: VNode; urlOnly?: boolean }) {
             <option value="__url">Custom URL…</option>
           </select>
         )}
-        {icon && (
+        {icon && !hidePreview && (
           <img
             className="editor-icon-preview"
             src={ICONS[icon as keyof typeof ICONS] ?? icon}
@@ -110,6 +123,22 @@ function IconField({ node, urlOnly }: { node: VNode; urlOnly?: boolean }) {
           placeholder="https://…"
           onChange={(e) => set(e.target.value)}
         />
+      )}
+      {hint && <span className="editor-hint">{hint}</span>}
+    </div>
+  );
+}
+
+/** The big picture of a character, with a stand-in while there is none. */
+function Avatar({ src }: { src?: string }) {
+  const [failed, setFailed] = useState<string>();
+  const broken = failed === src;
+  return (
+    <div className="editor-avatar">
+      {src && !broken ? (
+        <img src={src} alt="" onError={() => setFailed(src)} />
+      ) : (
+        <User size={48} />
       )}
     </div>
   );
@@ -244,33 +273,38 @@ function SlotSection({
 
   return (
     <div className="editor-field">
-      <span className="editor-label">Files</span>
-      <p className="editor-hint">Fixed for every character. An empty one is hidden.</p>
-      {slots.map((slot) => {
-        const id = `${node.id}/${slot.key}`;
-        const child = draft.index.get(id);
-        return (
-          <div
-            className={`editor-order-row${slot.disabled ? " editor-slot-off" : ""}`}
-            key={slot.key}
-          >
-            {slot.disabled ? (
-              <span>{slot.name}</span>
-            ) : (
-              <button
-                type="button"
-                className="editor-link"
-                onClick={() => select(id)}
-              >
-                {slot.name}
-              </button>
-            )}
-            <span className="editor-text-muted">
-              {slot.disabled ? "under construction" : slotStatus(child)}
-            </span>
-          </div>
-        );
-      })}
+      <div className="editor-slot-grid">
+        {slots.map((slot) => {
+          const id = `${node.id}/${slot.key}`;
+          const status = slot.disabled
+            ? "Coming soon"
+            : slotStatus(draft.index.get(id));
+          const empty = status === "empty — hidden";
+          const body = (
+            <>
+              <span className="editor-slot-name">{slot.name}</span>
+              <span className="editor-slot-status">
+                {empty ? "Empty (hidden)" : status}
+              </span>
+              {!slot.disabled && <ChevronRight size={16} />}
+            </>
+          );
+          return slot.disabled ? (
+            <div className="editor-slot-card editor-slot-off" key={slot.key}>
+              {body}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="editor-slot-card"
+              key={slot.key}
+              onClick={() => select(id)}
+            >
+              {body}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -404,7 +438,7 @@ function ChildrenSection({ node }: { node: VNode }) {
 }
 
 export default function NodeForm({ node }: { node: VNode }) {
-  const { draft } = useEditor();
+  const { draft, select } = useEditor();
   const def = APP_REGISTRY[node.view];
   const problems = draft.problems.filter((p) => p.nodeId === node.id);
   const knownView = VIEWS.includes(node.view);
@@ -428,6 +462,16 @@ export default function NodeForm({ node }: { node: VNode }) {
 
   return (
     <div className="editor-form">
+      {slot && (
+        <button
+          type="button"
+          className="editor-back"
+          onClick={() => select(node.id.slice(0, node.id.lastIndexOf("/")))}
+        >
+          <ChevronLeft size={16} />
+          Back
+        </button>
+      )}
       <div className="editor-form-head">
         <h2>{node.name || "(unnamed)"}</h2>
         <span className="editor-text-mono">{node.id}</span>
@@ -450,7 +494,29 @@ export default function NodeForm({ node }: { node: VNode }) {
         </p>
       )}
 
-      {!isDesktopEntry && !slot && (
+      {!isDesktopEntry && !slot && slots && (
+        <div className="editor-profile">
+          <Avatar src={node.icon} />
+          <div className="editor-profile-fields">
+            <ScalarField
+              label="Name"
+              type="text"
+              required
+              value={node.name}
+              onChange={(v) => draft.patchNode(node.id, { name: v })}
+            />
+            <IconField
+              node={node}
+              urlOnly
+              hidePreview
+              label="Avatar picture"
+              hint="Use the [ Thumbnail ] image link in [ Get Pinterest image link ] tab."
+            />
+          </div>
+        </div>
+      )}
+
+      {!isDesktopEntry && !slot && !slots && (
         <>
           <ScalarField
             label="Name"
@@ -470,9 +536,6 @@ export default function NodeForm({ node }: { node: VNode }) {
                   draft.patchNode(node.id, { view: e.target.value as ViewId })
                 }
               >
-                {/* A node whose view is not registered keeps its own value as an
-                  option. Without it the select would show the first entry, which
-                  reads as valid and leaves the bad value in the file on save. */}
                 {!knownView && (
                   <option value={node.view}>
                     {node.view} — unknown, pick one
@@ -487,12 +550,10 @@ export default function NodeForm({ node }: { node: VNode }) {
             </label>
           )}
 
-          {!hideIcon && <IconField node={node} urlOnly={convention?.icon === "url"} />}
+          {!hideIcon && (
+            <IconField node={node} urlOnly={convention?.icon === "url"} />
+          )}
         </>
-      )}
-
-      {slot && !slot.disabled && (
-        <p className="editor-hint">Name, type and icon come from the character layout.</p>
       )}
 
       {!slot?.disabled &&
