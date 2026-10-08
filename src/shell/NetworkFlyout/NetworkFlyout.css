@@ -1,0 +1,309 @@
+/* Windows 10 network flyout — rises from the tray's Wi-Fi icon. Shell chrome
+   like the start menu: above every window, below the taskbar, never draggable. */
+
+.netfly {
+  position: fixed;
+  right: 0;
+  bottom: var(--taskbar-height);
+  z-index: var(--z-startmenu);
+  display: flex;
+  flex-direction: column;
+  width: var(--netfly-width);
+  max-width: 100vw;
+  max-height: calc(100vh - var(--taskbar-height) - 8px);
+  background: var(--startmenu-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--startmenu-border);
+  border-bottom: none;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.45);
+  color: var(--text-inverse);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-body);
+  user-select: none;
+  /* Dark surface: re-point the shared focus ring and scrollbar at light ones. */
+  --focus-ring: var(--focus-ring-light);
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.25);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.4);
+  animation: netfly-rise 160ms var(--motion-ease);
+}
+
+/* Windows 10 flyouts slide up out of the taskbar rather than scale. */
+@keyframes netfly-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ---------- Network list ---------- */
+
+.netfly-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.netfly-network-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.netfly-network:not(.netfly-network--expanded) .netfly-network-head:hover {
+  background: var(--startmenu-tile-hover);
+}
+
+.netfly-network--expanded {
+  background: var(--netfly-row-expanded);
+}
+
+.netfly-network-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.netfly-ssid {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.netfly-sub {
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.35;
+}
+
+.netfly-sub--warn {
+  font-size: var(--font-size-chrome);
+}
+
+/* ---------- Signal fan ---------- */
+
+.netfly-signal {
+  position: relative;
+  flex-shrink: 0;
+  width: 22px;
+  height: 20px;
+}
+
+.netfly-signal svg {
+  display: block;
+  overflow: visible;
+}
+
+.netfly-signal path {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.netfly-arc,
+.netfly-arc--lit {
+  stroke: var(--netfly-arc-dim);
+  fill: var(--netfly-arc-dim);
+}
+
+.netfly-arc--lit {
+  stroke: var(--text-inverse);
+  fill: var(--text-inverse);
+}
+
+/* The arcs are stroked, the dot is filled; `fill: none` above wins on paths. */
+.netfly-signal circle.netfly-arc,
+.netfly-signal circle.netfly-arc--lit {
+  stroke: none;
+}
+
+.netfly-lock {
+  position: absolute;
+  right: -3px;
+  bottom: -1px;
+  color: var(--text-inverse);
+}
+
+/* ---------- Expanded row ---------- */
+
+.netfly-network-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Lines up with the ssid: head padding + icon + gap. */
+  padding: 0 14px 12px 48px;
+}
+
+.netfly-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.netfly-check input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.netfly-status {
+  color: rgba(255, 255, 255, 0.8);
+  min-height: 1.4em;
+}
+
+/* Three dots that count up, like the real "Connecting..." */
+.netfly-ellipsis::after {
+  content: "";
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: netfly-dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes netfly-dots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+
+.netfly-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.netfly-btn {
+  min-width: 112px;
+  padding: 6px 16px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-inverse);
+  font: inherit;
+  cursor: default;
+}
+
+.netfly-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.netfly-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.netfly-btn--primary {
+  background: var(--accent);
+}
+
+.netfly-btn--primary:active:not(:disabled) {
+  background: var(--netfly-tile-on-hover);
+}
+
+.netfly-btn:disabled {
+  opacity: 0.45;
+}
+
+/* ---------- The one that should not be there ---------- */
+
+/* Not always in the list — useFaintSignal adds and drops it, with no
+   transition, the way a Windows 10 rescan does. Only its text is styled. */
+.netfly-network--ominous .netfly-status,
+.netfly-network--ominous .netfly-sub--warn {
+  color: var(--netfly-ominous);
+}
+
+/* ---------- Wi-Fi off ---------- */
+
+.netfly-empty {
+  padding: 28px 14px;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+
+/* ---------- Footer: settings link and quick tiles ---------- */
+
+.netfly-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--startmenu-border);
+}
+
+/* Decorative, like the explorer sidebar: there is no Settings app to open. */
+.netfly-link {
+  color: var(--netfly-link);
+}
+
+.netfly-footnote {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--font-size-chrome);
+}
+
+.netfly-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 12px;
+}
+
+.netfly-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 64px;
+  padding: 8px;
+  border: 1px solid transparent;
+  background: var(--startmenu-tile);
+  color: var(--text-inverse);
+  font: inherit;
+  font-size: var(--font-size-chrome);
+  text-align: left;
+  cursor: default;
+}
+
+.netfly-tile:hover {
+  background: var(--startmenu-tile-hover);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.netfly-tile--on {
+  background: var(--netfly-tile-on);
+}
+
+.netfly-tile--on:hover {
+  background: var(--netfly-tile-on-hover);
+}
+
+.netfly-tile-label {
+  line-height: 1.25;
+}
+
+/* ---------- Touch ---------- */
+
+@media (pointer: coarse) {
+  .netfly-network-head {
+    padding-top: 13px;
+    padding-bottom: 13px;
+  }
+
+  .netfly-check input {
+    width: 18px;
+    height: 18px;
+  }
+}
