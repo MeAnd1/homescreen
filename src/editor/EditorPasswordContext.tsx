@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import wallpaper from "../assets/background.webp";
 import { EditorPasswordContext } from "./editor-auth";
 import {
   clearPassword,
@@ -24,6 +25,7 @@ export function EditorPasswordProvider({ children }: { children: ReactNode }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const stored = getSavedPassword();
@@ -109,22 +111,42 @@ export function EditorPasswordProvider({ children }: { children: ReactNode }) {
 
   if (gate === "locked") {
     return (
-      <div className="editor-gate">
+      <div
+        className="editor-gate"
+        style={{ "--editor-wallpaper": `url(${wallpaper})` } as CSSProperties}
+      >
         <form className="editor-gate-form" onSubmit={submit}>
           <h1>Kataa behind the screen</h1>
           <p className="editor-hint">Project: {PROJECT_ID}</p>
           <label className="editor-field">
             <span className="editor-label">Password</span>
-            <input
-              className="editor-input"
-              type="password"
-              value={input}
-              autoFocus
-              disabled={verifying}
-              onChange={(e) => setInput(e.target.value)}
-            />
+            <span className="editor-password-wrap">
+              <input
+                className="editor-input"
+                type={showPassword ? "text" : "password"}
+                value={input}
+                autoFocus
+                disabled={verifying}
+                onChange={(e) => setInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="editor-password-toggle"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {showPassword && <path d="M3 3l18 18" />}
+                </svg>
+              </button>
+            </span>
           </label>
-          {error && <p className="editor-warn">{error}</p>}
+          <p className="editor-warn editor-gate-warn" role="alert">
+            {error}
+          </p>
           <button
             type="submit"
             className="editor-button editor-button-primary"

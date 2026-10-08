@@ -8,6 +8,15 @@ import { indexDraft, loadEntities, ownerOf, rematerialize } from "./entities";
 
 const REGISTERED_VIEWS: ReadonlySet<string> = new Set(Object.keys(APP_REGISTRY));
 
+/** A prose body edited but not yet pushed. Prose is its own file on the server,
+ *  but it is saved from the same button as the entity that owns it. */
+export interface ProseEdit {
+  entityId: string;
+  body: string;
+  /** What the server holds, so the edit can tell when it is back to it. */
+  loaded: string;
+}
+
 export interface DraftApi {
   /** entityId → the entity's root node, ids derived. One entity = one file. */
   entities: ReadonlyMap<string, VNode>;
@@ -15,8 +24,14 @@ export interface DraftApi {
   index: ReadonlyMap<string, VNode>;
   /** Entities whose file on disk has structural damage; they cannot be saved. */
   broken: ReadonlyMap<string, TreeProblem[]>;
-  /** Entities edited but not yet pushed. */
+  /** Entities with anything unsaved: their node file, or a prose body they own. */
   dirty: ReadonlySet<string>;
+  /** Entities whose own node file is unsaved (a subset of `dirty`). */
+  nodeDirty: ReadonlySet<string>;
+  /** Unsaved prose bodies by prose fileId. */
+  prose: ReadonlyMap<string, ProseEdit>;
+  setProse: (fileId: string, nodeId: string, body: string, loaded: string) => void;
+  markProseSaved: (fileId: string) => void;
   /** Entities created this session — they exist on the server but not in this bundle. */
   created: ReadonlySet<string>;
   /** validateNodes over the whole draft — the pre-save gate. */
@@ -83,6 +98,7 @@ function editNode(node: VNode, targetId: string, fn: (n: VNode) => VNode | null)
 export function useDraft(): DraftApi {
   const [{ entities, broken }, setLoaded] = useState(loadEntities);
   const [dirty, setDirty] = useState<ReadonlySet<string>>(new Set<string>());
+  const [prose, setProseEdits] = useState<ReadonlyMap<string, ProseEdit>>(new Map());
   const [created, setCreated] = useState<ReadonlySet<string>>(new Set<string>());
 
   /** Every write goes through here: edit the owning entity, re-derive its ids,
@@ -197,6 +213,34 @@ export function useDraft(): DraftApi {
     });
   }, []);
 
+  const setProse = useCallback(
+    (fileId: string, nodeId: string, body: string, loaded: string) => {
+      setProseEdits((prev) => {
+        const next = new Map(prev);
+        const entityId = ownerOf(entities, nodeId);
+        if (body === loaded || !entityId) next.delete(fileId);
+        else next.set(fileId, { entityId, body, loaded });
+        return next;
+      });
+    },
+    [entities],
+  );
+
+  const markProseSaved = useCallback((fileId: string) => {
+    setProseEdits((prev) => {
+      if (!prev.has(fileId)) return prev;
+      const next = new Map(prev);
+      next.delete(fileId);
+      return next;
+    });
+  }, []);
+
+  const anyDirty = useMemo(() => {
+    const all = new Set(dirty);
+    for (const edit of prose.values()) all.add(edit.entityId);
+    return all;
+  }, [dirty, prose]);
+
   const { index, problems } = useMemo(() => {
     const { index, duplicates } = indexDraft(entities);
     const problems: TreeProblem[] = duplicates.map((nodeId) => ({
@@ -232,7 +276,11 @@ export function useDraft(): DraftApi {
     entities,
     index,
     broken,
-    dirty,
+    dirty: anyDirty,
+    nodeDirty: dirty,
+    prose,
+    setProse,
+    markProseSaved,
     created,
     problems,
     nodeAt,

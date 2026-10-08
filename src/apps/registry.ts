@@ -56,7 +56,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     Content: MsWord,
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
-      { key: "src", type: "richText", label: "Text" },
+      { key: "src", type: "richText" },
     ],
   },
 
@@ -70,7 +70,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     Content: Notepad,
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
-      { key: "src", type: "richText", label: "Text" },
+      { key: "src", type: "richText" },
     ],
   },
 

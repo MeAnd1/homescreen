@@ -4,6 +4,9 @@ interface Props {
   value: unknown;
   required?: boolean;
   hint?: string;
+  /** Small grey words after the label, saying what the field is for. */
+  note?: string;
+  placeholder?: string;
   invalid?: boolean;
   onChange: (value: unknown) => void;
 }
@@ -15,6 +18,8 @@ export default function ScalarField({
   value,
   required,
   hint,
+  note,
+  placeholder,
   invalid,
   onChange,
 }: Props) {
@@ -25,13 +30,14 @@ export default function ScalarField({
       <span className="editor-label">
         {label}
         {required && <span className="editor-required"> *</span>}
+        {note && <span className="editor-label-note">{note}</span>}
       </span>
       <input
         className={`editor-input${invalid || (required && !text) ? " editor-input-invalid" : ""}`}
         type={type === "number" ? "number" : "text"}
         inputMode={type === "number" ? "decimal" : undefined}
         value={text}
-        placeholder={type === "url" ? "https://…" : undefined}
+        placeholder={placeholder ?? (type === "url" ? "https://…" : undefined)}
         onChange={(e) => {
           const raw = e.target.value;
           if (type !== "number") return onChange(raw);

@@ -2,14 +2,7 @@ import React, { useState } from "react";
 import { Link2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import CopyToClipboardButton from "./CopyToClipboardButton";
-
-interface PinApiResponse {
-  source: string;
-  thumbnail: string;
-  original: string;
-}
-
-const PIN_API_BASE = "https://09176645.xyz/pin-image-urls";
+import { fetchPinImages, type PinApiResponse } from "./pinApi";
 
 const EditorPinImageUrl: React.FC = () => {
   const [pinUrl, setPinUrl] = useState("");
@@ -26,14 +19,7 @@ const EditorPinImageUrl: React.FC = () => {
     setResult(null);
 
     try {
-      const apiUrl = `${PIN_API_BASE}/?url=${encodeURIComponent(pinUrl.trim())}`;
-      const response = await fetch(apiUrl);
-
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-
-      const data: PinApiResponse = await response.json();
+      const data = await fetchPinImages(pinUrl);
       setResult(data);
       toast.success("Got it");
     } catch (error) {

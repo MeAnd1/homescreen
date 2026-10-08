@@ -27,22 +27,15 @@ const blankAction = (): HotspotAction => ({
   opens: SECRETS[0]?.id ?? "",
 });
 
-/**
- * An action opening a built-in node (`content/builtins.ts`). Which secret it is
- * gets picked from a dropdown, but its id is never printed in the zone list —
- * that list is always on screen, and it would give the secret away to anyone
- * who opens the form.
- */
+/** An action opening a built-in node (`content/builtins.ts`) — a secret. */
 const isSecret = (action: HotspotAction | undefined): boolean =>
   action?.do === "openNode" && isBuiltinNode(action.opens);
 
+/** The list row's title: the secret's name, as the Effect dropdown shows it. */
 const actionSummary = (action: HotspotAction | undefined): string => {
-  if (isSecret(action)) return "opens a secret";
-  // Content written before secrets were the only action can still point at an
-  // ordinary node; it is named rather than silently rewritten.
-  // Empty until a target is picked — summarising that as "opens " reads as a
-  // bug, so it falls through to the positional name instead.
-  return action?.opens ? `opens ${action.opens}` : "";
+  if (!action?.opens) return "";
+  const secret = SECRETS.find((s) => s.id === action.opens);
+  return secret ? secret.name : `opens ${action.opens}`;
 };
 
 const hotspotSummary = (hotspot: Hotspot, index: number): string =>
@@ -235,10 +228,7 @@ function ImageZones({
 
       <div className="editor-placer-panel">
         <div className="editor-list-head">
-          <span className="editor-label">
-            Easter egg clicks{" "}
-            <span className="editor-count">({hotspots.length})</span>
-          </span>
+          <span className="editor-label">Secret effect</span>
           <button
             type="button"
             className="editor-button editor-button-small"
@@ -249,7 +239,9 @@ function ImageZones({
         </div>
 
         {hotspots.length === 0 ? (
-          <span className="editor-hint">None yet. Add one, then drag it into place.</span>
+          <span className="editor-hint">
+            None yet. Add one, then drag it into place.
+          </span>
         ) : (
           <ul className="editor-zone-list">
             {hotspots.map((hotspot, i) => (
@@ -301,14 +293,6 @@ function ImageZones({
 
       {current && (
         <div className="editor-placer-settings">
-          {/* "Easter egg click 4 — Easter egg click 4" is what naming an
-              unconfigured one after its position would print, so the summary is
-              appended only when the action has something to say. */}
-          <span className="editor-label">
-            {`Easter egg click ${index + 1}`}
-            {actionSummary(current.action) &&
-              ` — ${actionSummary(current.action)}`}
-          </span>
           {/* Every easter egg click opens a secret — a built-in node from
               `content/builtins.ts`, deliberately missing from the ordinary node
               picker, which would only ever call one an unknown node. */}
@@ -318,7 +302,7 @@ function ImageZones({
             </span>
           ) : (
             <label className="editor-field">
-              <span className="editor-label">Opens</span>
+              <span className="editor-label">Select effect</span>
               <select
                 className="editor-input"
                 value={current.action?.opens ?? ""}

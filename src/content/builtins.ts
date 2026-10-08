@@ -15,10 +15,10 @@
 export const BUILTIN_NODES: Record<string, Record<string, unknown>> = {
   /** The payoff behind Me and I's two hotspots. */
   rickroll: {
-    name: "Never gonna give you up",
+    name: "Rickroll",
     icon: "mystery",
     view: "mediaPlayer",
-    fileName: "you-got-rick-rolled.mp4",
+    fileName: "never-gonna-give-you-up.mp4",
     src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     loop: false,
   },

@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, RotateCcw, Save } from "lucide-react";
-import toast from "react-hot-toast";
+import { Eye, EyeOff, RotateCcw } from "lucide-react";
 import type { VNode } from "../../content/types";
 import BBCode from "../../ui/BBCode/BBCode";
 import { SCEditor } from "../BBCodeEditor";
 import { useEditor } from "../EditorContext";
-import { useEditorPassword } from "../editor-auth";
 import { fetchProse, proseIdFor } from "../prose";
 
 const BBCODE_TOOLBAR = "bold,italic,underline,strike|color|image,link|source";
 
 interface Props {
-  label: string;
+  /** Left out when the page already says what the text is. */
+  label?: string;
   node: VNode;
   /** The node field holding the prose fileId (`src` / `infoSrc`). */
   value: unknown;
@@ -19,16 +18,16 @@ interface Props {
 }
 
 /**
- * Prose is a **separate file and a separate save** from the node — see
- * DATA-MODEL.md. So this field edits two things: the body, on its own button,
- * and the fileId on the node, which is *derived from the names* and written on
+ * Prose is a **separate file** from the node — see DATA-MODEL.md — but not a
+ * separate button: the body is held in the draft (`draft.prose`) and pushed by
+ * the same Save as the node that owns it, text first. So this field edits two
+ * things: the body, and the fileId on the node, which is *derived from the names* and written on
  * the first keystroke rather than typed. Pinning it at that moment is what
  * stops a later rename from pointing the node at a different file and orphaning
  * the text.
  */
 export default function RichTextField({ label, node, value, onChange }: Props) {
   const { draft } = useEditor();
-  const { saveToServer } = useEditorPassword();
 
   const slash = node.id.lastIndexOf("/");
   const parentName =
@@ -38,14 +37,21 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
 
   const [body, setBody] = useState("");
   const [loaded, setLoaded] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [preview, setPreview] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    // Coming back to a body that was edited and not saved: pick it up where it
+    // was left rather than fetching the old text over it.
+    const pending = draft.prose.get(fileId);
+    if (pending) {
+      setBody(pending.body);
+      setLoaded(pending.loaded);
+      setStatus("idle");
+      return;
+    }
     setStatus("loading");
     setError("");
     fetchProse(fileId)
@@ -63,6 +69,8 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
     return () => {
       cancelled = true;
     };
+    // Only a change of file refetches; `draft` changes on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId]);
 
   const dirty = body !== loaded;
@@ -71,26 +79,13 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
    *  must never dirty its file. */
   const editBody = (next: string) => {
     setBody(next);
+    draft.setProse(fileId, node.id, next, loaded);
     if (!stored) onChange(fileId);
-  };
-
-  const saveBody = async () => {
-    setStatus("saving");
-    const result = await saveToServer(fileId, body);
-    setStatus("idle");
-    if (result.success) {
-      if (!stored) onChange(fileId);
-      setLoaded(body);
-      toast.success(result.message || "Saved");
-      result.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
-    } else {
-      toast.error(result.error || "Save failed");
-    }
   };
 
   return (
     <div className="editor-field">
-      <span className="editor-label">{label}</span>
+      {label && <span className="editor-label">{label}</span>}
 
       {error && <p className="editor-warn">{error}</p>}
 
@@ -114,16 +109,11 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
           <div className="editor-row">
             <button
               type="button"
-              className="editor-button editor-button-primary"
-              onClick={saveBody}
-              disabled={!dirty || status === "saving" || status === "loading"}
-            >
-              <Save size={13} /> {status === "saving" ? "Saving…" : "Save"}
-            </button>
-            <button
-              type="button"
               className="editor-button"
-              onClick={() => setBody(loaded)}
+              onClick={() => {
+                setBody(loaded);
+                draft.setProse(fileId, node.id, loaded, loaded);
+              }}
               disabled={!dirty}
             >
               <RotateCcw size={13} /> Revert
@@ -136,7 +126,6 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
               {preview ? <EyeOff size={13} /> : <Eye size={13} />}
               {preview ? "Hide" : "Preview"}
             </button>
-            {dirty && <span className="editor-dirty">unsaved</span>}
           </div>
           {preview && (
             <div className="editor-preview">
