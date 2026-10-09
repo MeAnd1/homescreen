@@ -26,7 +26,7 @@ function QuickSetup({
 
   const run = async () => {
     if (!pinUrl.trim()) {
-      toast.error("Paste a Pinterest URL first");
+      toast.error("Paste a Pinterest short link first");
       return;
     }
     setLoading(true);

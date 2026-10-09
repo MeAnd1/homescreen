@@ -56,7 +56,24 @@ export interface WindowInstance<T extends WindowTypeId = WindowTypeId> {
 }
 
 export type FieldSpec =
-  | { key: string; type: "text" | "url" | "number"; label: string; required?: boolean }
+  | {
+      key: string;
+      type: "text" | "url" | "number";
+      label: string;
+      required?: boolean;
+      /** Faint example text shown while the box is empty. */
+      placeholder?: string;
+      /** Small grey words after the label, saying what the field is for. */
+      note?: string;
+    }
+  /** A pick from a fixed list of numbers. `value: undefined` is the "leave it unset" entry. */
+  | {
+      key: string;
+      type: "choice";
+      label: string;
+      note?: string;
+      options: { value: number | undefined; label: string }[];
+    }
   | { key: string; type: "richText"; label?: string }
   | { key: string; type: "imageList"; label: string }
   | { key: string; type: "nodeRef"; label: string }

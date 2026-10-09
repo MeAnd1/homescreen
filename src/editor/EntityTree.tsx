@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, FilePlus2, X } from "lucide-react";
 import type { VNode } from "../content/types";
+import desktopConfig from "../content/desktop.json";
 import { sortDiscovered } from "../content/vfs";
 import type { ViewId } from "../window-system/types";
 import { APP_REGISTRY } from "../apps/registry";
@@ -187,6 +188,9 @@ function Row({ node, depth, selectedId, childrenOf, open, toggle }: RowProps) {
   );
 }
 
+/** The "New" button is hidden for now. Flip this to bring it back. */
+const SHOW_NEW = false;
+
 export default function EntityTree({ selectedId }: { selectedId: string }) {
   const { draft, select } = useEditor();
   const [open, setOpen] = useState<ReadonlyMap<string, boolean>>(new Map());
@@ -203,8 +207,17 @@ export default function EntityTree({ selectedId }: { selectedId: string }) {
       ...(node.children ?? []),
       ...(byParent.get(node.id) ?? []).sort(sortDiscovered(node.id, node.childOrder)),
     ];
+    // Top level follows the desktop's icon order, so the tree and the desktop
+    // read the same way; anything the desktop does not list comes after.
+    const desktopRank = (id: string) => {
+      const i = (desktopConfig.desktopIcons as readonly string[]).indexOf(id);
+      return i === -1 ? Infinity : i;
+    };
+    const fallback = sortDiscovered("", undefined);
     return {
-      roots: (byParent.get("") ?? []).sort(sortDiscovered("", undefined)),
+      roots: (byParent.get("") ?? []).sort(
+        (a, b) => desktopRank(a.id) - desktopRank(b.id) || fallback(a, b),
+      ),
       childrenOf,
     };
   }, [draft.entities]);
@@ -214,7 +227,7 @@ export default function EntityTree({ selectedId }: { selectedId: string }) {
 
   return (
     <div className="editor-tree">
-      <NewEntity onCreated={select} />
+      {SHOW_NEW && <NewEntity onCreated={select} />}
       <div className="editor-tree-scroll">
         {roots.map((node) => (
           <Row
