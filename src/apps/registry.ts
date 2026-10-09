@@ -32,7 +32,8 @@ export interface AppPayloads {
  */
 const nodeTitle = (fallback: string) => (p: { nodeId: string }) =>
   getNode(p.nodeId)?.name ?? fallback;
-const nodeIcon = (p: { nodeId: string }) => resolveIcon(getNode(p.nodeId)?.icon);
+const nodeIcon = (p: { nodeId: string }) =>
+  resolveIcon(getNode(p.nodeId)?.icon);
 
 export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   fileExplorer: {
@@ -103,7 +104,12 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
       // read the same key — one edits the list, the other draws on a member.
       // "Easter egg click" is the owner's word for them; the data model and the
       // code keep saying hotspot.
-      { key: "images", type: "hotspots", label: "Easter egg clicks", imagesKey: "images" },
+      {
+        key: "images",
+        type: "hotspots",
+        label: "Easter egg clicks",
+        imagesKey: "images",
+      },
       { key: "infoSrc", type: "richText", label: "Info text" },
     ],
   },
@@ -118,10 +124,36 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     Content: MediaPlayer,
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
-      { key: "fileName", type: "text", label: "File name (titlebar)" },
-      { key: "src", type: "url", label: "Media URL" },
-      { key: "poster", type: "url", label: "Poster image" },
-      { key: "aspect", type: "number", label: "Aspect ratio (width ÷ height)" },
+      {
+        key: "fileName",
+        type: "text",
+        label: "File name",
+        note: "Show on window title bar",
+      },
+      {
+        key: "src",
+        type: "url",
+        label: "Youtube video link",
+        placeholder: "e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      },
+      {
+        key: "poster",
+        type: "url",
+        label: "Poster image link",
+        note: "Shown while the video is paused. Optional",
+      },
+      {
+        key: "aspect",
+        type: "choice",
+        label: "Video ratio",
+        note: "YouTube only. Change it if the video looks cropped or has black bars",
+        options: [
+          { value: undefined, label: "Widescreen 16:9 (most videos)" },
+          { value: 9 / 16, label: "Vertical 9:16 (phone video, Shorts)" },
+          { value: 4 / 3, label: "Classic 4:3" },
+          { value: 1, label: "Square 1:1" },
+        ],
+      },
     ],
   },
 

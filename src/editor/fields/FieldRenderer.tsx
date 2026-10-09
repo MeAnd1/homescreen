@@ -2,6 +2,7 @@ import type { VNode } from "../../content/types";
 import type { FieldSpec } from "../../window-system/types";
 import { useEditor } from "../EditorContext";
 import BoardItemsField from "./BoardItemsField";
+import ChoiceField from "./ChoiceField";
 import HotspotsField from "./HotspotsField";
 import ImageListField from "./ImageListField";
 import NodeRefField from "./NodeRefField";
@@ -27,6 +28,19 @@ export default function FieldRenderer({ spec, node }: { spec: FieldSpec; node: V
           label={spec.label}
           type={spec.type}
           required={spec.required}
+          note={spec.note}
+          placeholder={spec.placeholder}
+          value={values[spec.key]}
+          onChange={set(spec.key)}
+        />
+      );
+
+    case "choice":
+      return (
+        <ChoiceField
+          label={spec.label}
+          note={spec.note}
+          options={spec.options}
           value={values[spec.key]}
           onChange={set(spec.key)}
         />

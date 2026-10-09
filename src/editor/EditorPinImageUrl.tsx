@@ -11,7 +11,7 @@ const EditorPinImageUrl: React.FC = () => {
 
   const fetchPinImage = async () => {
     if (!pinUrl.trim()) {
-      toast.error("Enter a Pinterest URL");
+      toast.error("Enter a Pinterest short link");
       return;
     }
 
@@ -42,7 +42,7 @@ const EditorPinImageUrl: React.FC = () => {
         <div className="editor-section-header"></div>
         <div className="editor-section-content">
           <div className="editor-field">
-            <label className="editor-label">Pinterest URL</label>
+            <label className="editor-label">Pinterest short link</label>
             <div className="editor-pin-input-row">
               <input
                 type="text"
