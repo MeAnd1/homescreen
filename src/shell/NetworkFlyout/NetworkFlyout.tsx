@@ -15,15 +15,14 @@ interface Network {
 const NETWORKS: readonly Network[] = [
   { ssid: HOME_SSID, bars: 4, secured: true },
   { ssid: "SITE-19_STAFF_L2", bars: 4, secured: true },
+  { ssid: "SITE-19_CONTAINMENT_SUBLVL-B", bars: 4, secured: true },
   { ssid: "TP-Link_4F2A", bars: 4, secured: true },
   { ssid: "NETGEAR57", bars: 3, secured: true },
   { ssid: "DIRECT-7B-HP OfficeJet Pro 8020", bars: 2, secured: true },
   { ssid: "SITE-19_RESEARCH-WING_L3", bars: 2, secured: true },
+  { ssid: "OnePingToRuleThemAll", bars: 2, secured: true },
   { ssid: "FBI Surveillance Van #4", bars: 2, secured: true },
   { ssid: "Linksys00342", bars: 2, secured: true },
-  { ssid: "OnePingToRuleThemAll", bars: 2, secured: true },
-  { ssid: "ASUS_E8_2G", bars: 1, secured: true },
-  { ssid: "SITE-19_CONTAINMENT_SUBLVL-B", bars: 4, secured: true },
   { ssid: "they can see you", bars: 1, secured: false, ominous: true },
 ];
 

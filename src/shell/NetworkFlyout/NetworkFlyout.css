@@ -10,7 +10,12 @@
   flex-direction: column;
   width: var(--netfly-width);
   max-width: 100vw;
-  max-height: calc(100vh - var(--taskbar-height) - 8px);
+  /* Never the whole screen: Windows caps the flyout and scrolls the list.
+     dvh, not vh — on a phone 100vh includes the area behind the URL bar, so a
+     vh cap let the panel run up under it and touch the top of the screen.
+     The vh line is the fallback for browsers without dvh. */
+  max-height: calc(100vh - var(--taskbar-height) - 48px);
+  max-height: min(640px, calc(100dvh - var(--taskbar-height) - 48px));
   background: var(--startmenu-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -44,7 +49,11 @@
   margin: 0;
   padding: 0;
   overflow-y: auto;
-  min-height: 0;
+  /* Scrolling to the end of the list must not drag the page behind it. */
+  overscroll-behavior: contain;
+  /* Room for a couple of rows however short the screen; the footer gives way
+     first (see the short-screen block below). */
+  min-height: 96px;
   flex: 1;
 }
 
@@ -292,6 +301,39 @@
 
 .netfly-tile-label {
   line-height: 1.25;
+}
+
+/* ---------- Small screens ----------
+   Same breakpoint as the start menu. Width stays as on desktop (max-width
+   already keeps it on screen); a phone only gets a lower cap — at most about
+   three quarters of the screen, so the desktop stays visible above it and it
+   reads as a panel, not a page. */
+
+@media (max-width: 560px) {
+  .netfly {
+    max-height: calc(75vh - var(--taskbar-height));
+    max-height: calc(75dvh - var(--taskbar-height));
+  }
+}
+
+/* A phone held sideways: little height, so the footer slims down to keep the
+   list usable. */
+@media (max-height: 480px) {
+  .netfly-footnote {
+    display: none;
+  }
+
+  .netfly-tiles {
+    margin-top: 8px;
+  }
+
+  .netfly-tile {
+    height: 44px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+  }
 }
 
 /* ---------- Touch ---------- */
