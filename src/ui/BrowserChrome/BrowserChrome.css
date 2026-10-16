@@ -1,0 +1,96 @@
+.browser-chrome {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--browser-page-bg);
+  font-family: var(--font-ui);
+}
+
+.browser-chrome-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--browser-bar-bg);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.browser-chrome-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.browser-chrome-button:hover:not(:disabled) {
+  background: var(--win-control-hover);
+}
+
+.browser-chrome-button:disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.browser-chrome-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* The white pill from the sketch. Read-only, so it is a box, not an input. */
+.browser-chrome-address {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--browser-address-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  user-select: text;
+}
+
+.browser-chrome-lock {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.browser-chrome-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browser-chrome-page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Fingers need bigger targets than the mouse-sized Win10 buttons. */
+@media (pointer: coarse) {
+  .browser-chrome-button {
+    width: 38px;
+    height: 36px;
+  }
+
+  .browser-chrome-address {
+    height: 30px;
+    border-radius: 15px;
+  }
+}

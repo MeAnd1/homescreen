@@ -1,0 +1,242 @@
+/* The click-and-point site — the ad column and the room stage. The browser
+   chrome around it is ui/BrowserChrome. */
+
+/* The window, not the viewport, decides the layout: a phone opens it
+   maximized, but on a desktop it can be dragged to any shape. `size` (not just
+   inline-size) so the queries below can ask about orientation. */
+.browser-site {
+  container-type: size;
+  height: 100%;
+}
+
+.browser-site--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-body);
+}
+
+.browser-site-layout {
+  display: flex;
+  height: 100%;
+  padding: 8px;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.browser-site-ad {
+  flex: none;
+  width: clamp(80px, 18%, 170px);
+  overflow: hidden;
+  background: var(--room-ad-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Letterboxed: the whole picture, at its own shape, as large as the slot
+   allows. Whatever it does not fill is the ad background. */
+.browser-site-ad img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.browser-site-ad-blank {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-size-chrome);
+  writing-mode: vertical-rl;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Tall and narrow — a phone held upright. A column beside the room would
+   squeeze it to a stamp, so the ad moves under it. The room takes exactly its
+   picture's height (no black bands) and the ad gets what is left. A tall picture can still push the ad down to 48px. */
+@container (orientation: portrait) {
+  .browser-site-layout {
+    flex-direction: column;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  /* Doubled up to outrank the base .browser-site-room rule further down. */
+  .browser-site-layout .browser-site-room {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+
+  .browser-site-ad {
+    order: 2;
+    flex: 1 1 0;
+    width: auto;
+    min-height: 48px;
+  }
+
+  .browser-site-ad-blank {
+    writing-mode: horizontal-tb;
+  }
+}
+
+/* Short — a phone on its side. Every pixel of height goes to the room. */
+@container (max-height: 320px) {
+  .browser-site-layout {
+    padding: 4px;
+    gap: 4px;
+  }
+}
+
+.browser-site-room {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Not hidden: the frame is capped at this box anyway, and a box zone near the
+     bottom of the picture puts its words just below it — onto the ad strip on
+     a phone, where the room hugs the picture. */
+  overflow: visible;
+  background: var(--room-stage-bg);
+}
+
+.browser-site-note {
+  color: var(--text-inverse);
+  opacity: 0.6;
+  font-size: var(--font-size-body);
+}
+
+/* Hugs the picture so zone percentages are percentages of the picture, not of
+   the letterboxed stage — the same trick as .image-viewer-frame. */
+.browser-room-frame {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 0;
+  animation: browser-room-in 180ms var(--motion-ease);
+}
+
+@keyframes browser-room-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .browser-room-frame {
+    animation: none;
+  }
+}
+
+.browser-room-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ---------- Zones ---------- */
+
+.browser-zone {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: normal;
+}
+
+/* A box is invisible until you find it, then a red rectangle with its words
+   underneath — the sketch's "Go back" / "Move forward". */
+.browser-zone--box {
+  border: 2px solid transparent;
+}
+
+/* `is-revealed` is a touch screen's first tap (Browser.tsx RoomStage). Hover is
+   kept to devices that really hover: on a phone a tap leaves :hover stuck. */
+.browser-zone--box.is-revealed,
+.browser-zone--box:focus-visible {
+  border-color: var(--room-zone);
+  outline: none;
+}
+
+@media (hover: hover) {
+  .browser-zone--box:hover {
+    border-color: var(--room-zone);
+  }
+}
+
+.browser-zone-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  white-space: nowrap;
+  color: var(--room-zone);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.browser-zone--box.is-revealed .browser-zone-label,
+.browser-zone--box:focus-visible .browser-zone-label {
+  visibility: visible;
+}
+
+@media (hover: hover) {
+  .browser-zone--box:hover .browser-zone-label {
+    visibility: visible;
+  }
+}
+
+/* An arrow never gets a box: it is a red triangle that is always there. */
+.browser-zone--arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.browser-zone--arrow polygon {
+  fill: var(--room-zone);
+  stroke: #fff;
+  stroke-width: 1.5;
+  transition: transform var(--motion-fast) var(--motion-ease);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.browser-zone--arrow:focus-visible polygon {
+  transform: scale(1.12);
+}
+
+@media (hover: hover) {
+  .browser-zone--arrow:hover polygon {
+    transform: scale(1.12);
+  }
+}
+
+/* An arrow is a few percent of a picture that is itself small on a phone —
+   too small for a fingertip. An invisible margin widens what a tap can hit
+   without moving or growing the arrow you see. */
+@media (pointer: coarse) {
+  .browser-zone--arrow::before {
+    content: "";
+    position: absolute;
+    inset: -12px;
+  }
+}
+
+.browser-zone--arrow:focus-visible {
+  outline: 2px solid var(--focus-ring-light);
+  outline-offset: 2px;
+}

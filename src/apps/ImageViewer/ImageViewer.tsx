@@ -1,22 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { openNode } from "../../content/openNode";
 import { useResource } from "../../content/resources";
 import { getNode } from "../../content/vfs";
-import type { Hotspot, HotspotAction, ImageRef } from "../../content/types";
+import type { Hotspot, ImageRef } from "../../content/types";
 import BBCode from "../../ui/BBCode/BBCode";
 import { useWindow } from "../../window-system/WindowContext";
+import { runEffect } from "../effects";
 import "./ImageViewer.css";
 
 interface ImageViewerPayload {
   nodeId: string;
   startIndex?: number;
-}
-
-interface HotspotContext {
-  /** The viewer's own window id, so an opened window closes with it. */
-  windowId: string;
 }
 
 /** A drag longer than this is a pan, not a hotspot click. */
@@ -28,20 +23,6 @@ const CLICK_SLOP_PX = 5;
  * trackpad's many small deltas add up gradually.
  */
 const WHEEL_STEP = 0.0025;
-
-/**
- * Every hotspot effect lives here. Adding one is a new `HotspotAction` variant
- * plus a case below — no component branches on the action type.
- */
-function runHotspotAction(action: HotspotAction, ctx: HotspotContext): void {
-  switch (action.do) {
-    case "openNode":
-      openNode(action.opens, { view: action.view, parentId: ctx.windowId });
-      return;
-    default:
-      console.warn("[ImageViewer] unknown hotspot action", action);
-  }
-}
 
 /** The full-size view of an image set — design1 sketch 4. */
 function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
@@ -104,7 +85,7 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
       ) {
         return; // the pointer was panning the image
       }
-      runHotspotAction(hotspot.action, { windowId: self.id });
+      runEffect(hotspot.action, { windowId: self.id });
     },
     [self.id],
   );

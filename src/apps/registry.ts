@@ -1,6 +1,7 @@
 import { getNode } from "../content/vfs";
 import { resolveIcon } from "../ui/icons";
 import type { WindowTypeDef, WindowTypeId } from "../window-system/types";
+import Browser from "./Browser/Browser";
 import FileExplorer from "./FileExplorer/FileExplorer";
 import Favourites from "./Favourites/Favourites";
 import ImageGallery from "./ImageGallery/ImageGallery";
@@ -24,6 +25,7 @@ export interface AppPayloads {
   imageViewer: { nodeId: string; startIndex?: number };
   mediaPlayer: { nodeId: string };
   favourites: { nodeId: string };
+  browser: { nodeId: string };
 }
 
 /**
@@ -168,6 +170,33 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
       { key: "items", type: "boardItems", label: "Sprites" },
+    ],
+  },
+
+  browser: {
+    label: "Website (Browser)",
+    title: nodeTitle("Browser"),
+    icon: nodeIcon,
+    singletonKey: (p) => p.nodeId,
+    defaultSize: { width: 820, height: 520 },
+    minSize: { width: 360, height: 280 },
+    Content: Browser,
+    fields: [
+      { key: "name", type: "text", label: "Name", required: true },
+      {
+        key: "url",
+        type: "text",
+        label: "Address bar",
+        required: true,
+        placeholder: "e.g. https://nowayback.com",
+      },
+      {
+        key: "adImage",
+        type: "url",
+        label: "Ad picture",
+        note: "The tall picture down the left. Optional",
+      },
+      { key: "rooms", type: "rooms", label: "Rooms", startKey: "startRoom" },
     ],
   },
 };

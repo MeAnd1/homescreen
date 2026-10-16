@@ -7,6 +7,7 @@ import mysteryIcon from "../assets/icons/mystery.webp";
 import msWordIcon from "../assets/icons/ms-word.svg";
 import folderEmptyIcon from "../assets/icons/folder-empty.webp";
 import ocProfilePowersIcon from "../assets/icons/oc-profile-powers.gif";
+import nowaybackIcon from "../assets/icons/nowayback.webp";
 
 /**
  * Icon keys usable in a node's `icon` field. Keys keep JSON free of bundler
@@ -23,6 +24,7 @@ export const ICONS = {
   "ms-word": msWordIcon,
   "folder-empty": folderEmptyIcon,
   powers: ocProfilePowersIcon,
+  nowayback: nowaybackIcon,
 } as const;
 
 export type IconKey = keyof typeof ICONS;
