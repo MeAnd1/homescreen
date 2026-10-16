@@ -139,6 +139,14 @@
   --hotspot-outline: rgba(255, 255, 255, 0.85);
   --hotspot-fill-hover: rgba(255, 255, 255, 0.16);
 
+  /* Browser window (ui/BrowserChrome) and the click-and-point site in it. */
+  --browser-bar-bg: #d6d7da;
+  --browser-address-bg: #ffffff;
+  --browser-page-bg: #c9cacd;
+  --room-stage-bg: #111111;
+  --room-zone: #e81123;
+  --room-ad-bg: #b3121b;
+
   /* ---------- Start menu (design2 sketch 7) ---------- */
   --startmenu-bg: rgba(32, 32, 32, 0.96);
   --startmenu-border: #454545;

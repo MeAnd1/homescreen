@@ -1,6 +1,6 @@
 import { BUILTIN_NODES, isBuiltinNode } from "./builtins";
 import { isHiddenSlot } from "./folderConventions";
-import type { BoardNode, ImageSetNode, TreeProblem, VNode } from "./types";
+import type { BoardNode, BrowserNode, ImageSetNode, TreeProblem, VNode } from "./types";
 
 /**
  * The virtual filesystem: one flat index built from `nodes/**\/*.json` at module
@@ -276,6 +276,16 @@ export function validateNodes(
       });
     }
 
+    if (node.view === "browser") {
+      problems.push(
+        ...validateRooms(node as BrowserNode, exists).map((message) => ({
+          nodeId: node.id,
+          message,
+          severity: "warning" as const,
+        })),
+      );
+    }
+
     for (const key of node.childOrder ?? []) {
       if (!exists(`${node.id}/${key}`)) {
         problems.push({
@@ -288,6 +298,38 @@ export function validateNodes(
   }
 
   return problems;
+}
+
+/**
+ * A site's rooms point at each other inside one file; only an "open a node"
+ * zone reaches outside it. All of it is a warning: a bad link is one dead
+ * click, and the browser falls back to the start room.
+ */
+function validateRooms(site: BrowserNode, exists: (id: string) => boolean): string[] {
+  const messages: string[] = [];
+  const rooms = Array.isArray(site.rooms) ? site.rooms : [];
+  const keys = new Set<string>();
+  rooms.forEach((room, r) => {
+    if (!room.key) messages.push(`rooms[${r}] has no key`);
+    else if (keys.has(room.key)) messages.push(`rooms[${r}] repeats key "${room.key}"`);
+    keys.add(room.key);
+  });
+  if (site.startRoom && !keys.has(site.startRoom)) {
+    messages.push(`startRoom → unknown room "${site.startRoom}"`);
+  }
+  rooms.forEach((room, r) => {
+    room.zones?.forEach((zone, z) => {
+      const where = `rooms[${r}].zones[${z}]`;
+      const action = zone.action;
+      if (!action) messages.push(`${where} has no action`);
+      else if (action.do === "goToRoom" && !keys.has(action.room)) {
+        messages.push(`${where} → unknown room "${action.room}"`);
+      } else if (action.do === "openNode" && !exists(action.opens)) {
+        messages.push(`${where}.opens → unknown node "${action.opens}"`);
+      }
+    });
+  });
+  return messages;
 }
 
 /**

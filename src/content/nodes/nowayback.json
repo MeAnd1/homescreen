@@ -1,0 +1,94 @@
+{
+  "name": "nowayback.com",
+  "icon": "nowayback",
+  "view": "browser",
+  "url": "https://nowayback.com",
+  "adImage": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Cat_demonstrating_static_cling_with_styrofoam_peanuts.jpg",
+  "startRoom": "lobby",
+  "window": { "width": 860, "height": 520 },
+  "rooms": [
+    {
+      "key": "lobby",
+      "name": "Classic yellow backroom",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/b/bb/HobbyTown_USA_Oshkosh_interior_under_construction_2002_%28The_Backrooms%29.jpg",
+      "zones": [
+        {
+          "x": 24,
+          "y": 16,
+          "width": 32,
+          "height": 30,
+          "look": "box",
+          "label": "Go deeper",
+          "action": { "do": "goToRoom", "room": "arches" }
+        },
+        {
+          "x": 91,
+          "y": 44,
+          "width": 6,
+          "height": 12,
+          "look": "arrow",
+          "direction": "right",
+          "action": { "do": "goToRoom", "room": "hallway" }
+        },
+        {
+          "x": 73,
+          "y": 75,
+          "width": 4,
+          "height": 6,
+          "look": "box",
+          "action": { "do": "openNode", "opens": "rickroll" }
+        }
+      ]
+    },
+    {
+      "key": "arches",
+      "name": "Room with arches",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/9/93/Dsc00159.jpg_B%E1%BB%A9c_%E1%BA%A3nh_th%E1%BB%A9_2_trong_2_b%E1%BB%A9c_%E1%BA%A3nh_ngu%E1%BB%93n_g%E1%BB%91c_c%E1%BB%A7a_The_Backrooms.jpg",
+      "zones": [
+        {
+          "x": 46,
+          "y": 14,
+          "width": 44,
+          "height": 26,
+          "look": "box",
+          "label": "Look through",
+          "action": { "do": "goToRoom", "room": "hallway" }
+        },
+        {
+          "x": 3,
+          "y": 44,
+          "width": 6,
+          "height": 12,
+          "look": "arrow",
+          "direction": "left",
+          "action": { "do": "goToRoom", "room": "lobby" }
+        }
+      ]
+    },
+    {
+      "key": "hallway",
+      "name": "Basement hallway",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Lorain_High_School_hallway.jpg",
+      "zones": [
+        {
+          "x": 47,
+          "y": 31,
+          "width": 8,
+          "height": 13,
+          "look": "box",
+          "label": "Open?",
+          "action": { "do": "goToRoom", "room": "lobby" }
+        },
+        {
+          "x": 3,
+          "y": 44,
+          "width": 6,
+          "height": 12,
+          "look": "arrow",
+          "direction": "left",
+          "action": { "do": "goToRoom", "room": "arches" }
+        }
+      ]
+    }
+  ]
+}

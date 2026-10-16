@@ -37,7 +37,9 @@ function IconTile({
       <span className="icon-tile-graphic">
         {children ?? (src ? <img src={src} alt={alt ?? label} draggable={false} /> : null)}
       </span>
-      <span className="icon-tile-label">{label}</span>
+      {/* A zero-width break after each dot, so a long file-like name wraps as
+          "nowayback." / "com" rather than mid-word. Invisible otherwise. */}
+      <span className="icon-tile-label">{label.replace(/\./g, ".\u200b")}</span>
     </button>
   );
 }

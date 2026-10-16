@@ -7,6 +7,7 @@ import HotspotsField from "./HotspotsField";
 import ImageListField from "./ImageListField";
 import NodeRefField from "./NodeRefField";
 import RichTextField from "./RichTextField";
+import RoomsField from "./RoomsField";
 import ScalarField from "./ScalarField";
 
 /**
@@ -82,6 +83,17 @@ export default function FieldRenderer({ spec, node }: { spec: FieldSpec; node: V
     case "boardItems":
       return (
         <BoardItemsField label={spec.label} value={values[spec.key]} onChange={set(spec.key)} />
+      );
+
+    case "rooms":
+      return (
+        <RoomsField
+          label={spec.label}
+          value={values[spec.key]}
+          onChange={set(spec.key)}
+          start={values[spec.startKey]}
+          onStartChange={set(spec.startKey)}
+        />
       );
 
     default: {

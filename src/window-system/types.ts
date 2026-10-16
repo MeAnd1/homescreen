@@ -78,7 +78,10 @@ export type FieldSpec =
   | { key: string; type: "imageList"; label: string }
   | { key: string; type: "nodeRef"; label: string }
   | { key: string; type: "hotspots"; label: string; imagesKey: string }
-  | { key: string; type: "boardItems"; label: string };
+  | { key: string; type: "boardItems"; label: string }
+  /** A browser site's rooms and their zones. `startKey` is the sibling key
+   *  holding the start room, picked from the same list. */
+  | { key: string; type: "rooms"; label: string; startKey: string };
 
 export interface WindowTypeDef<T extends WindowTypeId> {
   /**
