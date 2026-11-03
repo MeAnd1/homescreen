@@ -69,17 +69,20 @@
   background: rgba(76, 194, 255, 0.38);
 }
 
-/* ---------- Explorer variant (light panel) ---------- */
+/* ---------- Explorer variant (light panel) ----------
+   Windows 10 "Large icons": a 96px icon, a 12px label, square tiles that
+   nearly touch, light blue on hover, a blue box once clicked. */
 
 .icon-tile--explorer {
-  width: 100px;
-  padding: 8px 4px;
-  gap: 6px;
+  width: 112px;
+  padding: 4px 2px 6px;
+  gap: 4px;
+  border-radius: 0;
 }
 
 .icon-tile--explorer .icon-tile-graphic {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
 }
 
 .icon-tile--explorer .icon-tile-graphic img {
@@ -88,18 +91,14 @@
 }
 
 .icon-tile--explorer .icon-tile-label {
-  font-size: var(--font-size-chrome);
+  font-size: var(--font-size-body);
   color: var(--text-primary);
-  max-width: 92px;
+  max-width: 106px;
 }
 
 .icon-tile--explorer:hover {
-  background: var(--surface-tile-hover);
-  border-color: var(--border-default);
-}
-
-.icon-tile--explorer:active {
-  background: var(--surface-tile-active);
+  background: var(--hover-bg);
+  border-color: var(--hover-bg);
 }
 
 .icon-tile--explorer.icon-tile--selected {
@@ -107,33 +106,36 @@
   border-color: var(--select-border);
 }
 
-.icon-tile--explorer.icon-tile--selected:hover {
-  background: var(--select-bg-hover);
-  border-color: var(--select-border-hover);
+.window:not(.window--focused) .icon-tile--explorer.icon-tile--selected {
+  background: var(--select-bg-inactive);
+  border-color: var(--select-bg-inactive);
 }
 
 /* ---------- Responsive (explorer) ---------- */
 
 @media (max-width: 768px) {
   .icon-tile--explorer {
-    width: 80px;
+    width: 84px;
   }
   .icon-tile--explorer .icon-tile-graphic {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
+  }
+  .icon-tile--explorer .icon-tile-label {
+    max-width: 80px;
   }
 }
 
 @media (max-width: 480px) {
   .icon-tile--explorer {
     width: 72px;
-    padding: 6px 2px;
   }
   .icon-tile--explorer .icon-tile-graphic {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
   .icon-tile--explorer .icon-tile-label {
-    font-size: 10px;
+    font-size: var(--font-size-chrome);
+    max-width: 68px;
   }
 }

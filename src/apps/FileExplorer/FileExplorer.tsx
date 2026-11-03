@@ -1,8 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import { visibleChildren } from "../../content/folderConventions";
 import { openNode } from "../../content/openNode";
-import { useOpenNodes } from "../../content/useOpenNodes";
 import { getChildren, getNode } from "../../content/vfs";
 import type { VNode } from "../../content/types";
 import ExplorerLayout from "../../ui/ExplorerLayout/ExplorerLayout";
@@ -26,8 +25,7 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
     [payload.nodeId],
   );
 
-  // A tile is highlighted while a window on that node is open.
-  const openNodes = useOpenNodes();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   if (!node) {
     return (
@@ -51,13 +49,17 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
       statusText={`${children.length} items`}
     >
       <div className="explorer-content-header">{node.name}</div>
-      <div className="explorer-file-grid">
+      <div
+        className="explorer-file-grid"
+        onClick={(event) => event.target === event.currentTarget && setSelectedId(null)}
+      >
         {children.map((child) => (
           <IconTile
             key={child.id}
             label={child.name}
-            selected={openNodes.has(child.id)}
-            onClick={() => openNode(child.id)}
+            selected={selectedId === child.id}
+            onClick={() => setSelectedId(child.id)}
+            onOpen={() => openNode(child.id)}
           >
             <ChildGraphic node={child} />
           </IconTile>
@@ -71,8 +73,8 @@ function FileExplorer({ payload }: { payload: { nodeId: string } }) {
  * Icon rule, in order: an explicit icon, else a fanned stack of the node's own
  * images, else a folder icon, else a generic document icon.
  *
- * A remote URL is a photo (an avatar) and fills the tile; a bundled asset is a
- * symbol drawn at its own size.
+ * A remote URL is a photo (an avatar) and is cropped to fill the tile; a bundled
+ * asset is a symbol, scaled to fit without cropping.
  */
 function ChildGraphic({ node }: { node: VNode }) {
   const resolved = resolveIcon(node.icon);
@@ -91,7 +93,7 @@ function ChildGraphic({ node }: { node: VNode }) {
   if (images?.length) {
     return (
       <div className="explorer-tile-graphic">
-        <IconImageStack images={images} alt={node.name} size={64} />
+        <IconImageStack images={images} alt={node.name} size={96} />
       </div>
     );
   }
@@ -105,7 +107,7 @@ function ChildGraphic({ node }: { node: VNode }) {
 
   return (
     <div className="explorer-tile-graphic">
-      <FileText size={32} strokeWidth={1.5} />
+      <FileText size={64} strokeWidth={1.5} />
     </div>
   );
 }

@@ -64,10 +64,12 @@
   --accent: #0078d4;
   --accent-taskbar: rgba(76, 194, 255, 0.8);
   --danger: #e81123;
+  /* Windows 10 explorer item states: hover, selected, and selected in a
+     window that has lost focus (the blue turns grey). */
+  --hover-bg: #e5f3ff;
   --select-bg: #cce8ff;
   --select-border: #99d1ff;
-  --select-bg-hover: #b8deff;
-  --select-border-hover: #80c4ff;
+  --select-bg-inactive: #d9d9d9;
 
   /* ---------- Window chrome ---------- */
   --win-bg: #b5b6b4;

@@ -23,7 +23,7 @@ function DesktopIcons() {
         .filter((node) => node !== undefined),
     [],
   );
-  // Same rule the explorer follows: a node with a window open is highlighted.
+  // A node with a window open is highlighted; desktop icons open on one click.
   const openNodes = useOpenNodes();
 
   return (
