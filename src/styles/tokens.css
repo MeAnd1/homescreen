@@ -195,3 +195,10 @@
      stacking context, so they need to out-rank it explicitly. */
   --z-menu: 100001;
 }
+
+/* Touch screens: a 30px titlebar is too thin to grab or to hit its buttons. */
+@media (pointer: coarse) {
+  :root {
+    --titlebar-height: 38px;
+  }
+}
