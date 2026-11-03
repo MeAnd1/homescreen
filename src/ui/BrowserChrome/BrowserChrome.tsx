@@ -10,7 +10,6 @@ interface Props {
   onBack: () => void;
   onForward: () => void;
   onRefresh: () => void;
-  /** The page. */
   children: ReactNode;
 }
 

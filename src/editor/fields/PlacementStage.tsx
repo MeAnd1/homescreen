@@ -13,35 +13,18 @@ interface Props {
   selected: number;
   onSelect: (index: number) => void;
   onChange: (index: number, next: Placement) => void;
-  /**
-   * How far outside the picture an item may sit, in percent. Zones stay on the
-   * picture (0); a name plate is allowed off it, and the stage grows a margin
-   * that much bigger so an off-picture plate is still visible and draggable.
-   */
+  /** Percent an item may sit off the picture; the stage grows that much margin so it stays draggable. */
   bleed?: number;
   /** Arrow-key and handle step, in percent. Owned by the field, shared with NudgePad. */
   step: number;
-  /**
-   * Ceiling on the stage's height in pixels. A tall picture would otherwise take
-   * over the form: the stage keeps the picture's aspect ratio, so it is the
-   * width that gives way.
-   */
+  /** Pixel height cap so a tall picture cannot take over the form; the width gives way. */
   maxHeight?: number;
-  /** Draws the body of one item — a numbered box, a name plate. */
   renderItem: (item: Placement, index: number, isSelected: boolean) => React.ReactNode;
-  /** Screen-reader name for item `index`. */
   itemLabel: (item: Placement, index: number) => string;
 }
 
-/**
- * An image with draggable things on it. Knows nothing about hotspots or
- * sprites: it moves `Placement`s and reports them back, so the two fields that
- * place something on a picture cannot drift apart in behaviour.
- *
- * Positions are committed on every pointer move rather than held locally and
- * flushed at the end — the draft is the single source of truth, and a preview
- * that lags the numbers is how "the editor lies about the layout" starts.
- */
+// Knows nothing about hotspots or sprites, so every field that places things on a picture behaves the same.
+// Commits on every pointer move, not at the end: a preview that lags the draft is how the editor starts lying about layout.
 export default function PlacementStage({
   imageUrl,
   items,
@@ -55,13 +38,10 @@ export default function PlacementStage({
   itemLabel,
 }: Props) {
   const frameRef = useRef<HTMLDivElement>(null);
-  // Until the picture loads we do not know its shape; 4:3 keeps the box from
-  // collapsing, and the first load corrects it.
+  // 4:3 keeps the box from collapsing until the picture loads and gives its real shape.
   const [ratio, setRatio] = useState(4 / 3);
 
-  // The stage's own aspect ratio equals the picture's however wide the bleed
-  // is: growing the box by the same fraction on all four sides scales width and
-  // height together. That is why one `inset` percentage works in both axes.
+  // Growing the box by the same fraction on all sides keeps the picture's ratio, so one inset works in both axes.
   const inset = (100 * bleed) / (100 + 2 * bleed);
 
   const constrain = useCallback(
@@ -69,29 +49,24 @@ export default function PlacementStage({
     [bleed],
   );
 
-  /**
-   * Shared by the move drag and the four resize drags: both are "watch the
-   * pointer in picture-percent and rewrite the placement".
-   */
   const startDrag = (
-    e: React.PointerEvent,
+    event: React.PointerEvent,
     index: number,
     apply: (start: Placement, dx: number, dy: number) => Placement,
   ) => {
     const rect = frameRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0 || rect.height === 0) return;
 
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     onSelect(index);
 
     const start = items[index];
-    const originX = e.clientX;
-    const originY = e.clientY;
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
-    // preventDefault above stops the browser focusing the grab button, and a
-    // zone you just clicked must be the one the arrow keys move.
+    const originX = event.clientX;
+    const originY = event.clientY;
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture(event.pointerId);
+    // preventDefault stopped the browser focusing the button, and the clicked zone must be the one arrow keys move.
     target.focus();
 
     const onMove = (move: PointerEvent) => {
@@ -100,7 +75,7 @@ export default function PlacementStage({
       onChange(index, constrain(apply(start, dx, dy)));
     };
     const onUp = () => {
-      target.releasePointerCapture(e.pointerId);
+      target.releasePointerCapture(event.pointerId);
       target.removeEventListener("pointermove", onMove);
       target.removeEventListener("pointerup", onUp);
       target.removeEventListener("pointercancel", onUp);
@@ -110,18 +85,17 @@ export default function PlacementStage({
     target.addEventListener("pointercancel", onUp);
   };
 
-  /** Arrow keys move the focused item — the same step the nudge pad uses. */
-  const onKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const distance = e.shiftKey ? step * 5 : step;
+  const onKeyDown = (event: React.KeyboardEvent, index: number) => {
+    const distance = event.shiftKey ? step * 5 : step;
     const delta: Record<string, [number, number]> = {
       ArrowUp: [0, -distance],
       ArrowDown: [0, distance],
       ArrowLeft: [-distance, 0],
       ArrowRight: [distance, 0],
     };
-    const move = delta[e.key];
+    const move = delta[event.key];
     if (!move) return;
-    e.preventDefault();
+    event.preventDefault();
     onSelect(index);
     const item = items[index];
     onChange(index, constrain({ ...item, x: item.x + move[0], y: item.y + move[1] }));
@@ -143,11 +117,10 @@ export default function PlacementStage({
           src={imageUrl}
           alt=""
           draggable={false}
-          onLoad={(e) => {
-            const img = e.currentTarget;
-            if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-              setRatio(img.naturalWidth / img.naturalHeight);
-            }
+          onLoad={(event) => {
+            const image = event.currentTarget;
+            if (image.naturalWidth === 0 || image.naturalHeight === 0) return;
+            setRatio(image.naturalWidth / image.naturalHeight);
           }}
         />
 
@@ -172,14 +145,14 @@ export default function PlacementStage({
                 className="editor-stage-grab"
                 aria-label={`${itemLabel(item, index)} — drag, or move with the arrow keys`}
                 aria-pressed={isSelected}
-                onPointerDown={(e) =>
-                  startDrag(e, index, (start, dx, dy) => ({
+                onPointerDown={(event) =>
+                  startDrag(event, index, (start, dx, dy) => ({
                     ...start,
                     x: start.x + dx,
                     y: start.y + dy,
                   }))
                 }
-                onKeyDown={(e) => onKeyDown(e, index)}
+                onKeyDown={(event) => onKeyDown(event, index)}
                 onFocus={() => onSelect(index)}
               >
                 {renderItem(item, index, isSelected)}
@@ -191,8 +164,8 @@ export default function PlacementStage({
                   <span
                     key={corner}
                     className={`editor-stage-handle editor-stage-handle-${corner}`}
-                    onPointerDown={(e) =>
-                      startDrag(e, index, (start, dx, dy) => resizeAtCorner(corner, start, dx, dy))
+                    onPointerDown={(event) =>
+                      startDrag(event, index, (start, dx, dy) => resizeAtCorner(corner, start, dx, dy))
                     }
                   />
                 ))}

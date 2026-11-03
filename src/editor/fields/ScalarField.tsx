@@ -4,14 +4,13 @@ interface Props {
   value: unknown;
   required?: boolean;
   hint?: string;
-  /** Small grey words after the label, saying what the field is for. */
   note?: string;
   placeholder?: string;
   invalid?: boolean;
   onChange: (value: unknown) => void;
 }
 
-/** text / url / number — the three FieldSpec types that are one input. */
+// The text / url / number FieldSpec types: one input each.
 export default function ScalarField({
   label,
   type,
@@ -38,8 +37,8 @@ export default function ScalarField({
         inputMode={type === "number" ? "decimal" : undefined}
         value={text}
         placeholder={placeholder ?? (type === "url" ? "https://…" : undefined)}
-        onChange={(e) => {
-          const raw = e.target.value;
+        onChange={(event) => {
+          const raw = event.target.value;
           if (type !== "number") return onChange(raw);
           onChange(raw === "" ? undefined : Number(raw));
         }}

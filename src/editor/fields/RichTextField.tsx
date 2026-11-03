@@ -17,15 +17,8 @@ interface Props {
   onChange: (value: unknown) => void;
 }
 
-/**
- * Prose is a **separate file** from the node — see DATA-MODEL.md — but not a
- * separate button: the body is held in the draft (`draft.prose`) and pushed by
- * the same Save as the node that owns it, text first. So this field edits two
- * things: the body, and the fileId on the node, which is *derived from the names* and written on
- * the first keystroke rather than typed. Pinning it at that moment is what
- * stops a later rename from pointing the node at a different file and orphaning
- * the text.
- */
+// Prose is a separate file (DATA-MODEL.md) saved by the node's own Save, text first, via `draft.prose`.
+// The fileId is derived from the names and pinned on the first keystroke, so a later rename cannot orphan the text.
 export default function RichTextField({ label, node, value, onChange }: Props) {
   const { draft } = useEditor();
 
@@ -43,8 +36,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    // Coming back to a body that was edited and not saved: pick it up where it
-    // was left rather than fetching the old text over it.
+    // An unsaved edit wins over refetching the old text.
     const pending = draft.prose.get(fileId);
     if (pending) {
       setBody(pending.body);
@@ -61,9 +53,9 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
         setLoaded(text);
         setStatus("idle");
       })
-      .catch((e: Error) => {
+      .catch((fetchError: Error) => {
         if (cancelled) return;
-        setError(e.message);
+        setError(fetchError.message);
         setStatus("error");
       });
     return () => {
@@ -75,8 +67,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
 
   const dirty = body !== loaded;
 
-  /** Writing the fileId onto the node here, not on mount: merely opening a node
-   *  must never dirty its file. */
+  // The fileId is written here, not on mount: merely opening a node must never dirty its file.
   const editBody = (next: string) => {
     setBody(next);
     draft.setProse(fileId, node.id, next, loaded);
@@ -92,9 +83,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
       {!error && (
         <>
           <div className="editor-prose">
-            {/* Mounted only once the body has arrived, and keyed by fileId:
-                SCEditor reads `value` when it initialises, so a body that
-                loads after mount would otherwise never appear. */}
+            {/* SCEditor reads `value` only on init, so mount it after the body arrives, keyed by fileId. */}
             {status !== "loading" && (
               <SCEditor
                 key={fileId}
@@ -121,7 +110,7 @@ export default function RichTextField({ label, node, value, onChange }: Props) {
             <button
               type="button"
               className="editor-button"
-              onClick={() => setPreview((p) => !p)}
+              onClick={() => setPreview((isShown) => !isShown)}
             >
               {preview ? <EyeOff size={13} /> : <Eye size={13} />}
               {preview ? "Hide" : "Preview"}

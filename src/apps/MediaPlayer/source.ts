@@ -18,7 +18,7 @@ export function youTubeId(src: string): string | undefined {
 
 export function mediaKind(src: string): MediaKind {
   const path = src.split(/[?#]/, 1)[0].toLowerCase();
-  if (IMAGE_EXTENSIONS.some((ext) => path.endsWith(ext))) return "image";
+  if (IMAGE_EXTENSIONS.some((extension) => path.endsWith(extension))) return "image";
   if (youTubeId(src)) return "youtube";
   return "video";
 }

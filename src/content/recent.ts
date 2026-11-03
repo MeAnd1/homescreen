@@ -1,41 +1,37 @@
 /**
  * The last few node ids opened, most recent first, for the start menu's
- * "Recent" column (design2 sketch 7). Kept in localStorage so it survives a
- * reload — window state deliberately does not (that is phase 4).
+ * "Recent" column (design2 sketch 7). Kept in localStorage so it survives a reload.
  *
  * A plain module, not a store: it is read once when the panel opens.
  */
 
 import { isBuiltinNode } from "./builtins";
 
-const KEY = "homescreen.recent";
+const STORAGE_KEY = "homescreen.recent";
 const LIMIT = 8;
 
 export function getRecent(): string[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((id): id is string => typeof id === "string" && !isBuiltinNode(id))
       .slice(0, LIMIT);
   } catch {
-    // Unparseable or unavailable storage. Recents are a convenience: an empty
-    // list is the correct degraded state, and the next write repairs it.
+    // Unparseable or unavailable storage: an empty list is the right degraded state.
     return [];
   }
 }
 
 export function recordRecent(nodeId: string): void {
-  // A built-in backs an easter egg; listing it under Recent hands the secret
-  // to anyone who opens the panel afterwards. See content/builtins.ts.
+  // A built-in backs an easter egg; listing it under Recent would give it away.
   if (isBuiltinNode(nodeId)) return;
   const next = [nodeId, ...getRecent().filter((id) => id !== nodeId)].slice(0, LIMIT);
   try {
-    localStorage.setItem(KEY, JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch (error) {
-    // Private browsing or a full quota. Opening a window must not fail
-    // because its history entry could not be written.
+    // Private browsing or a full quota must not stop the window opening.
     console.warn("[recent] could not record", nodeId, error);
   }
 }

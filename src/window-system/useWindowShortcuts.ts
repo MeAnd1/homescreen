@@ -1,17 +1,6 @@
 import { useEffect } from "react";
 import { useWindowStore } from "./store";
 
-/** Escape typed into a field belongs to that field, not to the desktop. */
-function isTextEntry(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
-  );
-}
-
 /**
  * Desktop-level keyboard shortcuts. Today: `Escape` closes the focused window.
  * Alt/Cmd+Tab is deliberately out of scope — the browser owns it.
@@ -23,8 +12,19 @@ function isTextEntry(target: EventTarget | null): boolean {
 export function useWindowShortcuts(enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || isTextEntry(e.target)) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+
+      // Escape typed into a field belongs to that field, not to the desktop.
+      const target = event.target;
+      const isTextEntry =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement);
+      if (isTextEntry) return;
+
       const { focusedId } = useWindowStore.getState();
       if (!focusedId) return;
       useWindowStore.getState().close(focusedId);

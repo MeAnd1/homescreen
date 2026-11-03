@@ -18,23 +18,12 @@ const DEFAULT_ASPECT = 16 / 9;
 /** The API reports position by polling only — there is no timeupdate event. */
 const POLL_MS = 250;
 
-/**
- * How long a play/pause command may go unanswered before the embed counts as
- * deaf and is rebuilt. `playVideo()` on a live player produces a state change
- * (BUFFERING at worst) almost immediately, so anything past this is not a slow
- * network — it is a player that can no longer hear us. See `armWatchdog`.
- */
+// A live player answers play/pause with a state change almost at once; silence past
+// this is a deaf embed, not a slow network, and it is rebuilt. See `armWatchdog`.
 const DEAF_MS = 1500;
 
-/**
- * How long the position may stand still, while the player still calls itself
- * BUFFERING, before the embed counts as wedged. **Measured, not guessed:**
- * closing one YouTube window can drop a *second*, unrelated YouTube window
- * into BUFFERING mid-stream, where it sits for ever — both embeds are
- * same-origin and share a renderer, and tearing one down occasionally stalls
- * the other's media pipeline. Nothing in this app can prevent that; this is
- * how it is noticed. See `nudge`.
- */
+// How long the position may stand still in BUFFERING before the embed counts as wedged.
+// Measured: closing one YouTube window can stall another for ever (CONVENTIONS pitfall 13).
 const STALL_MS = 2500;
 
 /** Long enough for the pause to land before the play that follows it. */
@@ -66,21 +55,15 @@ function YouTubeSurface({
   const [muted, setMuted] = useState(false);
   const [loop, setLoop] = useState(initialLoop);
 
-  /**
-   * Bumped to throw the embed away and build a new one. An `<iframe>` that is
-   * re-inserted into the DOM reloads, and a reloaded YouTube embed never gets
-   * the API's `listening` handshake again: `getPlayerState()` still answers
-   * from the parent's cache, but nothing we send arrives and no state change
-   * ever comes back. That is the "the video is frozen and cannot be played"
-   * state, and rebuilding is the only way out of it.
-   */
+  // Bumped to rebuild the embed. A reloaded iframe never gets the API's `listening`
+  // handshake again, so it goes deaf ("frozen video"); rebuilding is the only way out.
   const [generation, setGeneration] = useState(0);
-  /** Where to pick up after a rebuild — set only when one is requested. */
+  // Where to pick up after a rebuild; set only when one is requested.
   const resumeAtRef = useRef<{ time: number; play: boolean } | null>(null);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Last position that actually moved, and when — the stall watch's memory. */
+  // Last position that actually moved, and when: the stall watch's memory.
   const progressRef = useRef({ time: -1, at: 0 });
-  /** One nudge per stall; the second strike rebuilds. */
+  // One nudge per stall; the second strike rebuilds.
   const nudgedRef = useRef(false);
 
   // Read inside the player's event handler, which is registered once.
@@ -139,11 +122,8 @@ function YouTubeSurface({
               if (cancelled) return;
               // Any state change proves the embed is still listening.
               clearWatchdog();
-              // Buffering counts as playing: it is a video on its way, not a
-              // stopped one. Treating it as stopped slammed the opaque cover
-              // over every mid-stream buffer and — worse — put a Play glyph on
-              // a video that was already trying to play, so the click it
-              // invited was read as a pause.
+              // Buffering counts as playing: treating it as stopped covered every
+              // mid-stream buffer and showed a Play glyph whose click then paused.
               setPlaying(
                 event.data === YT.PlayerState.PLAYING ||
                   event.data === YT.PlayerState.BUFFERING,
@@ -189,10 +169,8 @@ function YouTubeSurface({
   // moving — see `setPlaying` in onStateChange.
   useEffect(() => {
     if (!playing) return;
-    // `nudgedRef` deliberately survives this: the nudge pauses the player,
-    // which ends this effect and starts it again, and clearing the strike here
-    // would make a wedged embed nudge for ever instead of escalating. Only
-    // real progress clears it, below.
+    // `nudgedRef` survives this on purpose: the nudge restarts this effect, and clearing
+    // the strike here would nudge a wedged embed for ever. Only real progress clears it.
     progressRef.current = { time: -1, at: 0 };
 
     const timer = setInterval(() => {
@@ -203,9 +181,7 @@ function YouTubeSurface({
 
       const now = Date.now();
       const last = progressRef.current;
-      // The first sample after a restart is a baseline, not progress — it must
-      // not clear the strike, or a wedged embed nudges for ever: the nudge's
-      // own pause/play restarts this effect and would hand it a clean slate.
+      // The first sample after a restart is a baseline, not progress, so it must not clear the strike.
       if (last.at === 0) {
         progressRef.current = { time, at: now };
         return;
@@ -222,19 +198,17 @@ function YouTubeSurface({
       progressRef.current = { time, at: now };
 
       if (!nudgedRef.current) {
-        // A pause followed by a play unwedges it — measured on a real stall:
-        // BUFFERING@61.0 (dead) -> pause -> PAUSED@67.4 -> play -> PLAYING@76.2,
-        // advancing normally from there.
+        // Pause then play unwedges it, measured on a real stall:
+        // BUFFERING@61.0 (dead) -> pause -> PAUSED@67.4 -> play -> PLAYING@76.2.
         nudgedRef.current = true;
         console.warn("[MediaPlayer] YouTube embed stalled — nudging it");
         player.pauseVideo();
         setTimeout(() => playerRef.current?.playVideo(), NUDGE_MS);
         return;
       }
-      // The nudge did not take. Nothing left but a new embed.
       console.warn("[MediaPlayer] YouTube embed still stalled — rebuilding");
       resumeAtRef.current = { time, play: true };
-      setGeneration((g) => g + 1);
+      setGeneration((previous) => previous + 1);
     }, POLL_MS);
 
     return () => clearInterval(timer);
@@ -248,12 +222,8 @@ function YouTubeSurface({
     setCurrentTime(target);
   };
 
-  /**
-   * A command has been sent. If no state change answers it the embed is deaf —
-   * rebuild it, resuming where it stopped. Without this the surface deadlocks:
-   * a `playing` flag stuck at true turns every further click into a pause that
-   * nobody hears, so the video can never be started again.
-   */
+  // If no state change answers a command, the embed is deaf: rebuild it where it stopped.
+  // Without this a `playing` flag stuck at true turns every click into an unheard pause.
   const armWatchdog = (wantPlay: boolean, at: number) => {
     // An embed that has not reached onReady yet is entitled to ignore us.
     if (!ready) return;
@@ -262,7 +232,7 @@ function YouTubeSurface({
       watchdogRef.current = null;
       console.warn("[MediaPlayer] YouTube embed stopped responding — rebuilding");
       resumeAtRef.current = { time: at, play: wantPlay };
-      setGeneration((g) => g + 1);
+      setGeneration((previous) => previous + 1);
     }, DEAF_MS);
   };
 
@@ -287,11 +257,8 @@ function YouTubeSurface({
           style={{ "--media-aspect": aspect } as React.CSSProperties}
         />
 
-        {/* YouTube draws its own chrome — title, share, "More videos", the big
-            pause glyph — on hover and whenever the video is paused, none of
-            which belongs in a Windows-10 window. This cover swallows every
-            pointer event so the hover chrome never triggers, and goes opaque
-            while paused so the paused chrome is never seen. */}
+        {/* Hides YouTube's own chrome: swallows pointer events so hover chrome never
+            shows, and goes opaque while paused so the paused chrome is never seen. */}
         <button
           type="button"
           className={`media-cover${playing ? " media-cover--playing" : ""}`}
@@ -323,8 +290,8 @@ function YouTubeSurface({
           setVolume(next);
           if (next > 0) setMuted(false);
         }}
-        onToggleMute={() => setMuted((m) => !m)}
-        onToggleLoop={() => setLoop((l) => !l)}
+        onToggleMute={() => setMuted((isMuted) => !isMuted)}
+        onToggleLoop={() => setLoop((isLooping) => !isLooping)}
       />
     </>
   );

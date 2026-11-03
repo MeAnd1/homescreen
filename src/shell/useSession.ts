@@ -44,7 +44,7 @@ export function useSession() {
       ran.current = true;
       const param = searchParams.get("open");
       const ids = param
-        ? param.split(",").map((s) => s.trim()).filter(Boolean)
+        ? param.split(",").map((part) => part.trim()).filter(Boolean)
         : [];
 
       if (ids.length > 0) {

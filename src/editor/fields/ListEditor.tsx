@@ -9,16 +9,12 @@ interface Props<T> {
   addLabel?: string;
   items: T[];
   onChange: (items: T[]) => void;
-  /** A blank member, for the add button. */
   create: () => T;
   summary: (item: T, index: number) => string;
   children: (item: T, index: number, patch: (changes: Partial<T>) => void) => React.ReactNode;
 }
 
-/**
- * Add / remove / reorder around any array field. Every list field renderer uses
- * it, so the three list types cannot drift apart in behaviour.
- */
+// Every list field uses this, so add / remove / reorder cannot drift apart between them.
 export default function ListEditor<T>({
   label,
   addLabel,
@@ -29,7 +25,7 @@ export default function ListEditor<T>({
   children,
 }: Props<T>) {
   const patchAt = (index: number, changes: Partial<T>) =>
-    onChange(items.map((item, i) => (i === index ? { ...item, ...changes } : item)));
+    onChange(items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...changes } : item)));
 
   const move = (index: number, direction: -1 | 1) => {
     const next = [...items];
@@ -67,7 +63,7 @@ export default function ListEditor<T>({
             <span className="editor-card-title">{summary(item, index) || `#${index + 1}`}</span>
             <div className="editor-card-actions">
               <DeleteButton
-                onClick={() => onChange(items.filter((_, i) => i !== index))}
+                onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}
                 title="Remove"
               />
             </div>

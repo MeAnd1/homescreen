@@ -1,3 +1,5 @@
+// #region Setup
+
 import { useCallback, useMemo, useState } from "react";
 import { APP_REGISTRY } from "../apps/registry";
 import type { TreeProblem, VNode } from "../content/types";
@@ -6,10 +8,13 @@ import { slotFor, slotsOf, type SlotSpec } from "../content/folderConventions";
 import { validateNodes } from "../content/vfs";
 import { indexDraft, loadEntities, ownerOf, rematerialize } from "./entities";
 
+// #endregion
+
+// #region Config
+
 const REGISTERED_VIEWS: ReadonlySet<string> = new Set(Object.keys(APP_REGISTRY));
 
-/** A prose body edited but not yet pushed. Prose is its own file on the server,
- *  but it is saved from the same button as the entity that owns it. */
+/** A prose body edited but not yet pushed: its own file on the server, saved from the owning entity's button. */
 export interface ProseEdit {
   entityId: string;
   body: string;
@@ -20,7 +25,6 @@ export interface ProseEdit {
 export interface DraftApi {
   /** entityId → the entity's root node, ids derived. One entity = one file. */
   entities: ReadonlyMap<string, VNode>;
-  /** Every node in the draft, by id. */
   index: ReadonlyMap<string, VNode>;
   /** Entities whose file on disk has structural damage; they cannot be saved. */
   broken: ReadonlyMap<string, TreeProblem[]>;
@@ -37,11 +41,7 @@ export interface DraftApi {
   /** validateNodes over the whole draft — the pre-save gate. */
   problems: TreeProblem[];
 
-  /**
-   * The node at `id`, or — for a fixed slot the file does not have yet — a
-   * virtual one. The form edits it like any other; the first patch is what
-   * writes it into the file.
-   */
+  /** The node at `id`, or a virtual one for a fixed slot the file lacks; the first patch writes it into the file. */
   nodeAt: (nodeId: string) => VNode | undefined;
   patchNode: (nodeId: string, patch: Record<string, unknown>) => void;
   addChild: (parentId: string, child: Record<string, unknown>) => void;
@@ -52,48 +52,9 @@ export interface DraftApi {
   markSaved: (entityId: string) => void;
 }
 
-const parentOf = (nodeId: string) => nodeId.slice(0, nodeId.lastIndexOf("/"));
+// #endregion
 
-/** The node a slot holds when it has never been filled in. */
-const emptySlotNode = (nodeId: string, slot: SlotSpec): VNode =>
-  ({
-    id: nodeId,
-    key: slot.key,
-    name: slot.name,
-    view: slot.view,
-    ...(slot.icon ? { icon: slot.icon } : {}),
-    ...(slot.view === "imageGallery" || slot.view === "imageViewer" ? { images: [] } : {}),
-  }) as VNode;
-
-const hasNode = (node: VNode, nodeId: string): boolean =>
-  node.id === nodeId || (node.children?.some((child) => hasNode(child, nodeId)) ?? false);
-
-/**
- * Appends a slot child and puts the parent's children back in slot order, so a
- * slot filled in late still lands where the layout says it goes.
- */
-function insertSlot(parent: VNode, slot: SlotSpec, patch: Record<string, unknown>): VNode {
-  const slots = slotsOf(parent.id) ?? [];
-  const rank = (key: string | undefined) => {
-    const i = slots.findIndex((s) => s.key === key);
-    return i === -1 ? slots.length : i;
-  };
-  const child = { key: slot.key, name: slot.name, view: slot.view, ...patch };
-  if (slot.icon) (child as Record<string, unknown>).icon = slot.icon;
-  const children = [...(parent.children ?? []), child as unknown as VNode];
-  children.sort((a, b) => rank(a.key) - rank(b.key));
-  return { ...parent, children } as VNode;
-}
-
-/** Applies `fn` to one node inside an entity. Returning null removes it. */
-function editNode(node: VNode, targetId: string, fn: (n: VNode) => VNode | null): VNode | null {
-  if (node.id === targetId) return fn(node);
-  if (!node.children) return node;
-  const children = node.children
-    .map((child) => editNode(child, targetId, fn))
-    .filter((child): child is VNode => child !== null);
-  return { ...node, children } as VNode;
-}
+// #region Draft
 
 export function useDraft(): DraftApi {
   const [{ entities, broken }, setLoaded] = useState(loadEntities);
@@ -101,15 +62,14 @@ export function useDraft(): DraftApi {
   const [prose, setProseEdits] = useState<ReadonlyMap<string, ProseEdit>>(new Map());
   const [created, setCreated] = useState<ReadonlySet<string>>(new Set<string>());
 
-  /** Every write goes through here: edit the owning entity, re-derive its ids,
-   *  mark it dirty. Ids can therefore never drift from the tree's shape. */
+  // Every write goes through here (edit owning entity, re-derive ids, mark dirty), so ids never drift from the tree's shape.
   const writeEntity = useCallback(
-    (nodeId: string, fn: (entityId: string, entity: VNode) => VNode | null) => {
+    (nodeId: string, edit: (entityId: string, entity: VNode) => VNode | null) => {
       setLoaded((prev) => {
         const entityId = ownerOf(prev.entities, nodeId);
         if (!entityId) return prev;
         const current = prev.entities.get(entityId)!;
-        const next = fn(entityId, current);
+        const next = edit(entityId, current);
         if (!next || next === current) return prev;
         const entities = new Map(prev.entities);
         entities.set(entityId, rematerialize(next, entityId));
@@ -130,11 +90,11 @@ export function useDraft(): DraftApi {
         if (hasNode(entity, nodeId)) {
           return editNode(entity, nodeId, (node) => ({ ...node, ...patch }) as VNode);
         }
-        // An unfilled slot: creating it on the first edit is what keeps the
-        // character form identical for every character, whatever its file holds.
+        // An unfilled slot, created on first edit: keeps every character's form identical whatever its file holds.
         const slot = slotFor(nodeId);
         if (!slot) return entity;
-        return editNode(entity, parentOf(nodeId), (parent) => insertSlot(parent, slot, patch));
+        const parentId = nodeId.slice(0, nodeId.lastIndexOf("/"));
+        return editNode(entity, parentId, (parent) => insertSlot(parent, slot, patch));
       });
     },
     [writeEntity],
@@ -165,7 +125,7 @@ export function useDraft(): DraftApi {
       writeEntity(parentId, (_entityId, entity) =>
         editNode(entity, parentId, (parent) => {
           const children = [...(parent.children ?? [])];
-          const from = children.findIndex((c) => c.id === nodeId);
+          const from = children.findIndex((child) => child.id === nodeId);
           const to = from + direction;
           if (from === -1 || to < 0 || to >= children.length) return parent;
           [children[from], children[to]] = [children[to], children[from]];
@@ -236,9 +196,9 @@ export function useDraft(): DraftApi {
   }, []);
 
   const anyDirty = useMemo(() => {
-    const all = new Set(dirty);
-    for (const edit of prose.values()) all.add(edit.entityId);
-    return all;
+    const dirtyEntities = new Set(dirty);
+    for (const edit of prose.values()) dirtyEntities.add(edit.entityId);
+    return dirtyEntities;
   }, [dirty, prose]);
 
   const { index, problems } = useMemo(() => {
@@ -249,8 +209,7 @@ export function useDraft(): DraftApi {
       severity: "error" as const,
     }));
     problems.push(
-      // Built-ins are not files, so they are absent from the draft — an
-      // `opens` pointing at one is valid even though nothing here holds it.
+      // Built-ins are not files, so absent from the draft, yet an `opens` pointing at one is valid.
       ...validateNodes(
         index.values(),
         REGISTERED_VIEWS,
@@ -265,9 +224,16 @@ export function useDraft(): DraftApi {
       const existing = index.get(nodeId);
       if (existing) return existing;
       const slot = slotFor(nodeId);
-      const parentId = parentOf(nodeId);
+      const parentId = nodeId.slice(0, nodeId.lastIndexOf("/"));
       if (!slot || !index.has(parentId)) return undefined;
-      return emptySlotNode(nodeId, slot);
+      return {
+        id: nodeId,
+        key: slot.key,
+        name: slot.name,
+        view: slot.view,
+        ...(slot.icon ? { icon: slot.icon } : {}),
+        ...(slot.view === "imageGallery" || slot.view === "imageViewer" ? { images: [] } : {}),
+      } as VNode;
     },
     [index],
   );
@@ -293,3 +259,37 @@ export function useDraft(): DraftApi {
     markSaved,
   };
 }
+
+// #endregion
+
+// #region Helpers
+
+function hasNode(node: VNode, nodeId: string): boolean {
+  return node.id === nodeId || (node.children?.some((child) => hasNode(child, nodeId)) ?? false);
+}
+
+// Re-sorts the parent's children into slot order, so a slot filled in late still lands where the layout puts it.
+function insertSlot(parent: VNode, slot: SlotSpec, patch: Record<string, unknown>): VNode {
+  const slots = slotsOf(parent.id) ?? [];
+  const rank = (key: string | undefined) => {
+    const position = slots.findIndex((candidate) => candidate.key === key);
+    return position === -1 ? slots.length : position;
+  };
+  const child = { key: slot.key, name: slot.name, view: slot.view, ...patch };
+  if (slot.icon) (child as Record<string, unknown>).icon = slot.icon;
+  const children = [...(parent.children ?? []), child as unknown as VNode];
+  children.sort((a, b) => rank(a.key) - rank(b.key));
+  return { ...parent, children } as VNode;
+}
+
+// Applies `edit` to one node inside an entity; returning null removes it.
+function editNode(node: VNode, targetId: string, edit: (node: VNode) => VNode | null): VNode | null {
+  if (node.id === targetId) return edit(node);
+  if (!node.children) return node;
+  const children = node.children
+    .map((child) => editNode(child, targetId, edit))
+    .filter((child): child is VNode => child !== null);
+  return { ...node, children } as VNode;
+}
+
+// #endregion

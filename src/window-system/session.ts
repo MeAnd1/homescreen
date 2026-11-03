@@ -1,26 +1,26 @@
 /**
- * Open windows across a reload (phase 4.1).
+ * Open windows across a reload (phase 4.1), over `localStorage`.
  *
- * A plain module over `localStorage`, deliberately NOT zustand's `persist`
- * middleware. Two reasons:
+ * Deliberately NOT zustand's `persist`: "does this window's node still exist?" is a
+ * content concern the window system may not import, so the caller supplies that
+ * predicate — and `persist` rehydrates before anything can run. Like
+ * `content/recent.ts`, a corrupt or unavailable store degrades to "no restore".
  *
- *  1. The interesting half of restoring is *validation*, and the useful check —
- *     "does this window's node still exist?" — is a content concern. The
- *     window system may not import `content/`, so the caller supplies the
- *     predicate. `persist` rehydrates before anything can run.
- *  2. It matches `content/recent.ts`: tolerant of a corrupt or unavailable
- *     store, degrading to "no restore" rather than to a blank desktop.
- *
- * The key is versioned. A future schema change bumps `v1` and the old entry is
- * simply never read again.
+ * The key is versioned: a schema change bumps `v1` and the old entry is never read again.
  */
+
+// #region Setup
 
 import { clampToViewport, currentViewport } from "./placement";
 import { getWindowType, hasWindowType } from "./registry";
 import { useWindowStore } from "./store";
 import type { Rect, WindowInstance, WindowState } from "./types";
 
-const KEY = "homescreen.windows.v1";
+// #endregion
+
+// #region Config
+
+const STORAGE_KEY = "homescreen.windows.v1";
 /** Coalesces the burst of writes a drag or a cascade produces. */
 const WRITE_DELAY = 300;
 
@@ -39,66 +39,12 @@ interface Snapshot {
   order: string[];
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+let lastWritten: string | null = null;
+let warnedOnce = false;
 
-/** Enough of a rejected entry to find it in storage, without dumping the lot. */
-function describe(entry: unknown): string {
-  if (!isRecord(entry)) return "<not an object>";
-  return `${String(entry.id ?? "<no id>")}:${String(entry.type ?? "<no type>")}`;
-}
+// #endregion
 
-function parseRect(value: unknown): Rect | null {
-  if (!isRecord(value)) return null;
-  const { x, y, width, height } = value;
-  if (![x, y, width, height].every((n) => typeof n === "number" && Number.isFinite(n))) {
-    return null;
-  }
-  const rect = { x, y, width, height } as Rect;
-  return rect.width > 0 && rect.height > 0 ? rect : null;
-}
-
-/**
- * One raw entry → a window instance, or null if anything about it is off.
- * Unknown window types are dropped here; unknown *nodes* are the caller's job.
- */
-function parseWindow(raw: unknown): WindowInstance | null {
-  if (!isRecord(raw)) return null;
-  const { id, type, payload, title, icon, state, groupId, parentId, resizable } = raw;
-
-  if (typeof id !== "string" || !id) return null;
-  if (typeof type !== "string" || !hasWindowType(type)) return null;
-  if (!isRecord(payload)) return null;
-  if (typeof title !== "string") return null;
-  if (typeof state !== "string" || !WINDOW_STATES.includes(state as WindowState)) return null;
-
-  const rect = parseRect(raw.rect);
-  if (!rect) return null;
-
-  const viewport = currentViewport();
-  // The session may have been saved on a bigger screen.
-  const restoreRect = parseRect(raw.restoreRect);
-
-  // A bundled icon's URL carries a build hash, so a persisted one 404s after
-  // the next deploy. Ask the type to resolve it again and keep the stored
-  // string only as the fallback for types that do not supply an icon.
-  const freshIcon = getWindowType(type as WindowInstance["type"]).icon?.(payload as never);
-
-  return {
-    id,
-    type: type as WindowInstance["type"],
-    payload: payload as WindowInstance["payload"],
-    title,
-    icon: freshIcon ?? (typeof icon === "string" ? icon : undefined),
-    rect: clampToViewport(rect, viewport),
-    state: state as WindowState,
-    restoreRect: restoreRect ? clampToViewport(restoreRect, viewport) : undefined,
-    resizable: typeof resizable === "boolean" ? resizable : undefined,
-    groupId: typeof groupId === "string" ? groupId : undefined,
-    parentId: typeof parentId === "string" ? parentId : undefined,
-  };
-}
+// #region Session
 
 /**
  * Read and validate the stored session. Returns null when there is nothing
@@ -107,7 +53,7 @@ function parseWindow(raw: unknown): WindowInstance | null {
 export function loadSession(isNodeAlive: (ref: PersistedWindowRef) => boolean): Snapshot | null {
   let raw: string | null;
   try {
-    raw = localStorage.getItem(KEY);
+    raw = localStorage.getItem(STORAGE_KEY);
   } catch {
     // Private browsing with storage disabled. Start clean.
     return null;
@@ -128,32 +74,35 @@ export function loadSession(isNodeAlive: (ref: PersistedWindowRef) => boolean): 
   const seen = new Set<string>();
   const dropped: string[] = [];
   for (const entry of parsed.windows) {
-    const w = parseWindow(entry);
-    if (!w) {
-      dropped.push(`${describe(entry)} (unreadable or unknown window type)`);
+    const instance = parseWindow(entry);
+    if (!instance) {
+      const label = isRecord(entry)
+        ? `${String(entry.id ?? "<no id>")}:${String(entry.type ?? "<no type>")}`
+        : "<not an object>";
+      dropped.push(`${label} (unreadable or unknown window type)`);
       continue;
     }
-    if (seen.has(w.id)) {
-      dropped.push(`${w.id} (duplicate id)`);
+    if (seen.has(instance.id)) {
+      dropped.push(`${instance.id} (duplicate id)`);
       continue;
     }
-    if (!isNodeAlive({ type: w.type, payload: w.payload as Record<string, unknown> })) {
-      dropped.push(`${w.id} (its node is gone)`);
+    if (!isNodeAlive({ type: instance.type, payload: instance.payload as Record<string, unknown> })) {
+      dropped.push(`${instance.id} (its node is gone)`);
       continue;
     }
-    seen.add(w.id);
-    kept.push(w);
+    seen.add(instance.id);
+    kept.push(instance);
   }
 
   // A child whose parent did not survive would never close with it and would
   // sit in a group that no longer exists — drop the whole broken chain.
   let alive = kept;
   for (;;) {
-    const ids = new Set(alive.map((w) => w.id));
-    const next = alive.filter((w) => !w.parentId || ids.has(w.parentId));
+    const ids = new Set(alive.map((instance) => instance.id));
+    const next = alive.filter((instance) => !instance.parentId || ids.has(instance.parentId));
     if (next.length === alive.length) break;
-    for (const w of alive) {
-      if (!next.includes(w)) dropped.push(`${w.id} (its parent window is gone)`);
+    for (const instance of alive) {
+      if (!next.includes(instance)) dropped.push(`${instance.id} (its parent window is gone)`);
     }
     alive = next;
   }
@@ -165,21 +114,18 @@ export function loadSession(isNodeAlive: (ref: PersistedWindowRef) => boolean): 
   }
   if (alive.length === 0) return null;
 
-  const aliveIds = new Set(alive.map((w) => w.id));
+  const aliveIds = new Set(alive.map((instance) => instance.id));
   const order = (parsed.order as unknown[]).filter(
     (id): id is string => typeof id === "string" && aliveIds.has(id),
   );
   // Anything the stored order forgot goes on top, in insertion order.
   const inOrder = new Set(order);
-  for (const w of alive) if (!inOrder.has(w.id)) order.push(w.id);
+  for (const instance of alive) if (!inOrder.has(instance.id)) order.push(instance.id);
 
   return { windows: alive, order };
 }
 
-/**
- * Restore the previous session into the store. Returns true if it put anything
- * on the desktop.
- */
+/** Returns true if it put anything on the desktop. */
 export function restoreSession(isNodeAlive: (ref: PersistedWindowRef) => boolean): boolean {
   const snapshot = loadSession(isNodeAlive);
   if (!snapshot) return false;
@@ -190,29 +136,21 @@ export function restoreSession(isNodeAlive: (ref: PersistedWindowRef) => boolean
 export function clearSession(): void {
   lastWritten = null;
   try {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Nothing to do — a stale entry is dropped on the next validated read.
   }
 }
 
-function serialize(): string {
-  const { windows, order } = useWindowStore.getState();
-  // focusedId is deliberately absent: it is not worth restoring and it would
-  // make every focus click a storage write.
-  return JSON.stringify({ windows: Object.values(windows), order });
-}
-
-let lastWritten: string | null = null;
-let warnedOnce = false;
-
 /** Write the current desktop out now. A no-op if nothing persistable changed. */
 export function saveSession(): void {
-  const next = serialize();
+  const { windows, order } = useWindowStore.getState();
+  // focusedId is left out: not worth restoring, and it would make every focus click a storage write.
+  const next = JSON.stringify({ windows: Object.values(windows), order });
   if (next === lastWritten) return;
   lastWritten = next;
   try {
-    localStorage.setItem(KEY, next);
+    localStorage.setItem(STORAGE_KEY, next);
   } catch (error) {
     if (!warnedOnce) {
       warnedOnce = true;
@@ -255,3 +193,63 @@ export function startSessionPersistence(): () => void {
     }
   };
 }
+
+// #endregion
+
+// #region Helpers
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseRect(value: unknown): Rect | null {
+  if (!isRecord(value)) return null;
+  const { x, y, width, height } = value;
+  if (![x, y, width, height].every((coordinate) => typeof coordinate === "number" && Number.isFinite(coordinate))) {
+    return null;
+  }
+  const rect = { x, y, width, height } as Rect;
+  return rect.width > 0 && rect.height > 0 ? rect : null;
+}
+
+/**
+ * One raw entry → a window instance, or null if anything about it is off.
+ * Unknown window types are dropped here; unknown *nodes* are the caller's job.
+ */
+function parseWindow(raw: unknown): WindowInstance | null {
+  if (!isRecord(raw)) return null;
+  const { id, type, payload, title, icon, state, groupId, parentId, resizable } = raw;
+
+  if (typeof id !== "string" || !id) return null;
+  if (typeof type !== "string" || !hasWindowType(type)) return null;
+  if (!isRecord(payload)) return null;
+  if (typeof title !== "string") return null;
+  if (typeof state !== "string" || !WINDOW_STATES.includes(state as WindowState)) return null;
+
+  const rect = parseRect(raw.rect);
+  if (!rect) return null;
+
+  const restoreRect = parseRect(raw.restoreRect);
+  // The session may have been saved on a bigger screen.
+  const viewport = currentViewport();
+
+  // A bundled icon's URL carries a build hash and 404s after the next deploy: re-resolve it,
+  // keeping the stored string only for types that supply no icon.
+  const freshIcon = getWindowType(type as WindowInstance["type"]).icon?.(payload as never);
+
+  return {
+    id,
+    type: type as WindowInstance["type"],
+    payload: payload as WindowInstance["payload"],
+    title,
+    icon: freshIcon ?? (typeof icon === "string" ? icon : undefined),
+    rect: clampToViewport(rect, viewport),
+    state: state as WindowState,
+    restoreRect: restoreRect ? clampToViewport(restoreRect, viewport) : undefined,
+    resizable: typeof resizable === "boolean" ? resizable : undefined,
+    groupId: typeof groupId === "string" ? groupId : undefined,
+    parentId: typeof parentId === "string" ? parentId : undefined,
+  };
+}
+
+// #endregion

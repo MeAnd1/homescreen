@@ -29,13 +29,6 @@ const EditorPinImageUrl: React.FC = () => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      fetchPinImage();
-    }
-  };
-
   return (
     <div className="editor-pin-container">
       <div className="editor-section">
@@ -47,8 +40,12 @@ const EditorPinImageUrl: React.FC = () => {
               <input
                 type="text"
                 value={pinUrl}
-                onChange={(e) => setPinUrl(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={(event) => setPinUrl(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  fetchPinImage();
+                }}
                 placeholder="https://pin.it/6LL2aVThw"
                 className="editor-input"
                 disabled={isLoading}

@@ -3,7 +3,6 @@ import type { DraftApi } from "./useDraft";
 
 export interface EditorContextValue {
   draft: DraftApi;
-  /** Move the form to another node — used by node pickers and the tree. */
   select: (nodeId: string) => void;
 }
 

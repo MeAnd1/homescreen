@@ -3,7 +3,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useResource } from "../../content/resources";
 import { getNode } from "../../content/vfs";
-import type { Hotspot, ImageRef } from "../../content/types";
+import type { ImageRef } from "../../content/types";
 import BBCode from "../../ui/BBCode/BBCode";
 import { useWindow } from "../../window-system/WindowContext";
 import { runEffect } from "../effects";
@@ -17,11 +17,8 @@ interface ImageViewerPayload {
 /** A drag longer than this is a pan, not a hotspot click. */
 const CLICK_SLOP_PX = 5;
 
-/**
- * Scale added per pixel of wheel delta. The library's `smooth` mode multiplies
- * the step by `|deltaY|`, so a mouse notch (~100px) zooms by ~0.25 and a
- * trackpad's many small deltas add up gradually.
- */
+// Scale per pixel of wheel delta: the library multiplies it by |deltaY|,
+// so a ~100px mouse notch zooms ~0.25 and trackpad deltas add up gradually.
 const WHEEL_STEP = 0.0025;
 
 /** The full-size view of an image set — design1 sketch 4. */
@@ -33,16 +30,13 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
 
   const startIndex = payload.startIndex ?? 0;
   const [currentIndex, setCurrentIndex] = useState(startIndex);
-  // Width/height of the loaded image. The frame is given this aspect ratio so
-  // it lands exactly on the picture — a hotspot's percentages are percentages
-  // of the picture, not of the letterboxed window.
+  // The frame takes the image's aspect ratio so hotspot percentages land on the picture, not the letterbox.
   const [ratio, setRatio] = useState<number | undefined>();
   const self = useWindow();
   const infoText = useResource(infoSrc);
   // Where the pointer went down on a hotspot, so a pan is not read as a click.
   const pressAt = useRef<{ x: number; y: number } | null>(null);
-  // Toggled by hand rather than through state: it flips on every wheel gesture
-  // and only switches a CSS transition, so it should not re-render the viewer.
+  // Its wheel class is toggled by hand, not via state, so every wheel gesture does not re-render the viewer.
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Re-opening a singleton MERGES the payload rather than remounting, so
@@ -60,41 +54,23 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
   const current = images[currentIndex];
 
   const handlePrev = useCallback(() => {
-    setCurrentIndex((i) => (i - 1 + total) % total);
+    setCurrentIndex((index) => (index - 1 + total) % total);
   }, [total]);
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((i) => (i + 1) % total);
+    setCurrentIndex((index) => (index + 1) % total);
   }, [total]);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.stopPropagation();
+  const handleWheel = useCallback((event: React.WheelEvent) => {
+    event.stopPropagation();
   }, []);
 
   const stopWheelEasing = useCallback(() => {
     canvasRef.current?.classList.remove("is-wheel-zooming");
   }, []);
 
-  const handleHotspotClick = useCallback(
-    (hotspot: Hotspot, e: React.MouseEvent) => {
-      const down = pressAt.current;
-      pressAt.current = null;
-      if (
-        down &&
-        Math.hypot(e.clientX - down.x, e.clientY - down.y) > CLICK_SLOP_PX
-      ) {
-        return; // the pointer was panning the image
-      }
-      runEffect(hotspot.action, { windowId: self.id });
-    },
-    [self.id],
-  );
-
-  // The titlebar follows the image only when the viewer is the *alternate* view
-  // of a gallery node: there the user clicked a named thumbnail, so the file
-  // name is what they asked for. A node whose own view is `imageViewer` is one
-  // window standing for the whole set, so it keeps its own name however many
-  // images it holds and whichever one is on screen.
+  // The titlebar follows the image only when this is a gallery's alternate view (the user
+  // clicked a named thumbnail); an `imageViewer` node stands for the whole set and keeps its name.
   const setTitle = self.setTitle;
   const fileName = node?.view === "imageViewer" ? undefined : current?.fileName;
   useEffect(() => {
@@ -144,15 +120,15 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
                 alt={current.fileName}
                 className="image-viewer-img"
                 draggable={false}
-                onLoad={(e) =>
-                  setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)
+                onLoad={(event) =>
+                  setRatio(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)
                 }
                 // A broken image still gets a frame, so the placeholder shows.
                 onError={() => setRatio(1)}
               />
-              {current.hotspots?.map((hotspot, i) => (
+              {current.hotspots?.map((hotspot, index) => (
                 <button
-                  key={i}
+                  key={index}
                   type="button"
                   className="image-viewer-hotspot"
                   style={{
@@ -164,10 +140,18 @@ function ImageViewer({ payload }: { payload: ImageViewerPayload }) {
                   // A fixed label, and never a `title`: a tooltip — or a name
                   // describing the target — would give the secret away.
                   aria-label="Image hotspot"
-                  onPointerDown={(e) => {
-                    pressAt.current = { x: e.clientX, y: e.clientY };
+                  onPointerDown={(event) => {
+                    pressAt.current = { x: event.clientX, y: event.clientY };
                   }}
-                  onClick={(e) => handleHotspotClick(hotspot, e)}
+                  onClick={(event) => {
+                    const pressedAt = pressAt.current;
+                    pressAt.current = null;
+                    const distance = pressedAt
+                      ? Math.hypot(event.clientX - pressedAt.x, event.clientY - pressedAt.y)
+                      : 0;
+                    if (distance > CLICK_SLOP_PX) return;
+                    runEffect(hotspot.action, { windowId: self.id });
+                  }}
                 />
               ))}
             </div>

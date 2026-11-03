@@ -14,11 +14,7 @@ import {
 
 type Gate = "checking" | "locked" | "unlocked";
 
-/**
- * The editor is password-gated: children never render until the server has
- * accepted the stored password. A 401 on any later request clears it and drops
- * back to the lock screen.
- */
+// Children never render until the server accepts the stored password; a later 401 clears it and locks again.
 export function EditorPasswordProvider({ children }: { children: ReactNode }) {
   const [gate, setGate] = useState<Gate>("checking");
   const [password, setPassword] = useState<string | null>(null);
@@ -72,12 +68,12 @@ export function EditorPasswordProvider({ children }: { children: ReactNode }) {
   );
 
   const saveToServer = useCallback(
-    (fileId: string, content: unknown) => authed((p) => saveAndPush(fileId, content, p)),
+    (fileId: string, content: unknown) => authed((acceptedPassword) => saveAndPush(fileId, content, acceptedPassword)),
     [authed],
   );
 
   const deleteFromServer = useCallback(
-    (fileId: string) => authed((p) => deleteAndPush(fileId, p)),
+    (fileId: string) => authed((acceptedPassword) => deleteAndPush(fileId, acceptedPassword)),
     [authed],
   );
 
@@ -127,14 +123,14 @@ export function EditorPasswordProvider({ children }: { children: ReactNode }) {
                 value={input}
                 autoFocus
                 disabled={verifying}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(event) => setInput(event.target.value)}
               />
               <button
                 type="button"
                 className="editor-password-toggle"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword((wasShown) => !wasShown)}
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />

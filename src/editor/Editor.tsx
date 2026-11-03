@@ -1,3 +1,5 @@
+// #region Setup
+
 import wallpaper from "../assets/background.webp";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -32,13 +34,165 @@ import {
 import { useDraft } from "./useDraft";
 import "./editor.css";
 
-/** "1 error", "2 errors" — the editor counts things in several places. */
-const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+// #endregion
 
-/**
- * The bar above the form. It names the **file** every button here writes,
- * because one entity is exactly one save and that is the model's whole point.
- */
+// #region Config
+
+type Tab = "content" | "pin";
+
+// #endregion
+
+// #region Main flow
+
+export default function Editor() {
+  return (
+    <EditorPasswordProvider>
+      <Toaster position="top-right" />
+      <Workspace />
+    </EditorPasswordProvider>
+  );
+}
+
+function Workspace() {
+  const draft = useDraft();
+  const [params, setParams] = useSearchParams();
+  const selectedId = params.get("node") ?? "characters";
+  const tab: Tab = params.get("tab") === "pin" ? "pin" : "content";
+  // Below the layout breakpoint the tree is a drawer. Kept unconditionally and CSS decides if it
+  // means anything, so the breakpoint is not duplicated in JS.
+  const [treeOpen, setTreeOpen] = useState(false);
+
+  // On the window, not the drawer: once open, focus is as likely inside the tree as on its button.
+  useEffect(() => {
+    if (!treeOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTreeOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [treeOpen]);
+
+  // Where you are lives in the query string, so Back walks through opened nodes instead of
+  // leaving the editor. Same route, no remount, so the unsaved draft survives going back.
+  const go = useCallback(
+    (next: { node?: string; tab?: Tab; replace?: boolean }) => {
+      const node = next.node ?? selectedId;
+      const nextTab = next.tab ?? tab;
+      const search = new URLSearchParams();
+      search.set("node", node);
+      if (nextTab === "pin") search.set("tab", "pin");
+      // Re-opening what is on screen must not stack an identical entry, or Back needs several presses.
+      const unchanged = node === selectedId && nextTab === tab;
+      setParams(search, { replace: Boolean(next.replace) || unchanged });
+      setTreeOpen(false);
+    },
+    [selectedId, tab, setParams],
+  );
+
+  const context = useMemo(
+    () => ({ draft, select: (nodeId: string) => go({ node: nodeId }) }),
+    [draft, go],
+  );
+
+  // nodeAt, not index.get: a slot the file has never had is editable as a virtual node (useDraft.ts).
+  const selected: VNode | undefined = draft.nodeAt(selectedId);
+  const entityId = ownerOf(draft.entities, selectedId);
+
+  return (
+    <EditorContext.Provider value={context}>
+      <div
+        className="editor-shell"
+        style={
+          { "--editor-wallpaper": `url(${wallpaper})` } as React.CSSProperties
+        }
+      >
+        <header className="editor-topbar">
+          {/* Only the tree drawer needs it, so it goes when the tree does. */}
+          {tab === "content" && (
+            <button
+              type="button"
+              className="editor-drawer-toggle"
+              aria-expanded={treeOpen}
+              aria-controls="editor-tree-pane"
+              onClick={() => setTreeOpen((open) => !open)}
+            >
+              {treeOpen ? (
+                <PanelLeftClose size={16} />
+              ) : (
+                <PanelLeftOpen size={16} />
+              )}
+              <span>Files</span>
+            </button>
+          )}
+          <h1>Kataa behind the screen</h1>
+          <nav className="editor-tabs">
+            <button
+              type="button"
+              className={`editor-tab${tab === "content" ? " editor-tab-active" : ""}`}
+              onClick={() => go({ tab: "content" })}
+            >
+              <FolderTree size={13} /> Content
+            </button>
+            <button
+              type="button"
+              className={`editor-tab${tab === "pin" ? " editor-tab-active" : ""}`}
+              onClick={() => go({ tab: "pin" })}
+            >
+              <Image size={13} /> Get Pinterest image link
+            </button>
+          </nav>
+          <ProblemList />
+        </header>
+
+        {tab === "content" ? (
+          <div className="editor-body">
+            {/* Only reachable on a narrow screen; elsewhere the scrim is display:none. */}
+            <button
+              type="button"
+              className="editor-drawer-scrim"
+              aria-label="Close the file tree"
+              hidden={!treeOpen}
+              onClick={() => setTreeOpen(false)}
+            />
+            <aside
+              id="editor-tree-pane"
+              className={`editor-pane editor-pane-left${treeOpen ? " editor-pane-left-open" : ""}`}
+            >
+              <EntityTree selectedId={selectedId} />
+            </aside>
+            <main className="editor-pane editor-pane-right">
+              {entityId && (
+                <EntityBar
+                  entityId={entityId}
+                  // The file is gone: replace, so Back does not land on it.
+                  onDeleted={() => go({ node: "", replace: true })}
+                />
+              )}
+              {selected ? (
+                /* Keyed: form-local state (add-child draft, prose body, icon mode) belongs to the node, not the pane. */
+                <NodeForm key={selected.id} node={selected} />
+              ) : (
+                <div className="editor-empty">
+                  <p className="editor-hint">Pick something on the left.</p>
+                </div>
+              )}
+            </main>
+          </div>
+        ) : (
+          <div className="editor-body">
+            <EditorPinImageUrl />
+          </div>
+        )}
+      </div>
+    </EditorContext.Provider>
+  );
+}
+
+// #endregion
+
+// #region Panels
+
+// Names the **file** every button here writes, because one entity is exactly one save.
 function EntityBar({
   entityId,
   onDeleted,
@@ -62,7 +216,7 @@ function EntityBar({
     [entity],
   );
   const errors = draft.problems.filter(
-    (p) => p.severity === "error" && ids.has(p.nodeId),
+    (problem) => problem.severity === "error" && ids.has(problem.nodeId),
   );
   const dirty = draft.dirty.has(entityId);
 
@@ -88,8 +242,7 @@ function EntityBar({
       return;
     }
     setBusy("saving");
-    // The text goes first: the node file points at it, so it must never land
-    // first and leave a node naming a file that is not there.
+    // Prose first: the node file points at it, so the node must never land naming a missing file.
     for (const [proseId, edit] of draft.prose) {
       if (edit.entityId !== entityId) continue;
       const proseResult = await saveToServer(proseId, edit.body);
@@ -110,7 +263,7 @@ function EntityBar({
     if (result.success) {
       draft.markSaved(entityId);
       toast.success(result.message || `Saved ${fileId}`);
-      result.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
+      result.warnings?.forEach((warning) => toast(warning, { icon: "⚠️" }));
     } else {
       toast.error(result.error || "Save failed");
     }
@@ -140,7 +293,7 @@ function EntityBar({
     if (result.success) {
       draft.dropEntity(entityId);
       toast.success(result.message || `Deleted ${fileId}`);
-      result.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
+      result.warnings?.forEach((warning) => toast(warning, { icon: "⚠️" }));
       onDeleted();
     } else {
       toast.error(result.error || "Delete failed");
@@ -196,8 +349,7 @@ function EntityBar({
       </div>
 
       {confirming && (
-        /* An in-page panel rather than confirm(): it can list what the deletion
-           breaks, which a one-line browser dialog cannot. */
+        /* In-page rather than confirm(), so it can list what the deletion breaks. */
         <div className="editor-confirm">
           <p>
             Delete <span className="editor-text-mono">{fileId}</span> and
@@ -248,8 +400,8 @@ function EntityBar({
 function ProblemList() {
   const { draft, select } = useEditor();
   const [open, setOpen] = useState(false);
-  const errors = draft.problems.filter((p) => p.severity === "error");
-  const warnings = draft.problems.filter((p) => p.severity === "warning");
+  const errors = draft.problems.filter((problem) => problem.severity === "error");
+  const warnings = draft.problems.filter((problem) => problem.severity === "warning");
   if (draft.problems.length === 0)
     return (
       <span className="editor-ok">
@@ -262,7 +414,7 @@ function ProblemList() {
       <button
         type="button"
         className="editor-link editor-link-icon"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         <AlertTriangle size={13} /> {plural(errors.length, "error")},{" "}
         {plural(warnings.length, "warning")}
@@ -293,161 +445,12 @@ function ProblemList() {
   );
 }
 
-type Tab = "content" | "pin";
+// #endregion
 
-function Workspace() {
-  const draft = useDraft();
-  const [params, setParams] = useSearchParams();
-  const selectedId = params.get("node") ?? "characters";
-  const tab: Tab = params.get("tab") === "pin" ? "pin" : "content";
-  /**
-   * Narrow screens cannot afford a permanent 280px tree beside the form, so
-   * below the layout breakpoint the tree becomes a drawer over it. The state is
-   * kept unconditionally — CSS decides whether it means anything — because a
-   * JS breakpoint would have to be duplicated in two places to stay in sync.
-   */
-  const [treeOpen, setTreeOpen] = useState(false);
+// #region Helpers
 
-  // On the window, not on the drawer: once it is open, focus is as likely to be
-  // inside the tree as on the button that opened it.
-  useEffect(() => {
-    if (!treeOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTreeOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [treeOpen]);
-
-  /**
-   * Where you are in the editor lives in the query string, so the browser's
-   * Back button walks back through the nodes you opened instead of leaving the
-   * editor for the desktop. Nothing is remounted by it — same route, same
-   * component — so the draft and its dirty files survive going back.
-   */
-  const go = useCallback(
-    (next: { node?: string; tab?: Tab; replace?: boolean }) => {
-      const node = next.node ?? selectedId;
-      const nextTab = next.tab ?? tab;
-      const search = new URLSearchParams();
-      search.set("node", node);
-      if (nextTab === "pin") search.set("tab", "pin");
-      // Re-opening what is already on screen must not stack an identical
-      // entry, or Back would need several presses to move anywhere.
-      const unchanged = node === selectedId && nextTab === tab;
-      setParams(search, { replace: Boolean(next.replace) || unchanged });
-      setTreeOpen(false);
-    },
-    [selectedId, tab, setParams],
-  );
-
-  const context = useMemo(
-    () => ({ draft, select: (nodeId: string) => go({ node: nodeId }) }),
-    [draft, go],
-  );
-
-  // nodeAt, not index.get: a character slot the file has never had is editable
-  // as a virtual node, and written on the first edit (useDraft.ts).
-  const selected: VNode | undefined = draft.nodeAt(selectedId);
-  const entityId = ownerOf(draft.entities, selectedId);
-
-  return (
-    <EditorContext.Provider value={context}>
-      <div
-        className="editor-shell"
-        style={
-          { "--editor-wallpaper": `url(${wallpaper})` } as React.CSSProperties
-        }
-      >
-        <header className="editor-topbar">
-          {/* Only the tree drawer needs it, so it goes when the tree does. */}
-          {tab === "content" && (
-            <button
-              type="button"
-              className="editor-drawer-toggle"
-              aria-expanded={treeOpen}
-              aria-controls="editor-tree-pane"
-              onClick={() => setTreeOpen((open) => !open)}
-            >
-              {treeOpen ? (
-                <PanelLeftClose size={16} />
-              ) : (
-                <PanelLeftOpen size={16} />
-              )}
-              <span>Files</span>
-            </button>
-          )}
-          <h1>Kataa behind the screen</h1>
-          <nav className="editor-tabs">
-            <button
-              type="button"
-              className={`editor-tab${tab === "content" ? " editor-tab-active" : ""}`}
-              onClick={() => go({ tab: "content" })}
-            >
-              <FolderTree size={13} /> Content
-            </button>
-            <button
-              type="button"
-              className={`editor-tab${tab === "pin" ? " editor-tab-active" : ""}`}
-              onClick={() => go({ tab: "pin" })}
-            >
-              <Image size={13} /> Get Pinterest image link
-            </button>
-          </nav>
-          <ProblemList />
-        </header>
-
-        {tab === "content" ? (
-          <div className="editor-body">
-            {/* Only ever hit on a narrow screen: the drawer is the pane itself
-                everywhere else, and the scrim is display:none over it. */}
-            <button
-              type="button"
-              className="editor-drawer-scrim"
-              aria-label="Close the file tree"
-              hidden={!treeOpen}
-              onClick={() => setTreeOpen(false)}
-            />
-            <aside
-              id="editor-tree-pane"
-              className={`editor-pane editor-pane-left${treeOpen ? " editor-pane-left-open" : ""}`}
-            >
-              <EntityTree selectedId={selectedId} />
-            </aside>
-            <main className="editor-pane editor-pane-right">
-              {entityId && (
-                <EntityBar
-                  entityId={entityId}
-                  // The file is gone: replace, so Back does not land on it.
-                  onDeleted={() => go({ node: "", replace: true })}
-                />
-              )}
-              {selected ? (
-                /* Keyed: every form-local state (add-child draft, prose body,
-                   icon mode) belongs to the node being edited, not to the pane. */
-                <NodeForm key={selected.id} node={selected} />
-              ) : (
-                <div className="editor-empty">
-                  <p className="editor-hint">Pick something on the left.</p>
-                </div>
-              )}
-            </main>
-          </div>
-        ) : (
-          <div className="editor-body">
-            <EditorPinImageUrl />
-          </div>
-        )}
-      </div>
-    </EditorContext.Provider>
-  );
+function plural(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-export default function Editor() {
-  return (
-    <EditorPasswordProvider>
-      <Toaster position="top-right" />
-      <Workspace />
-    </EditorPasswordProvider>
-  );
-}
+// #endregion

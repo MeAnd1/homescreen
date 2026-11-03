@@ -11,9 +11,9 @@ const BASE_Z = 500;
  * rather than every host. z-index is derived from the index in `order`.
  */
 function WindowHost({ id }: { id: string }) {
-  const window = useWindowStore((s) => s.windows[id]);
-  const orderIndex = useWindowStore((s) => s.order.indexOf(id));
-  const focused = useWindowStore((s) => s.focusedId === id);
+  const window = useWindowStore((state) => state.windows[id]);
+  const orderIndex = useWindowStore((state) => state.order.indexOf(id));
+  const focused = useWindowStore((state) => state.focusedId === id);
 
   const handle = useMemo<WindowHandle>(() => {
     const store = useWindowStore.getState;

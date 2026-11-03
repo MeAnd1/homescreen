@@ -34,13 +34,13 @@ function WindowControls({
   onMaximize,
   onClose,
 }: WindowControlsProps) {
-  const stop = (e: React.PointerEvent | React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
+  const stop = (event: React.PointerEvent | React.MouseEvent | React.TouchEvent) => {
+    event.stopPropagation();
   };
 
-  const handler = (action: () => void) => (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const handler = (action: () => void) => (event: React.MouseEvent | React.TouchEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
     action();
   };
 

@@ -24,12 +24,12 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   airplane: false,
   hotspot: false,
   connected: HOME_SSID,
-  toggleWifi: () => set((s) => ({ wifi: !s.wifi })),
+  toggleWifi: () => set((state) => ({ wifi: !state.wifi })),
   // Windows 10: airplane mode takes Wi-Fi down with it, and leaving it brings
   // Wi-Fi back up. Wi-Fi can still be turned on by hand while it is on.
   toggleAirplane: () =>
-    set((s) => ({ airplane: !s.airplane, wifi: s.airplane })),
-  toggleHotspot: () => set((s) => ({ hotspot: !s.hotspot })),
+    set((state) => ({ airplane: !state.airplane, wifi: state.airplane })),
+  toggleHotspot: () => set((state) => ({ hotspot: !state.hotspot })),
   connect: (ssid) => set({ connected: ssid }),
   disconnect: () => set({ connected: null }),
 }));

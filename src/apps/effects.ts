@@ -13,13 +13,13 @@ export interface EffectContext {
  * zone in a browser room both end up in this switch. Adding one is a new
  * `Effect` variant plus a case below; no component branches on the effect type.
  */
-export function runEffect(effect: Effect, ctx: EffectContext): void {
+export function runEffect(effect: Effect, context: EffectContext): void {
   switch (effect.do) {
     case "openNode":
-      openNode(effect.opens, { view: effect.view, parentId: ctx.windowId });
+      openNode(effect.opens, { view: effect.view, parentId: context.windowId });
       return;
     case "goToRoom":
-      if (ctx.goToRoom) ctx.goToRoom(effect.room);
+      if (context.goToRoom) context.goToRoom(effect.room);
       else console.warn("[effects] goToRoom outside a browser", effect);
       return;
     default:

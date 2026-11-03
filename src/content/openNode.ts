@@ -6,8 +6,7 @@ import { recordRecent } from "./recent";
 import { getNode } from "./vfs";
 
 interface OpenNodeOptions {
-  /** Overrides the node's default view — how one image set serves both the
-   *  gallery and the viewer. */
+  /** Overrides the node's default view — how one image set serves gallery and viewer. */
   view?: ViewId;
   /** Makes the new window cascade from, and close with, that window. */
   parentId?: string;
@@ -16,20 +15,18 @@ interface OpenNodeOptions {
 }
 
 /**
- * The one function that turns content into a window. Every click site calls
- * this instead of passing an "open that screen" callback down the tree.
- *
- * Returns null (and warns) on an unknown id or an unregistered view. It must
- * never throw — a dead link in content must not blank the desktop.
+ * The one function that turns content into a window; click sites call it rather
+ * than passing an "open that screen" callback down the tree.
+ * Never throws — a dead link in content must not blank the desktop.
  */
-export function openNode(nodeId: string, opts: OpenNodeOptions = {}): string | null {
+export function openNode(nodeId: string, options: OpenNodeOptions = {}): string | null {
   const node = getNode(nodeId);
   if (!node) {
     console.warn(`[openNode] unknown node "${nodeId}"`);
     return null;
   }
 
-  const type = opts.view ?? node.view;
+  const type = options.view ?? node.view;
   if (!hasWindowType(type)) {
     console.warn(`[openNode] node "${nodeId}" wants unregistered view "${type}"`);
     return null;
@@ -37,7 +34,7 @@ export function openNode(nodeId: string, opts: OpenNodeOptions = {}): string | n
 
   const payload =
     type === "imageViewer"
-      ? { nodeId, startIndex: opts.startIndex ?? 0 }
+      ? { nodeId, startIndex: options.startIndex ?? 0 }
       : { nodeId };
 
   // Every open goes through here, so this is the one place that has to know.
@@ -53,7 +50,7 @@ export function openNode(nodeId: string, opts: OpenNodeOptions = {}): string | n
     title: node.name,
     icon: resolveIcon(node.icon),
     groupId: node.group ?? node.id.split("/").slice(0, 2).join("/"),
-    parentId: opts.parentId,
+    parentId: options.parentId,
     resizable: node.window?.resizable,
     ...(Object.keys(size).length > 0 ? { rect: size } : {}),
   });

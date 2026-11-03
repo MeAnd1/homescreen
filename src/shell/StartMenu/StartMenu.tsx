@@ -1,3 +1,4 @@
+// #region Setup and config
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import desktopConfig from "../../content/desktop.json";
@@ -10,30 +11,9 @@ import "./StartMenu.css";
 
 /** More than this and the panel stops being scannable; the count is shown. */
 const MAX_RESULTS = 24;
+// #endregion
 
-const resolveIds = (ids: readonly string[]): VNode[] =>
-  ids.map((id) => getNode(id)).filter((node): node is VNode => node !== undefined);
-
-/** "Characters › M1a" — enough to tell two same-named nodes apart. */
-const breadcrumb = (node: VNode): string =>
-  getPath(node.id)
-    .slice(0, -1)
-    .map((ancestor) => ancestor.name)
-    .join(" › ");
-
-/** Not every node has an icon; fall back to its initial, as the taskbar does. */
-function NodeIcon({ node, kind }: { node: VNode; kind: "recent" | "tile" }) {
-  const src = resolveIcon(node.icon);
-  const className = `startmenu-${kind}-icon`;
-  return src ? (
-    <img className={className} src={src} alt="" draggable={false} />
-  ) : (
-    <span className={`${className} startmenu-icon--placeholder`}>
-      {node.name.charAt(0)}
-    </span>
-  );
-}
-
+// #region Main flow
 /**
  * design2 sketch 7 — the panel that rises from the taskbar search box.
  *
@@ -48,8 +28,20 @@ function StartMenu({ onClose }: { onClose: () => void }) {
 
   // Read once per opening: the list only changes by opening something, which
   // closes the panel anyway.
-  const recent = useMemo(() => resolveIds(getRecent()), []);
-  const quickSearch = useMemo(() => resolveIds(desktopConfig.quickSearch), []);
+  const recent = useMemo(
+    () =>
+      getRecent()
+        .map((id) => getNode(id))
+        .filter((node): node is VNode => node !== undefined),
+    [],
+  );
+  const quickSearch = useMemo(
+    () =>
+      desktopConfig.quickSearch
+        .map((id) => getNode(id))
+        .filter((node): node is VNode => node !== undefined),
+    [],
+  );
 
   const matches = useMemo(
     () => (query.trim() ? searchNodes(query) : []),
@@ -68,18 +60,16 @@ function StartMenu({ onClose }: { onClose: () => void }) {
   }, []);
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
     };
-    const onMouseDown = (e: MouseEvent) => {
-      if (!panelRef.current?.contains(e.target as Node)) onClose();
+    const onMouseDown = (event: MouseEvent) => {
+      if (!panelRef.current?.contains(event.target as Node)) onClose();
     };
-    // Capture phase: react-rnd stops mousedown propagating out of a window, so
-    // a bubble-phase listener never sees a click on one and the panel would
-    // stay open over it. Armed one task late, so the mousedown that opened the
-    // panel does not immediately close it — a `setTimeout` rather than a
-    // `requestAnimationFrame`, whose callbacks never run while the tab is
-    // hidden, which would leave the panel undismissable on a background tab.
+    // Capture phase: react-rnd stops mousedown leaving a window, so a bubble
+    // listener would miss clicks on one. Armed one task late so the opening
+    // mousedown does not close it; setTimeout, not rAF, which never runs on a
+    // hidden tab and would leave the panel undismissable.
     const armed = setTimeout(() => {
       window.addEventListener("mousedown", onMouseDown, true);
     }, 0);
@@ -96,16 +86,16 @@ function StartMenu({ onClose }: { onClose: () => void }) {
     onClose();
   };
 
-  const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (tiles.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelected((i) => (i + 1) % tiles.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelected((i) => (i - 1 + tiles.length) % tiles.length);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSelected((current) => (current + 1) % tiles.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelected((current) => (current - 1 + tiles.length) % tiles.length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
       const node = tiles[selected];
       if (node) open(node.id);
     }
@@ -122,7 +112,7 @@ function StartMenu({ onClose }: { onClose: () => void }) {
           value={query}
           placeholder="Search"
           aria-label="Search"
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKeyDown}
         />
       </div>
@@ -159,23 +149,28 @@ function StartMenu({ onClose }: { onClose: () => void }) {
             <p className="startmenu-empty">No matches.</p>
           ) : (
             <div className="startmenu-grid">
-              {tiles.map((node, i) => (
-                <button
-                  key={node.id}
-                  type="button"
-                  className={`startmenu-tile${i === selected ? " startmenu-tile--selected" : ""}`}
-                  onClick={() => open(node.id)}
-                  onMouseEnter={() => setSelected(i)}
-                >
-                  <NodeIcon node={node} kind="tile" />
-                  <span className="startmenu-tile-text">
-                    <span className="startmenu-tile-name">{node.name}</span>
-                    {breadcrumb(node) && (
-                      <span className="startmenu-tile-path">{breadcrumb(node)}</span>
-                    )}
-                  </span>
-                </button>
-              ))}
+              {tiles.map((node, tileIndex) => {
+                // "Characters › M1a" — enough to tell two same-named nodes apart.
+                const breadcrumb = getPath(node.id)
+                  .slice(0, -1)
+                  .map((ancestor) => ancestor.name)
+                  .join(" › ");
+                return (
+                  <button
+                    key={node.id}
+                    type="button"
+                    className={`startmenu-tile${tileIndex === selected ? " startmenu-tile--selected" : ""}`}
+                    onClick={() => open(node.id)}
+                    onMouseEnter={() => setSelected(tileIndex)}
+                  >
+                    <NodeIcon node={node} kind="tile" />
+                    <span className="startmenu-tile-text">
+                      <span className="startmenu-tile-name">{node.name}</span>
+                      {breadcrumb && <span className="startmenu-tile-path">{breadcrumb}</span>}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -192,3 +187,19 @@ function StartMenu({ onClose }: { onClose: () => void }) {
 }
 
 export default StartMenu;
+// #endregion
+
+// #region Parts
+/** Not every node has an icon; fall back to its initial, as the taskbar does. */
+function NodeIcon({ node, kind }: { node: VNode; kind: "recent" | "tile" }) {
+  const src = resolveIcon(node.icon);
+  const className = `startmenu-${kind}-icon`;
+  return src ? (
+    <img className={className} src={src} alt="" draggable={false} />
+  ) : (
+    <span className={`${className} startmenu-icon--placeholder`}>
+      {node.name.charAt(0)}
+    </span>
+  );
+}
+// #endregion

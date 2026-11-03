@@ -13,15 +13,15 @@ function IconImageStack({ images, size = 64 }: IconImageStackProps) {
 
   return (
     <div className="icon-image-stack" style={{ width: size, height: size }}>
-      {visibleImages.map((img, i) => (
+      {visibleImages.map((image, index) => (
         <img
-          key={i}
-          src={img.thumbnail}
-          alt={img.fileName}
+          key={index}
+          src={image.thumbnail}
+          alt={image.fileName}
           className="icon-image-stack-img"
           style={{
-            zIndex: i,
-            transform: `rotate(${rotations[i + (3 - count)]}deg)`,
+            zIndex: index,
+            transform: `rotate(${rotations[index + (3 - count)]}deg)`,
           }}
         />
       ))}

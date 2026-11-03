@@ -9,24 +9,24 @@ interface FavouriteSpriteProps {
 }
 
 function FavouriteSprite({ item, height }: FavouriteSpriteProps) {
-  const [descOpen, setDescOpen] = useState(false);
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!descOpen) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (!wrapperRef.current?.contains(e.target as Node)) setDescOpen(false);
+    if (!isDescriptionOpen) return;
+    const onDocumentMouseDown = (event: MouseEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setIsDescriptionOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDescOpen(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsDescriptionOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDocumentMouseDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDocumentMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
-  }, [descOpen]);
+  }, [isDescriptionOpen]);
 
   const { x, y } = item.namePlatePosition;
 
@@ -57,19 +57,19 @@ function FavouriteSprite({ item, height }: FavouriteSpriteProps) {
           <button
             type="button"
             className="favourite-sprite__nameplate"
-            aria-expanded={descOpen}
-            onClick={(e) => {
-              e.stopPropagation();
-              setDescOpen((v) => !v);
+            aria-expanded={isDescriptionOpen}
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsDescriptionOpen((isOpen) => !isOpen);
             }}
           >
             {item.name}
           </button>
-          {descOpen && item.shortDescription && (
+          {isDescriptionOpen && item.shortDescription && (
             <div
               role="dialog"
               className="favourite-sprite__popup"
-              onMouseDown={(e) => e.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
             >
               {item.shortDescription}
             </div>

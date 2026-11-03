@@ -9,32 +9,21 @@ import PlacementStage from "./PlacementStage";
 import { constrainPlacement, type Placement } from "./placement";
 
 interface Props<T extends ZoneBox> {
-  /** The picture the zones sit on. Empty = a hint instead of a stage. */
+  /** Empty shows a hint instead of a stage. */
   imageUrl: string;
   zones: T[];
   onChange: (zones: T[]) => void;
   /** A new zone, already valid. */
   create: () => T;
-  /** Heading over the list. */
   listLabel: string;
   /** The list row's title and the stage item's screen-reader name. */
   summary: (zone: T, index: number) => string;
-  /** The zone's body on the stage. Default: a numbered box. */
+  /** Default: a numbered box. */
   renderZone?: (zone: T, index: number, isSelected: boolean) => ReactNode;
-  /** The picked zone's own settings, under the stage. */
   renderSettings: (zone: T, patch: (changes: Partial<T>) => void) => ReactNode;
 }
 
-/**
- * Rectangles on one picture: a stage you drag them on, a list you pick them
- * from, a nudge pad, and the settings of whichever one is picked. Shared by the
- * image viewer's easter egg clicks and the browser's room zones, so placing a
- * zone works the same in both. Knows nothing about what a zone *does* — that is
- * `renderSettings`.
- *
- * Coordinates are percentages of the rendered picture, the same ones the
- * runtime uses, so what you drag here is what the window shows.
- */
+// Shared by easter egg clicks and room zones so placing works the same in both. What a zone does is `renderSettings`.
 export default function ZonePlacer<T extends ZoneBox>({
   imageUrl,
   zones,
@@ -52,14 +41,13 @@ export default function ZonePlacer<T extends ZoneBox>({
   const current = zones[index];
 
   const patch = (changes: Partial<T>) =>
-    onChange(zones.map((item, i) => (i === index ? { ...item, ...changes } : item)));
+    onChange(zones.map((item, zoneIndex) => (zoneIndex === index ? { ...item, ...changes } : item)));
 
-  /** The stage has already clamped what it sends; the pad's writes go through
-   *  `constrainPlacement` on the way in, so both routes obey the same limits. */
+  // The stage clamps what it sends; nudge pad writes go through constrainPlacement first.
   const place = (at: number, next: Placement) =>
     onChange(
-      zones.map((item, i) =>
-        i === at
+      zones.map((item, zoneIndex) =>
+        zoneIndex === at
           ? {
               ...item,
               x: next.x,
@@ -108,9 +96,7 @@ export default function ZonePlacer<T extends ZoneBox>({
     setSelected(zones.length);
   };
 
-  /** A copy lands next to its original rather than exactly on it: stacked, it
-   *  would look like nothing had happened. It keeps the effect — which is the
-   *  point, since that is the part there is no other way to copy. */
+  // Offset so the copy does not hide under its original; keeping the effect is the point of copying.
   const duplicate = (at: number) => {
     const original = zones[at];
     const { x, y } = constrainPlacement({ ...original, x: original.x + 3, y: original.y + 3 });
@@ -131,13 +117,13 @@ export default function ZonePlacer<T extends ZoneBox>({
             onSelect={setSelected}
             onChange={place}
             step={step}
-            itemLabel={(_item, i) => summary(zones[i], i)}
-            renderItem={(_item, i, isSelected) =>
+            itemLabel={(_item, itemIndex) => summary(zones[itemIndex], itemIndex)}
+            renderItem={(_item, itemIndex, isSelected) =>
               renderZone ? (
-                renderZone(zones[i], i, isSelected)
+                renderZone(zones[itemIndex], itemIndex, isSelected)
               ) : (
                 <span className={`editor-zone${isSelected ? " editor-zone-selected" : ""}`}>
-                  <span className="editor-zone-number">{i + 1}</span>
+                  <span className="editor-zone-number">{itemIndex + 1}</span>
                 </span>
               )
             }
@@ -159,27 +145,27 @@ export default function ZonePlacer<T extends ZoneBox>({
           <span className="editor-hint">None yet. Add one, then drag it into place.</span>
         ) : (
           <ul className="editor-zone-list">
-            {zones.map((zone, i) => (
-              <li key={i}>
+            {zones.map((zone, zoneIndex) => (
+              <li key={zoneIndex}>
                 <div
-                  className={`editor-zone-row${i === index ? " editor-zone-row-selected" : ""}`}
+                  className={`editor-zone-row${zoneIndex === index ? " editor-zone-row-selected" : ""}`}
                 >
                   <button
                     type="button"
                     className="editor-zone-pick"
-                    onClick={() => setSelected(i)}
-                    aria-pressed={i === index}
+                    onClick={() => setSelected(zoneIndex)}
+                    aria-pressed={zoneIndex === index}
                   >
-                    <span className="editor-zone-badge">{i + 1}</span>
-                    <span className="editor-zone-name">{summary(zone, i)}</span>
+                    <span className="editor-zone-badge">{zoneIndex + 1}</span>
+                    <span className="editor-zone-name">{summary(zone, zoneIndex)}</span>
                   </button>
                   <div className="editor-card-actions">
-                    <DuplicateButton onClick={() => duplicate(i)} />
-                    <ReorderButtons index={i} total={zones.length} onMove={move} />
+                    <DuplicateButton onClick={() => duplicate(zoneIndex)} />
+                    <ReorderButtons index={zoneIndex} total={zones.length} onMove={move} />
                     <DeleteButton
                       onClick={() => {
-                        onChange(zones.filter((_, j) => j !== i));
-                        setSelected(Math.max(0, i - 1));
+                        onChange(zones.filter((_, otherIndex) => otherIndex !== zoneIndex));
+                        setSelected(Math.max(0, zoneIndex - 1));
                       }}
                       title="Remove"
                     />

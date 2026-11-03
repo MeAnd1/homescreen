@@ -7,8 +7,7 @@ interface Props {
   onChange: (value: unknown) => void;
 }
 
-/** A picker over every node in the draft. Ids, not names — an `opens` target is
- *  a node id, and the editor must show exactly what gets written. */
+// Shows ids, not names: an `opens` target is a node id, and the editor must show exactly what gets written.
 export default function NodeRefField({ label, value, onChange }: Props) {
   const { draft, select } = useEditor();
   const listId = useId();
@@ -24,7 +23,7 @@ export default function NodeRefField({ label, value, onChange }: Props) {
           list={listId}
           value={id}
           placeholder="node id"
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(event) => onChange(event.target.value)}
         />
         {target ? (
           <button

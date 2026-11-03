@@ -29,10 +29,12 @@ export const ICONS = {
 
 export type IconKey = keyof typeof ICONS;
 
-export const resolveIcon = (key?: string): string | undefined =>
-  !key ? undefined : key.startsWith("http") ? key : ICONS[key as IconKey];
+export const resolveIcon = (key?: string): string | undefined => {
+  if (!key) return undefined;
+  if (key.startsWith("http")) return key;
+  return ICONS[key as IconKey];
+};
 
-/** A resolved icon that is a remote URL is a photo (an avatar); a bundled
- *  asset is a symbol. The two are drawn at different sizes. */
+/** A remote URL is a photo (an avatar), a bundled asset a symbol — drawn at different sizes. */
 export const isPhotoIcon = (resolved?: string): boolean =>
   Boolean(resolved?.startsWith("http"));

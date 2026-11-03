@@ -15,18 +15,13 @@ interface Props {
   onNudge: (dx: number, dy: number) => void;
   /** Sized items only — omit for a name plate, which has no size. */
   onResize?: (dWidth: number, dHeight: number) => void;
-  /** Puts the item back in the middle of the picture. */
   onCentre: () => void;
   disabled?: boolean;
 }
 
 const STEPS = [1, 5, 10];
 
-/**
- * The precision half of placing something on an image: the stage handles coarse
- * dragging, this moves and sizes by exact whole percentages. Deliberately shows
- * no coordinates — the picture is the readout.
- */
+// The stage drags coarsely; this moves by exact percentages. Shows no coordinates on purpose: the picture is the readout.
 export default function NudgePad({
   step,
   onStepChange,
@@ -54,11 +49,11 @@ export default function NudgePad({
     </button>
   );
 
-  const sizeButton = (label: string, Icon: typeof Plus, dw: number, dh: number) => (
+  const sizeButton = (label: string, Icon: typeof Plus, dWidth: number, dHeight: number) => (
     <button
       type="button"
       className="editor-nudge-button"
-      onClick={() => onResize?.(dw, dh)}
+      onClick={() => onResize?.(dWidth, dHeight)}
       disabled={disabled}
       aria-label={label}
       title={label}

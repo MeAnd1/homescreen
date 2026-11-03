@@ -21,14 +21,6 @@ export interface TransportProps {
 /** The skip buttons in sketch 6 are a short jump, not a playlist step. */
 const SKIP_SECONDS = 10;
 
-function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;
-  const total = Math.floor(seconds);
-  const mm = Math.floor(total / 60);
-  const ss = (total % 60).toString().padStart(2, "0");
-  return `${mm}:${ss}`;
-}
-
 /**
  * The Windows-10 transport bar from design1 sketch 6: a scrub bar above, then
  * skip / loop on the left, play-pause centred, volume on the right.
@@ -64,7 +56,7 @@ function MediaTransport({
         disabled={duration <= 0}
         aria-label="Seek"
         style={{ "--fill": `${progress}%` } as React.CSSProperties}
-        onChange={(e) => onSeek(Number(e.target.value))}
+        onChange={(event) => onSeek(Number(event.target.value))}
       />
 
       <div className="media-controls">
@@ -132,12 +124,20 @@ function MediaTransport({
             value={muted ? 0 : volume}
             aria-label="Volume"
             style={{ "--fill": `${(muted ? 0 : volume) * 100}%` } as React.CSSProperties}
-            onChange={(e) => onVolume(Number(e.target.value))}
+            onChange={(event) => onVolume(Number(event.target.value))}
           />
         </div>
       </div>
     </div>
   );
+}
+
+function formatTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const paddedSeconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${paddedSeconds}`;
 }
 
 export default MediaTransport;

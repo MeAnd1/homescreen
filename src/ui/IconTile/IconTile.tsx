@@ -51,17 +51,15 @@ function IconTile({
       }}
       onDoubleClick={onOpen}
       onKeyDown={(event) => {
-        if (onOpen && event.key === "Enter") {
-          event.preventDefault();
-          onOpen();
-        }
+        if (!onOpen || event.key !== "Enter") return;
+        event.preventDefault();
+        onOpen();
       }}
     >
       <span className="icon-tile-graphic">
         {children ?? (src ? <img src={src} alt={alt ?? label} draggable={false} /> : null)}
       </span>
-      {/* A zero-width break after each dot, so a long file-like name wraps as
-          "nowayback." / "com" rather than mid-word. Invisible otherwise. */}
+      {/* A zero-width break after each dot, so "nowayback.com" wraps at the dot, not mid-word. */}
       <span className="icon-tile-label">{label.replace(/\./g, ".\u200b")}</span>
     </button>
   );
