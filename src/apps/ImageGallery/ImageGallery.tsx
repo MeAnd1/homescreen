@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { openNode } from "../../content/openNode";
 import { getNode } from "../../content/vfs";
 import type { ImageRef } from "../../content/types";
@@ -13,6 +14,7 @@ import "./ImageGallery.css";
 function ImageGallery({ payload }: { payload: { nodeId: string } }) {
   const node = getNode(payload.nodeId);
   const self = useWindow();
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const images: ImageRef[] =
     node?.view === "imageGallery" || node?.view === "imageViewer" ? node.images : [];
 
@@ -20,13 +22,17 @@ function ImageGallery({ payload }: { payload: { nodeId: string } }) {
 
   return (
     <ExplorerLayout tabs={tabs} statusText={`${images.length} items`}>
-      <div className="explorer-file-grid">
+      <div
+        className="explorer-file-grid"
+        onClick={(event) => event.target === event.currentTarget && setSelectedIndex(null)}
+      >
         {images.map((img, i) => (
           <IconTile
             key={`${img.fileName}-${i}`}
             label={img.fileName}
-            className="gallery-item"
-            onClick={() =>
+            selected={selectedIndex === i}
+            onClick={() => setSelectedIndex(i)}
+            onOpen={() =>
               // parentId makes the viewer cascade from this window and close with it.
               openNode(payload.nodeId, {
                 view: "imageViewer",
