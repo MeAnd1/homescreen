@@ -1,18 +1,16 @@
 import type { Rect, Size } from "./types";
 
-/** Mirrors --taskbar-height in styles/tokens.css. Change both together. */
+// Mirrors --taskbar-height in styles/tokens.css. Change both together.
 export const TASKBAR_HEIGHT = 40;
 
-/** Windows-10 style cascade step. Never randomised — see CONVENTIONS pitfall 4. */
+// Never randomised — see CONVENTIONS pitfall 4.
 const CASCADE_STEP = 24;
 
-/** Where the first window of a cascade lands. */
-const ORIGIN = { x: 96, y: 48 };
+const CASCADE_ORIGIN = { x: 96, y: 48 };
 
 const MOBILE_BREAKPOINT = 768;
 const MOBILE_MARGIN = 8;
 
-/** The area a window may occupy: the viewport minus the taskbar. */
 export function currentViewport(): Size {
   return {
     width: window.innerWidth,
@@ -20,21 +18,7 @@ export function currentViewport(): Size {
   };
 }
 
-/**
- * A window opens maximized only when its own height does not fit the usable
- * area — a phone in landscape, or a short browser window. Width never decides
- * it: on a narrow phone `clampToViewport` already makes a window full width
- * minus the margins, so maximizing would only erase the desktop look.
- */
-export function shouldOpenMaximized(requestedHeight: number, viewport: Size): boolean {
-  return requestedHeight > viewport.height;
-}
-
-/**
- * Shrink and shift a rect until it fits the usable area. Below the mobile
- * breakpoint a window is pinned to a margin on the left and allowed to use the
- * full remaining width.
- */
+// Below the mobile breakpoint a window is pinned to the left margin and may use the full remaining width.
 export function clampToViewport(rect: Rect, viewport: Size): Rect {
   const isMobile = viewport.width <= MOBILE_BREAKPOINT;
   const margin = isMobile ? MOBILE_MARGIN : 0;
@@ -53,12 +37,7 @@ export function clampToViewport(rect: Rect, viewport: Size): Rect {
   };
 }
 
-/**
- * Place a new window: `defaultSize` at the cascade origin, or one step down
- * from `anchor` (its parent, or the topmost window) — and one step right when
- * that still fits. Wraps back to the origin when the cascade would leave the
- * bottom of the viewport.
- */
+// Cascades one step from `anchor`; wraps back to the origin when that would leave the bottom of the viewport.
 export function computeRect(opts: {
   size: Size;
   anchor?: Rect;
@@ -66,11 +45,10 @@ export function computeRect(opts: {
 }): Rect {
   const { size, anchor, viewport } = opts;
 
-  let x = ORIGIN.x;
-  let y = ORIGIN.y;
+  let x = CASCADE_ORIGIN.x;
+  let y = CASCADE_ORIGIN.y;
 
-  // A window too wide to step right still steps down — on a phone every
-  // window is full width, and without this they would all land on one spot.
+  // Step down even when too wide to step right, or full-width phone windows all land on one spot.
   if (anchor && anchor.y + CASCADE_STEP + size.height <= viewport.height) {
     y = anchor.y + CASCADE_STEP;
     const cascadedX = anchor.x + CASCADE_STEP;

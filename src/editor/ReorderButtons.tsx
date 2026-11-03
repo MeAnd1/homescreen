@@ -15,7 +15,7 @@ const ReorderButtons: React.FC<ReorderButtonsProps> = ({
   return (
     <div
       className="editor-reorder-buttons"
-      onClick={(e) => e.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
     >
       <button
         type="button"

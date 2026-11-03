@@ -5,8 +5,7 @@ import ExplorerLayout from "../../ui/ExplorerLayout/ExplorerLayout";
 import FavouriteSprite from "./FavouriteSprite";
 import "./Favourites.css";
 
-// Decorative chrome, as it was before — the sidebar does not filter yet
-// (phase 4). It is this app's own chrome, not node data.
+// Decorative chrome owned by this app, not node data; the sidebar does not filter yet.
 const tabs = [{ label: "Chara…", active: true }, { label: "Menu" }];
 
 const sidebar = [
@@ -15,53 +14,6 @@ const sidebar = [
   { label: "Favourites", star: true, active: true },
   { label: "All" },
 ];
-
-/**
- * Given each sprite's aspect ratio (w/h), the container width, and available
- * height, return the largest row height such that sprites — packed greedily
- * into rows of width ≤ availW — stack into a total height ≤ availH, plus the
- * resulting row partition. Sprites stay in input order.
- */
-function packFavourites(
-  aspects: number[],
-  availW: number,
-  availH: number,
-): { rows: number[][]; rowH: number } {
-  const partition = (rowH: number) => {
-    const rows: number[][] = [];
-    let current: number[] = [];
-    let currentW = 0;
-    for (let i = 0; i < aspects.length; i++) {
-      const w = rowH * aspects[i];
-      if (current.length > 0 && currentW + w > availW) {
-        rows.push(current);
-        current = [];
-        currentW = 0;
-      }
-      current.push(i);
-      currentW += w;
-    }
-    if (current.length) rows.push(current);
-    return rows;
-  };
-
-  const maxAspect = Math.max(...aspects);
-  // rowH can't exceed availH, and every sprite must fit within one row width.
-  const hi0 = Math.min(availH, availW / maxAspect);
-
-  // Binary search for the largest feasible rowH (rows * rowH ≤ availH).
-  let lo = 1;
-  let hi = hi0;
-  for (let iter = 0; iter < 40; iter++) {
-    const mid = (lo + hi) / 2;
-    const rows = partition(mid);
-    if (rows.length * mid <= availH) lo = mid;
-    else hi = mid;
-  }
-
-  const rowH = lo;
-  return { rows: partition(rowH), rowH };
-}
 
 function Favourites({ payload }: { payload: { nodeId: string } }) {
   const node = getNode(payload.nodeId);
@@ -72,71 +24,108 @@ function Favourites({ payload }: { payload: { nodeId: string } }) {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0 });
   // Keyed by index, not by the target node: two sprites may open the same
   // character, and keying by target gave the second one the first one's shape.
   const [ratios, setRatios] = useState<Record<number, number>>({});
 
   // Preload each sprite off-DOM to capture its natural aspect ratio.
   useEffect(() => {
-    const record = (i: number, ratio: number) =>
-      setRatios((prev) => (prev[i] ? prev : { ...prev, [i]: ratio }));
+    const record = (index: number, ratio: number) =>
+      setRatios((previous) => (previous[index] ? previous : { ...previous, [index]: ratio }));
 
-    items.forEach((item, i) => {
-      const img = new Image();
-      img.onload = () => {
-        if (img.naturalHeight > 0) record(i, img.naturalWidth / img.naturalHeight);
-        else record(i, 1);
+    items.forEach((item, index) => {
+      const image = new Image();
+      image.onload = () => {
+        if (image.naturalHeight > 0) record(index, image.naturalWidth / image.naturalHeight);
+        else record(index, 1);
       };
-      // The board waits for every ratio before it can pack, so a sprite whose
-      // URL has rotted would otherwise blank the whole board rather than
-      // itself. Hotlinked sprite URLs do rot — see the open questions.
-      img.onerror = () => {
+      // The board waits for every ratio, so one rotted hotlinked URL would blank the whole board.
+      image.onerror = () => {
         console.warn(`[favourites] sprite failed to load: ${item.spriteUrl}`);
-        record(i, 1);
+        record(index, 1);
       };
-      img.src = item.spriteUrl;
+      image.src = item.spriteUrl;
     });
   }, [items]);
 
-  // Observe container size.
   useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const update = () => setDims({ w: el.clientWidth, h: el.clientHeight });
+    const container = containerRef.current;
+    if (!container) return;
+    const update = () => setSize({ width: container.clientWidth, height: container.clientHeight });
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
   }, []);
 
   const layout = useMemo(() => {
-    const allReady = items.length > 0 && items.every((_, i) => ratios[i]);
-    if (!allReady || !dims.w || !dims.h) return null;
+    const allReady = items.length > 0 && items.every((_, index) => ratios[index]);
+    if (!allReady || !size.width || !size.height) return null;
 
-    const availH = Math.max(dims.h, 40);
-    const availW = Math.max(dims.w - 1, 1); // 1px sub-pixel safety margin
+    const availableHeight = Math.max(size.height, 40);
+    // 1px sub-pixel safety margin.
+    const availableWidth = Math.max(size.width - 1, 1);
     return packFavourites(
-      items.map((_, i) => ratios[i]),
-      availW,
-      availH,
+      items.map((_, index) => ratios[index]),
+      availableWidth,
+      availableHeight,
     );
-  }, [dims, ratios, items]);
+  }, [size, ratios, items]);
 
   return (
     <ExplorerLayout tabs={tabs} sidebar={sidebar} statusText={`${items.length} items`}>
       <div className="explorer-content-header">{node?.name ?? "Favourites"}</div>
       <div className="favourites-grid" ref={containerRef}>
-        {layout?.rows.map((row, idx) => (
-          <div key={idx} className="favourites-row" style={{ height: `${layout.rowH}px` }}>
-            {row.map((i) => (
-              <FavouriteSprite key={i} item={items[i]} height={layout.rowH} />
+        {layout?.rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="favourites-row" style={{ height: `${layout.rowHeight}px` }}>
+            {row.map((index) => (
+              <FavouriteSprite key={index} item={items[index]} height={layout.rowHeight} />
             ))}
           </div>
         ))}
       </div>
     </ExplorerLayout>
   );
+}
+
+// Largest row height at which the sprites, packed greedily in input order into rows
+// no wider than availableWidth, stack to no more than availableHeight.
+function packFavourites(
+  aspects: number[],
+  availableWidth: number,
+  availableHeight: number,
+): { rows: number[][]; rowHeight: number } {
+  const partition = (rowHeight: number) => {
+    const rows: number[][] = [];
+    let currentRow: number[] = [];
+    let currentRowWidth = 0;
+    for (let index = 0; index < aspects.length; index++) {
+      const spriteWidth = rowHeight * aspects[index];
+      if (currentRow.length > 0 && currentRowWidth + spriteWidth > availableWidth) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+      currentRow.push(index);
+      currentRowWidth += spriteWidth;
+    }
+    if (currentRow.length) rows.push(currentRow);
+    return rows;
+  };
+
+  // A row can't be taller than the board, and the widest sprite must fit in one row.
+  const maxAspect = Math.max(...aspects);
+  let low = 1;
+  let high = Math.min(availableHeight, availableWidth / maxAspect);
+  for (let iteration = 0; iteration < 40; iteration++) {
+    const middle = (low + high) / 2;
+    const rows = partition(middle);
+    if (rows.length * middle <= availableHeight) low = middle;
+    else high = middle;
+  }
+
+  return { rows: partition(low), rowHeight: low };
 }
 
 export default Favourites;

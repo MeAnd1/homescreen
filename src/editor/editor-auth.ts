@@ -2,9 +2,7 @@ import { createContext, useContext } from "react";
 import type { SaveResult } from "./editor-api";
 
 export interface EditorAuth {
-  /** Writes one file and pushes it. */
   saveToServer: (fileId: string, content: unknown) => Promise<SaveResult>;
-  /** Removes one file and pushes the removal. */
   deleteFromServer: (fileId: string) => Promise<SaveResult>;
   logout: () => void;
 }

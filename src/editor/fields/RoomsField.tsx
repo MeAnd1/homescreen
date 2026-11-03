@@ -1,3 +1,4 @@
+// #region Setup
 import { useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import type { Room, RoomZone } from "../../content/types";
@@ -18,67 +19,11 @@ interface Props {
   start: unknown;
   onStartChange: (value: unknown) => void;
 }
+// #endregion
 
-/** A key no other room has. Fixed at creation: links point at it, so a later
- *  rename touches the name only. */
-function uniqueKey(name: string, rooms: Room[]): string {
-  const base = slugify(name) || "room";
-  const taken = new Set(rooms.map((r) => r.key));
-  if (!taken.has(base)) return base;
-  let n = 2;
-  while (taken.has(`${base}-${n}`)) n += 1;
-  return `${base}-${n}`;
-}
-
-const blankZone = (
-  rooms: RoomOption[],
-  look: RoomZone["look"] = "box",
-): RoomZone =>
-  look === "arrow"
-    ? {
-        x: 90,
-        y: 44,
-        width: 6,
-        height: 12,
-        look,
-        direction: "right",
-        action: defaultEffect(rooms),
-      }
-    : {
-        x: 30,
-        y: 30,
-        width: 20,
-        height: 25,
-        look,
-        label: "",
-        action: defaultEffect(rooms),
-      };
-
-function zoneSummary(
-  zone: RoomZone,
-  index: number,
-  rooms: RoomOption[],
-): string {
-  const what =
-    zone.look === "arrow"
-      ? zone.direction === "left"
-        ? "◀ Arrow"
-        : "Arrow ▶"
-      : zone.label
-        ? `“${zone.label}”`
-        : `Box ${index + 1}`;
-  const effect = effectSummary(zone.action, rooms);
-  return effect ? `${what} ${effect}` : what;
-}
-
-/**
- * A browser site's rooms. Each room is a picture with zones on it; a zone runs
- * one effect, and "go to room" is one of them. Rooms live inside the site's
- * own file, so the whole site is one save.
- *
- * One room is open at a time — a site with many rooms would otherwise be one
- * very long page — and "Open this room →" on a zone jumps to where it leads.
- */
+// #region Main flow
+// Rooms live inside the site's own file, so the whole site is one save.
+// One room is open at a time, or a site with many rooms would be one very long page.
 export default function RoomsField({
   label,
   value,
@@ -87,9 +32,9 @@ export default function RoomsField({
   onStartChange,
 }: Props) {
   const rooms = Array.isArray(value) ? (value as Room[]) : [];
-  const options: RoomOption[] = rooms.map((r) => ({
-    key: r.key,
-    name: r.name,
+  const options: RoomOption[] = rooms.map((room) => ({
+    key: room.key,
+    name: room.name,
   }));
   const startKey = typeof start === "string" && start ? start : rooms[0]?.key;
 
@@ -97,15 +42,14 @@ export default function RoomsField({
   const [newName, setNewName] = useState("");
 
   const patchRoom = (key: string, changes: Partial<Room>) =>
-    onChange(rooms.map((r) => (r.key === key ? { ...r, ...changes } : r)));
+    onChange(rooms.map((room) => (room.key === key ? { ...room, ...changes } : room)));
 
-  /** Rooms some zone (in another room) leads to — the rest are unreachable. */
+  // Rooms that no zone in another room leads to are unreachable.
   const inbound = new Map<string, number>();
   for (const room of rooms) {
     for (const zone of room.zones ?? []) {
-      if (zone.action?.do === "goToRoom" && zone.action.room !== room.key) {
-        inbound.set(zone.action.room, (inbound.get(zone.action.room) ?? 0) + 1);
-      }
+      if (zone.action?.do !== "goToRoom" || zone.action.room === room.key) continue;
+      inbound.set(zone.action.room, (inbound.get(zone.action.room) ?? 0) + 1);
     }
   }
 
@@ -117,7 +61,6 @@ export default function RoomsField({
     setOpen(key);
   };
 
-  /** A copy is a new room — new key — with the same picture and zones. */
   const duplicate = (at: number) => {
     const original = rooms[at];
     const name = `${original.name} copy`;
@@ -142,7 +85,7 @@ export default function RoomsField({
 
   const jump = (key: string) => {
     setOpen(key);
-    // After the card has opened.
+    // Wait for the card to open before scrolling to it.
     requestAnimationFrame(() =>
       document.getElementById(`editor-room-${key}`)?.scrollIntoView({
         behavior: "smooth",
@@ -166,7 +109,7 @@ export default function RoomsField({
           <select
             className="editor-input"
             value={startKey}
-            onChange={(e) => onStartChange(e.target.value)}
+            onChange={(event) => onStartChange(event.target.value)}
           >
             {rooms.map((room) => (
               <option key={room.key} value={room.key}>
@@ -223,7 +166,7 @@ export default function RoomsField({
                 />
                 <DeleteButton
                   onClick={() =>
-                    onChange(rooms.filter((r) => r.key !== room.key))
+                    onChange(rooms.filter((other) => other.key !== room.key))
                   }
                   title={
                     links > 0
@@ -241,8 +184,8 @@ export default function RoomsField({
                   type="text"
                   required
                   value={room.name}
-                  onChange={(v) =>
-                    patchRoom(room.key, { name: String(v ?? "") })
+                  onChange={(next) =>
+                    patchRoom(room.key, { name: String(next ?? "") })
                   }
                 />
                 <ScalarField
@@ -250,8 +193,8 @@ export default function RoomsField({
                   type="url"
                   required
                   value={room.image}
-                  onChange={(v) =>
-                    patchRoom(room.key, { image: String(v ?? "") })
+                  onChange={(next) =>
+                    patchRoom(room.key, { image: String(next ?? "") })
                   }
                 />
 
@@ -262,13 +205,18 @@ export default function RoomsField({
                   // A new zone leads somewhere else by default, not back here.
                   create={() =>
                     blankZone([
-                      ...options.filter((o) => o.key !== room.key),
-                      ...options.filter((o) => o.key === room.key),
+                      ...options.filter((option) => option.key !== room.key),
+                      ...options.filter((option) => option.key === room.key),
                     ])
                   }
                   listLabel="Click zones"
-                  summary={(zone, i) => zoneSummary(zone, i, options)}
-                  renderZone={(zone, i, isSelected) =>
+                  summary={(zone, zoneIndex) => {
+                    let what = zone.label ? `“${zone.label}”` : `Box ${zoneIndex + 1}`;
+                    if (zone.look === "arrow") what = zone.direction === "left" ? "◀ Arrow" : "Arrow ▶";
+                    const effect = effectSummary(zone.action, options);
+                    return effect ? `${what} ${effect}` : what;
+                  }}
+                  renderZone={(zone, zoneIndex, isSelected) =>
                     zone.look === "arrow" ? (
                       <span
                         className={`editor-zone editor-zone-arrow${isSelected ? " editor-zone-selected" : ""}`}
@@ -279,7 +227,7 @@ export default function RoomsField({
                       <span
                         className={`editor-zone editor-zone-box${isSelected ? " editor-zone-selected" : ""}`}
                       >
-                        <span className="editor-zone-number">{i + 1}</span>
+                        <span className="editor-zone-number">{zoneIndex + 1}</span>
                       </span>
                     )
                   }
@@ -304,12 +252,11 @@ export default function RoomsField({
           type="text"
           value={newName}
           placeholder="New room name, e.g. Hallway"
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
-            }
+          onChange={(event) => setNewName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            add();
           }}
         />
         <button
@@ -324,7 +271,6 @@ export default function RoomsField({
   );
 }
 
-/** The picked zone: how it looks, and what it does. */
 function ZoneSettings({
   zone,
   patch,
@@ -336,8 +282,7 @@ function ZoneSettings({
   rooms: RoomOption[];
   onJump: (key: string) => void;
 }) {
-  /** Switching look keeps the place and the effect, and gives an arrow an
-   *  arrow's shape (and a box back a box's) so neither starts out absurd. */
+  // Keeps place and effect, but takes the new look's default size so neither starts out absurd.
   const setLook = (look: RoomZone["look"]) => {
     if (look === zone.look) return;
     const fresh = blankZone(rooms, look);
@@ -412,7 +357,7 @@ function ZoneSettings({
             note="Shown on hover"
             placeholder="e.g. Go inside"
             value={zone.label}
-            onChange={(v) => patch({ label: String(v ?? "") })}
+            onChange={(next) => patch({ label: String(next ?? "") })}
           />
         )}
       </div>
@@ -423,7 +368,7 @@ function ZoneSettings({
         rooms={rooms}
       />
 
-      {target && rooms.some((r) => r.key === target) && (
+      {target && rooms.some((room) => room.key === target) && (
         <button
           type="button"
           className="editor-button editor-button-small"
@@ -435,3 +380,23 @@ function ZoneSettings({
     </>
   );
 }
+// #endregion
+
+// #region Helpers
+// Fixed at creation: links point at the key, so a later rename touches the name only.
+function uniqueKey(name: string, rooms: Room[]): string {
+  const base = slugify(name) || "room";
+  const taken = new Set(rooms.map((room) => room.key));
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix += 1;
+  return `${base}-${suffix}`;
+}
+
+function blankZone(rooms: RoomOption[], look: RoomZone["look"] = "box"): RoomZone {
+  if (look === "arrow") {
+    return { x: 90, y: 44, width: 6, height: 12, look, direction: "right", action: defaultEffect(rooms) };
+  }
+  return { x: 30, y: 30, width: 20, height: 25, look, label: "", action: defaultEffect(rooms) };
+}
+// #endregion

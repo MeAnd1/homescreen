@@ -3,18 +3,17 @@ import { useShallow } from "zustand/react/shallow";
 import { useWindowStore } from "../window-system/store";
 
 /**
- * The set of node ids that currently have a window open. Both the explorer and
- * the desktop highlight a tile whose node is already open, and they must agree.
+ * The node ids that currently have a window open, shared so the explorer and the
+ * desktop agree on which tiles to highlight.
  *
- * The selector returns an **array** with `useShallow`; the `Set` is built in a
- * `useMemo` outside it. Building it inside would return a new identity on every
- * call and re-render forever — CONVENTIONS pitfall 1.
+ * The `Set` is built in `useMemo`, outside the selector: built inside it would be
+ * a new identity on every call and re-render forever — CONVENTIONS pitfall 1.
  */
 export function useOpenNodes(): ReadonlySet<string> {
   const ids = useWindowStore(
-    useShallow((s) =>
-      Object.values(s.windows)
-        .map((w) => (w.payload as { nodeId?: string }).nodeId)
+    useShallow((state) =>
+      Object.values(state.windows)
+        .map((openWindow) => (openWindow.payload as { nodeId?: string }).nodeId)
         .filter((id): id is string => Boolean(id)),
     ),
   );

@@ -1,3 +1,4 @@
+// #region Setup
 import { isBuiltinNode } from "../../content/builtins";
 import type { Effect } from "../../content/types";
 import { EFFECT_KINDS, SECRETS, type RoomOption } from "./effectKinds";
@@ -9,13 +10,12 @@ interface Props {
   rooms?: RoomOption[];
 }
 
-/**
- * What a click does. Shared by easter egg clicks and room zones; the only
- * difference is whether `rooms` is passed, which is what adds "Go to room".
- * With a single effect on offer the kind dropdown is skipped entirely.
- */
+// #endregion
+
+// #region Main flow
+// Shared by easter egg clicks and room zones; passing `rooms` is what adds "Go to room".
 export default function EffectPicker({ value, onChange, rooms }: Props) {
-  const kinds = EFFECT_KINDS.filter((k) => !k.needsRooms || rooms);
+  const kinds = EFFECT_KINDS.filter((candidate) => !candidate.needsRooms || rooms);
   const kind = value?.do ?? kinds[0].do;
 
   return (
@@ -26,14 +26,14 @@ export default function EffectPicker({ value, onChange, rooms }: Props) {
           <select
             className="editor-input"
             value={kind}
-            onChange={(e) => {
-              const picked = kinds.find((k) => k.do === e.target.value);
+            onChange={(event) => {
+              const picked = kinds.find((candidate) => candidate.do === event.target.value);
               if (picked) onChange(picked.create(rooms ?? []));
             }}
           >
-            {kinds.map((k) => (
-              <option key={k.do} value={k.do}>
-                {k.label}
+            {kinds.map((option) => (
+              <option key={option.do} value={option.do}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -46,11 +46,10 @@ export default function EffectPicker({ value, onChange, rooms }: Props) {
           <select
             className="editor-input"
             value={value.room}
-            onChange={(e) => onChange({ do: "goToRoom", room: e.target.value })}
+            onChange={(event) => onChange({ do: "goToRoom", room: event.target.value })}
           >
-            {/* A deleted room keeps its own entry, so the dead link is visible
-                rather than quietly retargeted to the first room. */}
-            {!rooms?.some((r) => r.key === value.room) && (
+            {/* A deleted room keeps its own entry so the dead link shows instead of being retargeted. */}
+            {!rooms?.some((room) => room.key === value.room) && (
               <option value={value.room}>Missing room "{value.room}"</option>
             )}
             {rooms?.map((room) => (
@@ -67,9 +66,7 @@ export default function EffectPicker({ value, onChange, rooms }: Props) {
   );
 }
 
-/** "Open a secret": a built-in node from `content/builtins.ts`, deliberately
- *  missing from the ordinary node picker, which would only ever call one an
- *  unknown node. */
+// Built-in nodes are missing from the ordinary node picker, which would call each one unknown.
 function SecretSelect({
   value,
   onChange,
@@ -93,10 +90,9 @@ function SecretSelect({
       <select
         className="editor-input"
         value={opens}
-        onChange={(e) => onChange({ do: "openNode", opens: e.target.value })}
+        onChange={(event) => onChange({ do: "openNode", opens: event.target.value })}
       >
-        {/* Older content can point at an ordinary node. It stays on the list
-            so opening this form does not quietly retarget it. */}
+        {/* Older content can point at an ordinary node; it stays listed so the form does not retarget it. */}
         {opens && !isBuiltinNode(opens) && (
           <option value={opens}>{opens} (not a secret)</option>
         )}
@@ -109,3 +105,4 @@ function SecretSelect({
     </label>
   );
 }
+// #endregion

@@ -5,12 +5,8 @@ import {
   type SCEditorInstance,
 } from "sceditor-react";
 
-/**
- * Wrapper around sceditor-react's SCEditor that also syncs onChange on
- * `nodechanged` and `blur`. Without this, SCEditor's built-in `valuechanged`
- * event only fires on keyup/blur — so clicking a toolbar button (e.g. Bold)
- * and immediately hitting Save pushes a stale value.
- */
+// Also syncs onChange on `nodechanged` and `blur`: the built-in `valuechanged` only fires on
+// keyup/blur, so clicking a toolbar button (e.g. Bold) and then Save would push a stale value.
 export const SCEditor: React.FC<SCEditorProps> = (props) => {
   const onChangeRef = useRef(props.onChange);
   onChangeRef.current = props.onChange;
@@ -22,8 +18,8 @@ export const SCEditor: React.FC<SCEditorProps> = (props) => {
       {...props}
       onReady={(instance: SCEditorInstance) => {
         instance.bind("nodechanged blur", () => {
-          const v = instance.val();
-          if (typeof v === "string") onChangeRef.current?.(v);
+          const value = instance.val();
+          if (typeof value === "string") onChangeRef.current?.(value);
         });
         onReadyProp?.(instance);
       }}

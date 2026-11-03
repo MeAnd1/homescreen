@@ -19,24 +19,14 @@ const blank = (): Hotspot => ({
   action: defaultEffect() as HotspotAction,
 });
 
-const hotspotSummary = (hotspot: Hotspot, index: number): string =>
-  effectSummary(hotspot.action) || `Easter egg click ${index + 1}`;
-
-/**
- * Hotspots hang off each image, not off the node, so this field walks the image
- * list and hands each one its own placer. Coordinates are percentages of the
- * rendered picture — the stage draws them at the same percentages, so what you
- * drag here is what the viewer shows.
- *
- * The form calls them **easter egg clicks**, the owner's word for them and what
- * they are for. `hotspot` stays the name in the files and in the code.
- */
+// Hotspots hang off each image, not the node, so each image gets its own placer.
+// The form says "easter egg click" (the owner's word); files and code keep `hotspot`.
 export default function HotspotsField({ label, value, onChange }: Props) {
   const images = Array.isArray(value) ? (value as ImageRef[]) : [];
 
   const setHotspots = (index: number, hotspots: Hotspot[]) =>
     onChange(
-      images.map((image, i) => (i === index ? { ...image, hotspots } : image)),
+      images.map((image, imageIndex) => (imageIndex === index ? { ...image, hotspots } : image)),
     );
 
   if (images.length === 0) {
@@ -68,7 +58,9 @@ export default function HotspotsField({ label, value, onChange }: Props) {
               onChange={(next) => setHotspots(imageIndex, next)}
               create={blank}
               listLabel="Secret effect"
-              summary={hotspotSummary}
+              summary={(hotspot, index) =>
+                effectSummary(hotspot.action) || `Easter egg click ${index + 1}`
+              }
               renderSettings={(hotspot, patch) => (
                 <EffectPicker
                   value={hotspot.action}

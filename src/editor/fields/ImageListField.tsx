@@ -1,3 +1,4 @@
+// #region Setup
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import type { ImageRef } from "../../content/types";
@@ -15,6 +16,77 @@ const EXAMPLE_URL =
   "https://i.pinimg.com/736x/c3/23/8d/c3238d4f22f3241bdb25cd91714b8e43.jpg";
 
 const blank = (): ImageRef => ({ thumbnail: "", full: "", fileName: "" });
+// #endregion
+
+// #region Main flow
+export default function ImageListField({ value, onChange }: Props) {
+  const images = Array.isArray(value) ? (value as ImageRef[]) : [];
+
+  return (
+    <ListEditor
+      addLabel="Add"
+      items={images}
+      onChange={onChange}
+      create={blank}
+      summary={(image, index) => image.fileName || image.full || `Image ${index + 1}`}
+    >
+      {(image, _index, patch) => (
+        <>
+          <QuickSetup
+            onFill={(full, thumbnail) => patch({ full, thumbnail })}
+          />
+          <div className="editor-media-row">
+            {image.thumbnail || image.full ? (
+              <img
+                className="editor-thumb"
+                src={image.thumbnail || image.full}
+                alt=""
+                loading="lazy"
+              />
+            ) : (
+              <div className="editor-thumb editor-thumb-empty">no image</div>
+            )}
+            <div className="editor-grow">
+              <ScalarField
+                label="Full-size image link"
+                note="Shown full size when the image is clicked"
+                type="url"
+                value={image.full}
+                placeholder={`e.g. ${EXAMPLE_URL}`}
+                required
+                onChange={(next) => patch({ full: String(next ?? "") })}
+              />
+              <ScalarField
+                label="Thumbnail image link"
+                note="Shown as the small icon in the window"
+                type="url"
+                value={image.thumbnail}
+                placeholder={`e.g. ${EXAMPLE_URL}`}
+                onChange={(next) => patch({ thumbnail: String(next ?? "") })}
+              />
+            </div>
+          </div>
+          <div className="editor-grid-2">
+            <ScalarField
+              label="File name"
+              note="Shown in the Windows Explorer file list"
+              type="text"
+              value={image.fileName}
+              onChange={(next) => patch({ fileName: String(next ?? "") })}
+            />
+            <ScalarField
+              label="Caption"
+              note="[WIP] in case you want a description or credit someone..."
+              type="text"
+              value={image.caption}
+              onChange={(next) => patch({ caption: String(next ?? "") })}
+            />
+          </div>
+        </>
+      )}
+    </ListEditor>
+  );
+}
 
 function QuickSetup({
   onFill,
@@ -53,12 +125,11 @@ function QuickSetup({
           value={pinUrl}
           placeholder="Paste your Pinterest short image link here (e.g. https://pin.it/6LL2aVThw)"
           disabled={loading}
-          onChange={(e) => setPinUrl(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              run();
-            }
+          onChange={(event) => setPinUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            run();
           }}
         />
         <button
@@ -73,72 +144,4 @@ function QuickSetup({
     </div>
   );
 }
-
-export default function ImageListField({ value, onChange }: Props) {
-  const images = Array.isArray(value) ? (value as ImageRef[]) : [];
-
-  return (
-    <ListEditor
-      addLabel="Add"
-      items={images}
-      onChange={onChange}
-      create={blank}
-      summary={(image, i) => image.fileName || image.full || `Image ${i + 1}`}
-    >
-      {(image, _index, patch) => (
-        <>
-          <QuickSetup
-            onFill={(full, thumbnail) => patch({ full, thumbnail })}
-          />
-          <div className="editor-media-row">
-            {image.thumbnail || image.full ? (
-              <img
-                className="editor-thumb"
-                src={image.thumbnail || image.full}
-                alt=""
-                loading="lazy"
-              />
-            ) : (
-              <div className="editor-thumb editor-thumb-empty">no image</div>
-            )}
-            <div className="editor-grow">
-              <ScalarField
-                label="Full-size image link"
-                note="Shown full size when the image is clicked"
-                type="url"
-                value={image.full}
-                placeholder={`e.g. ${EXAMPLE_URL}`}
-                required
-                onChange={(v) => patch({ full: String(v ?? "") })}
-              />
-              <ScalarField
-                label="Thumbnail image link"
-                note="Shown as the small icon in the window"
-                type="url"
-                value={image.thumbnail}
-                placeholder={`e.g. ${EXAMPLE_URL}`}
-                onChange={(v) => patch({ thumbnail: String(v ?? "") })}
-              />
-            </div>
-          </div>
-          <div className="editor-grid-2">
-            <ScalarField
-              label="File name"
-              note="Shown in the Windows Explorer file list"
-              type="text"
-              value={image.fileName}
-              onChange={(v) => patch({ fileName: String(v ?? "") })}
-            />
-            <ScalarField
-              label="Caption"
-              note="[WIP] in case you want a description or credit someone..."
-              type="text"
-              value={image.caption}
-              onChange={(v) => patch({ caption: String(v ?? "") })}
-            />
-          </div>
-        </>
-      )}
-    </ListEditor>
-  );
-}
+// #endregion

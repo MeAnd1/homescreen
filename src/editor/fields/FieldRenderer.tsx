@@ -10,11 +10,7 @@ import RichTextField from "./RichTextField";
 import RoomsField from "./RoomsField";
 import ScalarField from "./ScalarField";
 
-/**
- * One renderer per FieldSpec type, and nothing else. A content type that needs
- * editor UI which does not exist gets a new FieldSpec **type** here — never a
- * branch on `node.view` (CONVENTIONS.md pitfall 10).
- */
+// One renderer per FieldSpec type. New editor UI is a new FieldSpec type, never a branch on `node.view` (CONVENTIONS pitfall 10).
 export default function FieldRenderer({ spec, node }: { spec: FieldSpec; node: VNode }) {
   const { draft } = useEditor();
   const values = node as unknown as Record<string, unknown>;

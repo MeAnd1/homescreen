@@ -32,17 +32,17 @@ export interface AppPayloads {
  * `title` / `icon` are the "no override supplied" path — openNode always passes
  * the node's own name and icon, so these only run for a direct openWindow call.
  */
-const nodeTitle = (fallback: string) => (p: { nodeId: string }) =>
-  getNode(p.nodeId)?.name ?? fallback;
-const nodeIcon = (p: { nodeId: string }) =>
-  resolveIcon(getNode(p.nodeId)?.icon);
+const nodeTitle = (fallback: string) => (payload: { nodeId: string }) =>
+  getNode(payload.nodeId)?.name ?? fallback;
+const nodeIcon = (payload: { nodeId: string }) =>
+  resolveIcon(getNode(payload.nodeId)?.icon);
 
 export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
   fileExplorer: {
     label: "Folder",
     title: nodeTitle("Explorer"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 720, height: 480 },
     minSize: { width: 320, height: 240 },
     Content: FileExplorer,
@@ -53,7 +53,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Document (Word)",
     title: nodeTitle("Document - Word"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 720, height: 560 },
     minSize: { width: 360, height: 320 },
     Content: MsWord,
@@ -67,7 +67,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Note (Notepad)",
     title: nodeTitle("Untitled - Notepad"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 420, height: 480 },
     minSize: { width: 240, height: 240 },
     Content: Notepad,
@@ -81,7 +81,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Image gallery",
     title: nodeTitle("Images"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 640, height: 420 },
     minSize: { width: 320, height: 240 },
     Content: ImageGallery,
@@ -95,17 +95,15 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Image viewer",
     title: nodeTitle("Image"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 640, height: 480 },
     minSize: { width: 320, height: 240 },
     Content: ImageViewer,
     fields: [
       { key: "name", type: "text", label: "Name", required: true },
       { key: "images", type: "imageList", label: "Images" },
-      // Hotspots live inside each image (ImageRef.hotspots), so both editors
-      // read the same key — one edits the list, the other draws on a member.
-      // "Easter egg click" is the owner's word for them; the data model and the
-      // code keep saying hotspot.
+      // Hotspots live inside each image (ImageRef.hotspots), so both editors share the key.
+      // "Easter egg click" is the owner's word; the data model and code say hotspot.
       {
         key: "images",
         type: "hotspots",
@@ -120,7 +118,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Media player",
     title: nodeTitle("Media Player"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 560, height: 400 },
     minSize: { width: 320, height: 240 },
     Content: MediaPlayer,
@@ -163,7 +161,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Favourites board",
     title: nodeTitle("Favourites"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 760, height: 500 },
     minSize: { width: 360, height: 300 },
     Content: Favourites,
@@ -177,7 +175,7 @@ export const APP_REGISTRY: { [T in WindowTypeId]: WindowTypeDef<T> } = {
     label: "Website (Browser)",
     title: nodeTitle("Browser"),
     icon: nodeIcon,
-    singletonKey: (p) => p.nodeId,
+    singletonKey: (payload) => payload.nodeId,
     defaultSize: { width: 820, height: 520 },
     minSize: { width: 360, height: 280 },
     Content: Browser,

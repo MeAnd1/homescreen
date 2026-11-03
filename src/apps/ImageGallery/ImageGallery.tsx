@@ -26,22 +26,22 @@ function ImageGallery({ payload }: { payload: { nodeId: string } }) {
         className="explorer-file-grid"
         onClick={(event) => event.target === event.currentTarget && setSelectedIndex(null)}
       >
-        {images.map((img, i) => (
+        {images.map((image, index) => (
           <IconTile
-            key={`${img.fileName}-${i}`}
-            label={img.fileName}
-            selected={selectedIndex === i}
-            onClick={() => setSelectedIndex(i)}
+            key={`${image.fileName}-${index}`}
+            label={image.fileName}
+            selected={selectedIndex === index}
+            onClick={() => setSelectedIndex(index)}
             onOpen={() =>
               // parentId makes the viewer cascade from this window and close with it.
               openNode(payload.nodeId, {
                 view: "imageViewer",
-                startIndex: i,
+                startIndex: index,
                 parentId: self.id,
               })
             }
           >
-            <img src={img.thumbnail} alt={img.fileName} className="gallery-thumb" />
+            <img src={image.thumbnail} alt={image.fileName} className="gallery-thumb" />
           </IconTile>
         ))}
         {images.length === 0 && <div className="explorer-empty">No images yet.</div>}

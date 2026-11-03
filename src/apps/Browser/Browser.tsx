@@ -16,9 +16,6 @@ interface History {
   at: number;
 }
 
-const startOf = (rooms: Room[], startRoom?: string): string | undefined =>
-  rooms.find((r) => r.key === startRoom)?.key ?? rooms[0]?.key;
-
 /**
  * A fictional website in a browser window: the click-and-point site. An ad down
  * the left, the current room on the right, and zones on the room that run an
@@ -32,7 +29,8 @@ function Browser({ payload }: { payload: BrowserPayload }) {
   const node = getNode(payload.nodeId);
   const site = node?.view === "browser" ? node : undefined;
   const rooms = site?.rooms ?? [];
-  const start = startOf(rooms, site?.startRoom);
+  const start =
+    rooms.find((candidate) => candidate.key === site?.startRoom)?.key ?? rooms[0]?.key;
 
   const self = useWindow();
   const [history, setHistory] = useState<History>(() => ({
@@ -45,18 +43,20 @@ function Browser({ payload }: { payload: BrowserPayload }) {
   // A key that stops resolving (the room was deleted in an edit) falls back to
   // the start room rather than leaving a blank page.
   const currentKey = history.stack[history.at];
-  const room = rooms.find((r) => r.key === currentKey) ?? rooms.find((r) => r.key === start);
+  const room =
+    rooms.find((candidate) => candidate.key === currentKey) ??
+    rooms.find((candidate) => candidate.key === start);
 
   const goToRoom = (key: string) => {
-    if (!rooms.some((r) => r.key === key)) {
+    if (!rooms.some((candidate) => candidate.key === key)) {
       console.warn(`[Browser] ${payload.nodeId}: no room "${key}"`);
       return;
     }
     // Like a real browser: going somewhere new drops the forward history.
-    setHistory((h) =>
-      h.stack[h.at] === key
-        ? h
-        : { stack: [...h.stack.slice(0, h.at + 1), key], at: h.at + 1 },
+    setHistory((previous) =>
+      previous.stack[previous.at] === key
+        ? previous
+        : { stack: [...previous.stack.slice(0, previous.at + 1), key], at: previous.at + 1 },
     );
   };
 
@@ -72,11 +72,14 @@ function Browser({ payload }: { payload: BrowserPayload }) {
       address={site.url}
       canBack={history.at > 0}
       canForward={history.at < history.stack.length - 1}
-      onBack={() => setHistory((h) => ({ ...h, at: Math.max(0, h.at - 1) }))}
+      onBack={() => setHistory((previous) => ({ ...previous, at: Math.max(0, previous.at - 1) }))}
       onForward={() =>
-        setHistory((h) => ({ ...h, at: Math.min(h.stack.length - 1, h.at + 1) }))
+        setHistory((previous) => ({
+          ...previous,
+          at: Math.min(previous.stack.length - 1, previous.at + 1),
+        }))
       }
-      onRefresh={() => setReload((n) => n + 1)}
+      onRefresh={() => setReload((count) => count + 1)}
     >
       {/* Two boxes: `.browser-site` is the size container, and a container
           query cannot restyle the container itself — only what is inside. */}
@@ -105,6 +108,8 @@ function Browser({ payload }: { payload: BrowserPayload }) {
   );
 }
 
+// #region Room components
+
 /**
  * The room's picture with its zones on it.
  *
@@ -120,16 +125,6 @@ function RoomStage({ room, onZone }: { room: Room; onZone: (zone: RoomZone) => v
   // so a later keyboard activation is not taken for a touch.
   const pointer = useRef<string | null>(null);
 
-  const click = (zone: RoomZone, index: number) => {
-    const touch = pointer.current === "touch";
-    pointer.current = null;
-    if (touch && zone.look === "box" && revealed !== index) {
-      setRevealed(index);
-      return;
-    }
-    onZone(zone);
-  };
-
   return (
     <div className="browser-room-frame" style={{ aspectRatio: ratio }}>
       <img
@@ -137,21 +132,31 @@ function RoomStage({ room, onZone }: { room: Room; onZone: (zone: RoomZone) => v
         alt=""
         className="browser-room-img"
         draggable={false}
-        onLoad={(e) => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)}
+        onLoad={(event) =>
+          setRatio(event.currentTarget.naturalWidth / event.currentTarget.naturalHeight)
+        }
         // A broken image still gets a frame, so the zones stay usable.
         onError={() => setRatio(4 / 3)}
         // Tapping the picture itself hides a revealed box again.
         onClick={() => setRevealed(null)}
       />
-      {room.zones?.map((zone, i) => (
+      {room.zones?.map((zone, index) => (
         <ZoneButton
-          key={i}
+          key={index}
           zone={zone}
-          revealed={revealed === i}
-          onPointerDown={(e) => {
-            pointer.current = e.pointerType;
+          revealed={revealed === index}
+          onPointerDown={(event) => {
+            pointer.current = event.pointerType;
           }}
-          onClick={() => click(zone, i)}
+          onClick={() => {
+            const isTouch = pointer.current === "touch";
+            pointer.current = null;
+            if (isTouch && zone.look === "box" && revealed !== index) {
+              setRevealed(index);
+              return;
+            }
+            onZone(zone);
+          }}
         />
       ))}
     </div>
@@ -167,7 +172,7 @@ function ZoneButton({
 }: {
   zone: RoomZone;
   revealed: boolean;
-  onPointerDown: (e: React.PointerEvent) => void;
+  onPointerDown: (event: React.PointerEvent) => void;
   onClick: () => void;
 }) {
   const style = {
@@ -178,7 +183,7 @@ function ZoneButton({
   };
 
   if (zone.look === "arrow") {
-    const left = zone.direction === "left";
+    const isLeft = zone.direction === "left";
     return (
       <button
         type="button"
@@ -186,11 +191,11 @@ function ZoneButton({
         style={style}
         onPointerDown={onPointerDown}
         onClick={onClick}
-        aria-label={left ? "Go left" : "Go right"}
+        aria-label={isLeft ? "Go left" : "Go right"}
       >
         <svg viewBox="0 0 20 24" preserveAspectRatio="xMidYMid meet" aria-hidden>
           <polygon
-            points={left ? "18,2 2,12 18,22" : "2,2 18,12 2,22"}
+            points={isLeft ? "18,2 2,12 18,22" : "2,2 18,12 2,22"}
             strokeLinejoin="round"
           />
         </svg>
@@ -211,5 +216,7 @@ function ZoneButton({
     </button>
   );
 }
+
+// #endregion
 
 export default Browser;

@@ -52,9 +52,9 @@ function VideoSurface({ src, poster, loop: initialLoop = false }: VideoSurfacePr
           poster={poster}
           playsInline
           onClick={togglePlay}
-          onLoadedMetadata={(e) => setDuration(finiteDuration(e.currentTarget.duration))}
-          onDurationChange={(e) => setDuration(finiteDuration(e.currentTarget.duration))}
-          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+          onLoadedMetadata={(event) => setDuration(finiteDuration(event.currentTarget.duration))}
+          onDurationChange={(event) => setDuration(finiteDuration(event.currentTarget.duration))}
+          onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onEnded={() => setPlaying(false)}
@@ -75,8 +75,8 @@ function VideoSurface({ src, poster, loop: initialLoop = false }: VideoSurfacePr
           setVolume(next);
           if (next > 0) setMuted(false);
         }}
-        onToggleMute={() => setMuted((m) => !m)}
-        onToggleLoop={() => setLoop((l) => !l)}
+        onToggleMute={() => setMuted((isMuted) => !isMuted)}
+        onToggleLoop={() => setLoop((isLooping) => !isLooping)}
       />
     </>
   );

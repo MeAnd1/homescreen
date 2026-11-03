@@ -1,12 +1,13 @@
+// #region Setup
+
 import { create } from "zustand";
-import {
-  clampToViewport,
-  computeRect,
-  currentViewport,
-  shouldOpenMaximized,
-} from "./placement";
+import { clampToViewport, computeRect, currentViewport } from "./placement";
 import { getWindowType } from "./registry";
 import type { OpenInput, Rect, WindowInstance, WindowTypeId } from "./types";
+
+// #endregion
+
+// #region Config
 
 interface WindowStore {
   windows: Record<string, WindowInstance>;
@@ -43,52 +44,12 @@ interface WindowStore {
   setTitle: (id: string, title: string) => void;
 }
 
+// Restored ids are real ids: hydrate bumps this past them, or a restored `w3` would be handed out again.
 let idCounter = 0;
-const nextId = () => `w${++idCounter}`;
 
-/**
- * Restored ids are real ids. Without this a restored `w3` would be handed out
- * again by the first `openWindow` of the session and silently collide.
- */
-function reserveIds(ids: readonly string[]): void {
-  for (const id of ids) {
-    const match = /^w(\d+)$/.exec(id);
-    if (match) idCounter = Math.max(idCounter, Number(match[1]));
-  }
-}
+// #endregion
 
-/** The window that should hold focus once `excluded` ids are gone or hidden. */
-function nextFocus(
-  windows: Record<string, WindowInstance>,
-  order: string[],
-  excluded: ReadonlySet<string>,
-): string | null {
-  for (let i = order.length - 1; i >= 0; i--) {
-    const id = order[i];
-    if (excluded.has(id)) continue;
-    if (windows[id] && windows[id].state !== "minimized") return id;
-  }
-  return null;
-}
-
-/** `id` plus every window whose parentId chain reaches it. */
-function withDescendants(
-  windows: Record<string, WindowInstance>,
-  ids: readonly string[],
-): Set<string> {
-  const doomed = new Set(ids);
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const w of Object.values(windows)) {
-      if (!doomed.has(w.id) && w.parentId && doomed.has(w.parentId)) {
-        doomed.add(w.id);
-        grew = true;
-      }
-    }
-  }
-  return doomed;
-}
+// #region Store
 
 export const useWindowStore = create<WindowStore>((set, get) => ({
   windows: {},
@@ -109,6 +70,8 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       // Merge rather than duplicate: re-opening the same node with a different
       // payload (gallery -> viewer index) must update the open window in place.
       // The rect is deliberately left alone — the user put it where it is.
+      let reopenedState = existing.state;
+      if (existing.state === "minimized") reopenedState = existing.restoreRect ? "maximized" : "normal";
       set({
         windows: {
           ...state.windows,
@@ -117,20 +80,16 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
             payload: { ...existing.payload, ...input.payload },
             title: input.title ?? existing.title,
             icon: input.icon ?? existing.icon,
-            state: existing.state === "minimized"
-              ? existing.restoreRect
-                ? "maximized"
-                : "normal"
-              : existing.state,
+            state: reopenedState,
           },
         },
-        order: [...state.order.filter((x) => x !== singletonId), singletonId],
+        order: [...state.order.filter((windowId) => windowId !== singletonId), singletonId],
         focusedId: singletonId,
       });
       return singletonId;
     }
 
-    const id = singletonId ?? nextId();
+    const id = singletonId ?? `w${++idCounter}`;
     const viewport = currentViewport();
     const anchorId = input.parentId ?? state.order[state.order.length - 1];
     const anchor = anchorId ? state.windows[anchorId]?.rect : undefined;
@@ -143,10 +102,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       viewport,
     );
 
-    // `rect` still holds the windowed geometry, so unmaximizing on a rotated
-    // phone works. Decided on the requested height, before clamping hides it.
+    // Only height decides: on a narrow phone clampToViewport already makes the window full width.
+    // Read before clamping hides it; `rect` keeps the windowed geometry for unmaximizing.
     const requestedHeight = input.rect?.height ?? def.defaultSize.height;
-    const maximized = shouldOpenMaximized(requestedHeight, viewport);
+    const maximized = requestedHeight > viewport.height;
 
     const instance: WindowInstance = {
       id,
@@ -171,9 +130,12 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
   },
 
   hydrate: (instances, order) => {
-    reserveIds(instances.map((w) => w.id));
     const windows: Record<string, WindowInstance> = {};
-    for (const w of instances) windows[w.id] = w;
+    for (const instance of instances) {
+      windows[instance.id] = instance;
+      const match = /^w(\d+)$/.exec(instance.id);
+      if (match) idCounter = Math.max(idCounter, Number(match[1]));
+    }
     set({
       windows,
       order,
@@ -189,10 +151,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     const doomed = withDescendants(state.windows, [id]);
 
     const windows: Record<string, WindowInstance> = {};
-    for (const [key, w] of Object.entries(state.windows)) {
-      if (!doomed.has(key)) windows[key] = w;
+    for (const [key, instance] of Object.entries(state.windows)) {
+      if (!doomed.has(key)) windows[key] = instance;
     }
-    const order = state.order.filter((x) => !doomed.has(x));
+    const order = state.order.filter((windowId) => !doomed.has(windowId));
     set({
       windows,
       order,
@@ -206,16 +168,16 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
   closeGroup: (groupId) => {
     const state = get();
     const seeds = Object.values(state.windows)
-      .filter((w) => w.groupId === groupId)
-      .map((w) => w.id);
+      .filter((instance) => instance.groupId === groupId)
+      .map((instance) => instance.id);
     if (seeds.length === 0) return;
     const doomed = withDescendants(state.windows, seeds);
 
     const windows: Record<string, WindowInstance> = {};
-    for (const [key, w] of Object.entries(state.windows)) {
-      if (!doomed.has(key)) windows[key] = w;
+    for (const [key, instance] of Object.entries(state.windows)) {
+      if (!doomed.has(key)) windows[key] = instance;
     }
-    const order = state.order.filter((x) => !doomed.has(x));
+    const order = state.order.filter((windowId) => !doomed.has(windowId));
     set({
       windows,
       order,
@@ -234,7 +196,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     const alreadyTop = state.order[state.order.length - 1] === id;
     if (alreadyTop && state.focusedId === id) return;
     set({
-      order: alreadyTop ? state.order : [...state.order.filter((x) => x !== id), id],
+      order: alreadyTop ? state.order : [...state.order.filter((windowId) => windowId !== id), id],
       focusedId: id,
     });
   },
@@ -255,9 +217,9 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
   minimize: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w || w.state === "minimized") return;
-    const windows = { ...state.windows, [id]: { ...w, state: "minimized" as const } };
+    const instance = state.windows[id];
+    if (!instance || instance.state === "minimized") return;
+    const windows = { ...state.windows, [id]: { ...instance, state: "minimized" as const } };
     set({
       windows,
       focusedId:
@@ -269,70 +231,109 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
   restore: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w) return;
+    const instance = state.windows[id];
+    if (!instance) return;
     // restoreRect survives a minimize, so a maximized window comes back maximized.
-    const nextState = w.restoreRect ? ("maximized" as const) : ("normal" as const);
+    const nextState = instance.restoreRect ? ("maximized" as const) : ("normal" as const);
     set({
       windows:
-        w.state === "minimized" ? { ...state.windows, [id]: { ...w, state: nextState } } : state.windows,
-      order: [...state.order.filter((x) => x !== id), id],
+        instance.state === "minimized" ? { ...state.windows, [id]: { ...instance, state: nextState } } : state.windows,
+      order: [...state.order.filter((windowId) => windowId !== id), id],
       focusedId: id,
     });
   },
 
   toggleMinimize: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w) return;
-    if (w.state === "minimized") state.restore(id);
+    const instance = state.windows[id];
+    if (!instance) return;
+    if (instance.state === "minimized") state.restore(id);
     else if (state.focusedId === id) state.minimize(id);
     else state.focus(id);
   },
 
   maximize: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w || w.state === "maximized") return;
+    const instance = state.windows[id];
+    if (!instance || instance.state === "maximized") return;
     set({
       windows: {
         ...state.windows,
-        [id]: { ...w, state: "maximized", restoreRect: w.restoreRect ?? w.rect },
+        [id]: { ...instance, state: "maximized", restoreRect: instance.restoreRect ?? instance.rect },
       },
     });
   },
 
   unmaximize: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w) return;
+    const instance = state.windows[id];
+    if (!instance) return;
     set({
       windows: {
         ...state.windows,
-        [id]: { ...w, state: "normal", rect: w.restoreRect ?? w.rect, restoreRect: undefined },
+        [id]: { ...instance, state: "normal", rect: instance.restoreRect ?? instance.rect, restoreRect: undefined },
       },
     });
   },
 
   toggleMaximize: (id) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w) return;
-    if (w.state === "maximized") state.unmaximize(id);
+    const instance = state.windows[id];
+    if (!instance) return;
+    if (instance.state === "maximized") state.unmaximize(id);
     else state.maximize(id);
   },
 
   setRect: (id, rect) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w) return;
-    set({ windows: { ...state.windows, [id]: { ...w, rect } } });
+    const instance = state.windows[id];
+    if (!instance) return;
+    set({ windows: { ...state.windows, [id]: { ...instance, rect } } });
   },
 
   setTitle: (id, title) => {
     const state = get();
-    const w = state.windows[id];
-    if (!w || w.title === title) return;
-    set({ windows: { ...state.windows, [id]: { ...w, title } } });
+    const instance = state.windows[id];
+    if (!instance || instance.title === title) return;
+    set({ windows: { ...state.windows, [id]: { ...instance, title } } });
   },
 }));
+
+// #endregion
+
+// #region Helpers
+
+/** The window that should hold focus once `excluded` ids are gone or hidden. */
+function nextFocus(
+  windows: Record<string, WindowInstance>,
+  order: string[],
+  excluded: ReadonlySet<string>,
+): string | null {
+  for (let i = order.length - 1; i >= 0; i--) {
+    const id = order[i];
+    if (excluded.has(id)) continue;
+    if (windows[id] && windows[id].state !== "minimized") return id;
+  }
+  return null;
+}
+
+/** `id` plus every window whose parentId chain reaches it. */
+function withDescendants(
+  windows: Record<string, WindowInstance>,
+  ids: readonly string[],
+): Set<string> {
+  const doomed = new Set(ids);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const candidate of Object.values(windows)) {
+      if (doomed.has(candidate.id)) continue;
+      if (!candidate.parentId || !doomed.has(candidate.parentId)) continue;
+      doomed.add(candidate.id);
+      grew = true;
+    }
+  }
+  return doomed;
+}
+
+// #endregion

@@ -1,3 +1,4 @@
+// #region Setup and config
 import { useEffect, useState, type FormEvent } from "react";
 import { EDITOR_API_URL, PROJECT_ID } from "../editor/editor-api";
 import "./PageSetPassword.css";
@@ -5,12 +6,6 @@ import "./PageSetPassword.css";
 const ENDPOINT_BASE = `${EDITOR_API_URL}/set-password/${PROJECT_ID}`;
 const TOKEN_ENDPOINT_BASE = `${EDITOR_API_URL}/set-github-token/${PROJECT_ID}`;
 const NEW_TOKEN_URL = "https://github.com/settings/personal-access-tokens/new";
-
-function readKeyFromHash(): string {
-  const raw = window.location.hash;
-  if (!raw || raw === "#") return "";
-  return raw.startsWith("#") ? raw.slice(1) : raw;
-}
 
 type Status =
   | { kind: "idle" }
@@ -23,19 +18,9 @@ type TokenStatus =
   | { kind: "idle" }
   | { kind: "success"; login: string }
   | { kind: "error"; text: string };
+// #endregion
 
-/** The server answers `{ error }` with a sentence meant for the site owner. */
-async function readError(response: Response): Promise<string> {
-  const text = await response.text().catch(() => "");
-  try {
-    const body = JSON.parse(text) as { error?: unknown };
-    if (typeof body.error === "string") return body.error;
-  } catch {
-    // Not JSON: fall through to the raw text.
-  }
-  return text || `Request failed (${response.status})`;
-}
-
+// #region Main flow
 function PageSetPassword() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -65,8 +50,8 @@ function PageSetPassword() {
     };
   }, []);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     const key = readKeyFromHash();
     if (!key || submitting) return;
 
@@ -88,19 +73,19 @@ function PageSetPassword() {
         const text = await response.text().catch(() => "");
         setStatus({ kind: "error", code: response.status, text });
       }
-    } catch (err) {
+    } catch (error) {
       setStatus({
         kind: "error",
         code: 0,
-        text: err instanceof Error ? err.message : "Network error",
+        text: error instanceof Error ? error.message : "Network error",
       });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleTokenSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleTokenSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     const key = readKeyFromHash();
     if (!key || tokenSubmitting) return;
 
@@ -122,10 +107,10 @@ function PageSetPassword() {
       } else {
         setTokenStatus({ kind: "error", text: await readError(response) });
       }
-    } catch (err) {
+    } catch (error) {
       setTokenStatus({
         kind: "error",
-        text: err instanceof Error ? err.message : "Network error",
+        text: error instanceof Error ? error.message : "Network error",
       });
     } finally {
       setTokenSubmitting(false);
@@ -220,7 +205,7 @@ function PageSetPassword() {
                   className="set-password-input"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"
                   spellCheck={false}
                   autoFocus
@@ -229,7 +214,7 @@ function PageSetPassword() {
                 <button
                   type="button"
                   className="set-password-toggle"
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={() => setShowPassword((isShown) => !isShown)}
                   disabled={submitting}
                 >
                   {showPassword ? "Hide" : "Show"}
@@ -298,7 +283,7 @@ function PageSetPassword() {
                 className="set-password-input"
                 type="password"
                 value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
+                onChange={(event) => setGithubToken(event.target.value)}
                 placeholder="github_pat_…"
                 autoComplete="off"
                 spellCheck={false}
@@ -321,3 +306,24 @@ function PageSetPassword() {
 }
 
 export default PageSetPassword;
+// #endregion
+
+// #region Helpers
+function readKeyFromHash(): string {
+  const raw = window.location.hash;
+  if (!raw || raw === "#") return "";
+  return raw.startsWith("#") ? raw.slice(1) : raw;
+}
+
+/** The server answers `{ error }` with a sentence meant for the site owner. */
+async function readError(response: Response): Promise<string> {
+  const text = await response.text().catch(() => "");
+  try {
+    const body = JSON.parse(text) as { error?: unknown };
+    if (typeof body.error === "string") return body.error;
+  } catch {
+    // Not JSON: fall through to the raw text.
+  }
+  return text || `Request failed (${response.status})`;
+}
+// #endregion

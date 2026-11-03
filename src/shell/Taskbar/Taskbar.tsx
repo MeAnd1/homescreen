@@ -1,3 +1,4 @@
+// #region Setup and config
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
@@ -15,24 +16,131 @@ interface MenuState {
 const MENU_WIDTH = 200;
 const MENU_MARGIN = 4;
 
-/**
- * `?open=` deep link to a node. Built from BASE_URL, which already carries the
- * `/homescreen/` prefix and its trailing slash — never a leading "/".
- */
-function deepLinkFor(nodeId: string): string {
-  return `${window.location.origin}${import.meta.env.BASE_URL}?open=${encodeURIComponent(nodeId)}`;
+interface TaskbarProps {
+  startMenuOpen: boolean;
+  /** Mousedown, not click: see the note on the search button. */
+  onToggleStartMenu: () => void;
+  networkOpen: boolean;
+  /** Mousedown, not click, for the same reason. */
+  onToggleNetwork: () => void;
+}
+// #endregion
+
+// #region Main flow
+function Taskbar({
+  startMenuOpen,
+  onToggleStartMenu,
+  networkOpen,
+  onToggleNetwork,
+}: TaskbarProps) {
+  const [time, setTime] = useState(new Date());
+  const [menu, setMenu] = useState<MenuState | null>(null);
+  // Stable identity is load-bearing: the clock re-renders every second, and a
+  // fresh closure would re-arm the menu's outside-click listener each tick,
+  // losing a click that lands in the gap.
+  const closeMenu = useCallback(() => setMenu(null), []);
+  // Insertion order, not stacking order — a taskbar button must not jump when
+  // its window is focused. `windows` keys preserve the order they were added.
+  const ids = useWindowStore(useShallow((state) => Object.keys(state.windows)));
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // A menu whose window closed underneath it has nothing left to act on.
+  useEffect(() => {
+    if (menu && !ids.includes(menu.id)) closeMenu();
+  }, [ids, menu, closeMenu]);
+
+  const hours = time.getHours().toString().padStart(2, "0");
+  const minutes = time.getMinutes().toString().padStart(2, "0");
+  const date = `${time.getMonth() + 1}/${time.getDate()}/2171`;
+
+  return (
+    <div className="taskbar">
+      <div className="taskbar-icons">
+        <div className="taskbar-left">
+          {/* Mousedown, not click: the open panel dismisses itself on an outside
+              mousedown, and a click would then reopen it. preventDefault keeps
+              focus in the panel's search field. Keyboard never emits mousedown. */}
+          <button
+            type="button"
+            className="taskbar-search"
+            aria-expanded={startMenuOpen}
+            aria-label="Search"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onToggleStartMenu();
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              event.preventDefault();
+              onToggleStartMenu();
+            }}
+          >
+            <Search size={16} color="white" className="taskbar-search-icon" strokeWidth={2} />
+            <span className="taskbar-search-text">Type here to search</span>
+          </button>
+
+          <div className="taskbar-windows" role="group" aria-label="Open windows">
+            {ids.map((id) => (
+              <TaskbarButton
+                key={id}
+                id={id}
+                onOpenMenu={(left) => setMenu({ id, left })}
+                onCloseMenu={closeMenu}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="taskbar-right">
+          <button className="taskbar-btn taskbar-small" aria-label="Show hidden icons">
+            <ChevronUp size={14} color="white" strokeWidth={2} />
+          </button>
+          {/* Mousedown toggling, as for the search box. data-network-toggle
+              tells the flyout's outside-click listener to leave this to us. */}
+          <button
+            type="button"
+            className="taskbar-btn taskbar-small"
+            aria-label="Network"
+            aria-expanded={networkOpen}
+            data-network-toggle
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onToggleNetwork();
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              event.preventDefault();
+              onToggleNetwork();
+            }}
+          >
+            <NetworkTrayIcon />
+          </button>
+          <button className="taskbar-btn taskbar-small" aria-label="Volume">
+            <Volume2 size={16} color="white" strokeWidth={1.5} />
+          </button>
+          <div className="taskbar-datetime">
+            <span className="taskbar-time">
+              {hours}:{minutes}
+            </span>
+            <span className="taskbar-date">{date}</span>
+          </div>
+          <div className="taskbar-show-desktop" title="Show desktop" />
+        </div>
+      </div>
+
+      {menu && <WindowContextMenu menu={menu} onClose={closeMenu} />}
+    </div>
+  );
 }
 
-/**
- * Every app payload carries `nodeId` today, but the taskbar is shell code
- * reading a window-system value, so it asks rather than assumes.
- */
-function nodeIdOf(payload: unknown): string | null {
-  if (typeof payload !== "object" || payload === null) return null;
-  const id = (payload as { nodeId?: unknown }).nodeId;
-  return typeof id === "string" ? id : null;
-}
+export default Taskbar;
+// #endregion
 
+// #region Parts
 function TaskbarButton({
   id,
   onOpenMenu,
@@ -42,12 +150,12 @@ function TaskbarButton({
   onOpenMenu: (left: number) => void;
   onCloseMenu: () => void;
 }) {
-  const w = useWindowStore((s) => s.windows[id]);
-  const focused = useWindowStore((s) => s.focusedId === id);
+  const appWindow = useWindowStore((state) => state.windows[id]);
+  const focused = useWindowStore((state) => state.focusedId === id);
   const ref = useRef<HTMLButtonElement>(null);
-  if (!w) return null;
+  if (!appWindow) return null;
 
-  const minimized = w.state === "minimized";
+  const minimized = appWindow.state === "minimized";
   const classes = [
     "taskbar-btn",
     "taskbar-window-btn",
@@ -61,26 +169,26 @@ function TaskbarButton({
     <button
       ref={ref}
       className={classes}
-      title={w.title}
+      title={appWindow.title}
       // "Is this window showing?" — a minimized window is the un-pressed state.
       aria-pressed={!minimized}
       onClick={() => {
         onCloseMenu();
         useWindowStore.getState().toggleMinimize(id);
       }}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onOpenMenu(ref.current?.getBoundingClientRect().left ?? e.clientX);
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onOpenMenu(ref.current?.getBoundingClientRect().left ?? event.clientX);
       }}
     >
-      {w.icon ? (
-        <img src={w.icon} alt="" className="taskbar-btn-icon" />
+      {appWindow.icon ? (
+        <img src={appWindow.icon} alt="" className="taskbar-btn-icon" />
       ) : (
         <span className="taskbar-btn-icon taskbar-btn-icon--placeholder">
-          {w.title.charAt(0)}
+          {appWindow.title.charAt(0)}
         </span>
       )}
-      <span className="taskbar-btn-label">{w.title}</span>
+      <span className="taskbar-btn-label">{appWindow.title}</span>
     </button>
   );
 }
@@ -93,28 +201,30 @@ function TaskbarButton({
 function WindowContextMenu({ menu, onClose }: { menu: MenuState; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
-  const nodeId = useWindowStore((s) => nodeIdOf(s.windows[menu.id]?.payload));
+  // Every payload carries `nodeId` today, but this is shell code reading a
+  // window-system value, so it asks rather than assumes.
+  const nodeId = useWindowStore((state) => {
+    const payload = state.windows[menu.id]?.payload;
+    if (typeof payload !== "object" || payload === null) return null;
+    const id = (payload as { nodeId?: unknown }).nodeId;
+    return typeof id === "string" ? id : null;
+  });
 
   useEffect(() => {
-    const onMouseDown = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) onClose();
+    const onMouseDown = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) onClose();
     };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      // Capture phase + preventDefault so the desktop's Escape shortcut, which
-      // listens on the bubble phase, sees the key as already consumed and does
-      // not also close the window this menu belongs to.
-      e.preventDefault();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      // Capture + preventDefault so the desktop's bubble-phase Escape shortcut
+      // sees the key as consumed and does not also close this menu's window.
+      event.preventDefault();
       onClose();
     };
-    // Capture phase, with a contains() check rather than a stopPropagation in
-    // the menu: react-rnd swallows mousedown inside a window, so a bubble-phase
-    // listener never sees a click on one and the menu would stay open over it.
-    //
-    // Armed one task late, so the right-click that opened the menu does not
-    // close it again. A `setTimeout` rather than a `requestAnimationFrame`:
-    // rAF callbacks do not run at all while the tab is hidden, which would
-    // leave the menu permanently undismissable on a background tab.
+    // Capture phase: react-rnd swallows mousedown inside a window, so a bubble
+    // listener would miss clicks on one. Armed one task late so the opening
+    // right-click does not close it; setTimeout, not rAF, which never runs on a
+    // hidden tab and would leave the menu undismissable.
     const armed = setTimeout(() => {
       window.addEventListener("mousedown", onMouseDown, true);
     }, 0);
@@ -128,7 +238,9 @@ function WindowContextMenu({ menu, onClose }: { menu: MenuState; onClose: () => 
 
   const copyLink = () => {
     if (!nodeId) return;
-    navigator.clipboard?.writeText(deepLinkFor(nodeId)).then(
+    // BASE_URL already carries `/homescreen/` and its trailing slash.
+    const deepLink = `${window.location.origin}${import.meta.env.BASE_URL}?open=${encodeURIComponent(nodeId)}`;
+    navigator.clipboard?.writeText(deepLink).then(
       () => {
         setCopied(true);
         setTimeout(onClose, 700);
@@ -170,138 +282,13 @@ function WindowContextMenu({ menu, onClose }: { menu: MenuState; onClose: () => 
   );
 }
 
-interface TaskbarProps {
-  startMenuOpen: boolean;
-  /** Mousedown, not click: see the note on the search button. */
-  onToggleStartMenu: () => void;
-  networkOpen: boolean;
-  /** Mousedown, not click, for the same reason. */
-  onToggleNetwork: () => void;
-}
-
 /** The tray glyph follows the pretend radios, Windows 10 style. */
 function NetworkTrayIcon() {
-  const wifi = useNetworkStore((s) => s.wifi);
-  const airplane = useNetworkStore((s) => s.airplane);
-  const connected = useNetworkStore((s) => s.connected !== null);
+  const wifi = useNetworkStore((state) => state.wifi);
+  const airplane = useNetworkStore((state) => state.airplane);
+  const connected = useNetworkStore((state) => state.connected !== null);
   if (airplane && !wifi) return <Plane size={16} color="white" strokeWidth={1.5} />;
   if (!wifi || !connected) return <WifiOff size={16} color="white" strokeWidth={1.5} />;
   return <Wifi size={16} color="white" strokeWidth={1.5} />;
 }
-
-function Taskbar({
-  startMenuOpen,
-  onToggleStartMenu,
-  networkOpen,
-  onToggleNetwork,
-}: TaskbarProps) {
-  const [time, setTime] = useState(new Date());
-  const [menu, setMenu] = useState<MenuState | null>(null);
-  // Stable identity is load-bearing: the clock re-renders this component every
-  // second, and a fresh closure here would tear down and re-arm the menu's
-  // outside-click listener on every tick — which loses the click that lands in
-  // the gap. Memoizing it means the listener is armed exactly once per opening.
-  const closeMenu = useCallback(() => setMenu(null), []);
-  // Insertion order, not stacking order — a taskbar button must not jump when
-  // its window is focused. `windows` keys preserve the order they were added.
-  const ids = useWindowStore(useShallow((s) => Object.keys(s.windows)));
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // A menu whose window closed underneath it has nothing left to act on.
-  useEffect(() => {
-    if (menu && !ids.includes(menu.id)) closeMenu();
-  }, [ids, menu, closeMenu]);
-
-  const hours = time.getHours().toString().padStart(2, "0");
-  const minutes = time.getMinutes().toString().padStart(2, "0");
-  const date = `${time.getMonth() + 1}/${time.getDate()}/2171`;
-
-  return (
-    <div className="taskbar">
-      <div className="taskbar-icons">
-        <div className="taskbar-left">
-          {/* Toggles on mousedown, not click: the open panel dismisses itself
-              on any mousedown outside it, and a click handler would fire after
-              that dismissal and immediately reopen the panel. preventDefault
-              stops the button taking focus back off the panel's search field.
-              Keyboard activation never emits mousedown, hence the key handler. */}
-          <button
-            type="button"
-            className="taskbar-search"
-            aria-expanded={startMenuOpen}
-            aria-label="Search"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onToggleStartMenu();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onToggleStartMenu();
-              }
-            }}
-          >
-            <Search size={16} color="white" className="taskbar-search-icon" strokeWidth={2} />
-            <span className="taskbar-search-text">Type here to search</span>
-          </button>
-
-          <div className="taskbar-windows" role="group" aria-label="Open windows">
-            {ids.map((id) => (
-              <TaskbarButton
-                key={id}
-                id={id}
-                onOpenMenu={(left) => setMenu({ id, left })}
-                onCloseMenu={closeMenu}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="taskbar-right">
-          <button className="taskbar-btn taskbar-small" aria-label="Show hidden icons">
-            <ChevronUp size={14} color="white" strokeWidth={2} />
-          </button>
-          {/* Mousedown toggling, as for the search box. data-network-toggle
-              tells the flyout's outside-click listener to leave this to us. */}
-          <button
-            type="button"
-            className="taskbar-btn taskbar-small"
-            aria-label="Network"
-            aria-expanded={networkOpen}
-            data-network-toggle
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onToggleNetwork();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onToggleNetwork();
-              }
-            }}
-          >
-            <NetworkTrayIcon />
-          </button>
-          <button className="taskbar-btn taskbar-small" aria-label="Volume">
-            <Volume2 size={16} color="white" strokeWidth={1.5} />
-          </button>
-          <div className="taskbar-datetime">
-            <span className="taskbar-time">
-              {hours}:{minutes}
-            </span>
-            <span className="taskbar-date">{date}</span>
-          </div>
-          <div className="taskbar-show-desktop" title="Show desktop" />
-        </div>
-      </div>
-
-      {menu && <WindowContextMenu menu={menu} onClose={closeMenu} />}
-    </div>
-  );
-}
-
-export default Taskbar;
+// #endregion

@@ -1,3 +1,5 @@
+// #region Setup
+
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, User, X } from "lucide-react";
 import { APP_REGISTRY } from "../apps/registry";
@@ -21,6 +23,10 @@ import { showsChildren } from "../content/vfs";
 import { slugify } from "./slugify";
 import { viewLabel } from "./viewLabel";
 
+// #endregion
+
+// #region Config
+
 /** Rendered by this form itself, so a def that also declares one is not drawn twice. */
 const COMMON_KEYS = new Set([
   "name",
@@ -36,16 +42,171 @@ const COMMON_KEYS = new Set([
 
 const VIEWS = Object.keys(APP_REGISTRY) as ViewId[];
 
-/**
- * The Advanced block — sort order, taskbar group, window overrides — is hidden
- * for every node for now. All three are one-off escape hatches nobody is using:
- * ordering is done with the parent's Sort list, `group` has no consumer at all
- * (the store's closeGroup/focusGroup are unreferenced), and a per-node size
- * belongs in `apps/registry.ts` unless one node really is special. Existing
- * values in the node files are untouched — they are simply not editable here.
- * Flip this to bring the block back.
- */
+// The Advanced block (sort order, taskbar group, window overrides) is hidden: nobody uses these escape
+// hatches, `group` has no consumer, and sizes belong in `apps/registry.ts`. Stored values stay untouched.
 const SHOW_ADVANCED = false;
+
+// #endregion
+
+// #region Main flow
+
+export default function NodeForm({ node }: { node: VNode }) {
+  const { draft, select } = useEditor();
+  const registryEntry = APP_REGISTRY[node.view];
+  const problems = draft.problems.filter((problem) => problem.nodeId === node.id);
+  const knownView = VIEWS.includes(node.view);
+  // A top-level entity is a desktop icon: the shell fixes its name, icon, view and window, so only content is editable.
+  const isDesktopEntry = !node.id.includes("/");
+  // The parent folder may fix the window type and picture. A control is only dropped once the node
+  // matches, so a mismatched node keeps the control that repairs it (a stray icon stays clearable).
+  const convention = conventionFor(node.id);
+  const fixedView = convention?.view === node.view;
+  const hideIcon = convention?.icon === "none" && !node.icon;
+  // In a fixed slot, name, type and icon belong to the layout, so the form is content only.
+  const slot = slotFor(node.id);
+  const slots = slotsOf(node.id);
+
+  return (
+    <div className="editor-form">
+      {slot && (
+        <button
+          type="button"
+          className="editor-back"
+          onClick={() => select(node.id.slice(0, node.id.lastIndexOf("/")))}
+        >
+          <ChevronLeft size={16} />
+          Back
+        </button>
+      )}
+      <div className="editor-form-head">
+        <h2>{node.name || "(unnamed)"}</h2>
+        <span className="editor-text-mono">{node.id}</span>
+      </div>
+
+      {problems.map((problem, i) => (
+        <p
+          key={i}
+          className={
+            problem.severity === "error" ? "editor-error" : "editor-warn"
+          }
+        >
+          [{problem.severity}] {problem.message}
+        </p>
+      ))}
+
+      {slot?.disabled && (
+        <p className="editor-hint">
+          {slot.name} is under construction — hidden, and not editable here.
+        </p>
+      )}
+
+      {!isDesktopEntry && !slot && slots && (
+        <div className="editor-profile">
+          <Avatar src={node.icon} />
+          <div className="editor-profile-fields">
+            <ScalarField
+              label="Name"
+              type="text"
+              required
+              value={node.name}
+              onChange={(value) => draft.patchNode(node.id, { name: value })}
+            />
+            <IconField
+              node={node}
+              urlOnly
+              hidePreview
+              label="Avatar picture"
+              hint="Use the [ Thumbnail ] image link in [ Get Pinterest image link ] tab."
+            />
+          </div>
+        </div>
+      )}
+
+      {!isDesktopEntry && !slot && !slots && (
+        <>
+          <ScalarField
+            label="Name"
+            type="text"
+            required
+            value={node.name}
+            onChange={(value) => draft.patchNode(node.id, { name: value })}
+          />
+
+          {!fixedView && (
+            <label className="editor-field">
+              <span className="editor-label">Type</span>
+              <select
+                className={`editor-input${knownView ? "" : " editor-input-invalid"}`}
+                value={node.view}
+                onChange={(event) =>
+                  draft.patchNode(node.id, { view: event.target.value as ViewId })
+                }
+              >
+                {!knownView && (
+                  <option value={node.view}>
+                    {node.view} — unknown, pick one
+                  </option>
+                )}
+                {VIEWS.map((id) => (
+                  <option key={id} value={id}>
+                    {viewLabel(id)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {!hideIcon && (
+            <IconField node={node} urlOnly={convention?.icon === "url"} />
+          )}
+        </>
+      )}
+
+      {!slot?.disabled &&
+        registryEntry?.fields
+          ?.filter((spec) => !COMMON_KEYS.has(spec.key))
+          .map((spec, i) => (
+            <FieldRenderer
+              key={`${spec.key}-${spec.type}-${i}`}
+              spec={spec}
+              node={node}
+            />
+          ))}
+
+      {SHOW_ADVANCED && !isDesktopEntry && (
+        <details className="editor-details">
+          <summary>Advanced</summary>
+          <div className="editor-grid-2">
+            <ScalarField
+              label="Sort order among siblings"
+              type="number"
+              value={node.order}
+              onChange={(value) => draft.patchNode(node.id, { order: value })}
+            />
+            <ScalarField
+              label="Taskbar group"
+              type="text"
+              value={node.group}
+              onChange={(value) => draft.patchNode(node.id, { group: value })}
+            />
+          </div>
+          <WindowField node={node} />
+        </details>
+      )}
+
+      {!slot && <ChildOrderField node={node} />}
+      {slots ? (
+        <SlotSection node={node} slots={slots} />
+      ) : (
+        !slot?.disabled && <ChildrenSection node={node} />
+      )}
+    </div>
+  );
+}
+
+// #endregion
+
+// #region Form sections
 
 function IconField({
   node,
@@ -68,35 +229,32 @@ function IconField({
   // node's answer when the form moves to another node.
   const [pickingUrl, setPickingUrl] = useState(false);
   const mode = icon ? (isKey ? icon : "__url") : pickingUrl ? "__url" : "";
-  const set = (value: string) =>
+  const setIcon = (value: string) =>
     draft.patchNode(node.id, { icon: value || undefined });
 
   return (
     <div className="editor-field">
       <span className="editor-label">{label}</span>
       <div className="editor-row">
-        {/* A urlOnly folder has no built-in-icon list to offer, so the picker is
-            gone and the box is the URL one. Its value is whatever is stored,
-            shown raw: a leftover icon key is then visibly wrong here rather
-            than silently blank. */}
+        {/* urlOnly shows the stored value raw, so a leftover icon key is visibly wrong rather than blank. */}
         {urlOnly ? (
           <input
             className="editor-input"
             value={icon}
             placeholder="https://…"
-            onChange={(e) => set(e.target.value)}
+            onChange={(event) => setIcon(event.target.value)}
           />
         ) : (
           <select
             className="editor-input"
             value={mode}
-            onChange={(e) => {
-              if (e.target.value === "__url") {
+            onChange={(event) => {
+              if (event.target.value === "__url") {
                 setPickingUrl(true);
                 return;
               }
               setPickingUrl(false);
-              set(e.target.value);
+              setIcon(event.target.value);
             }}
           >
             <option value="">(none)</option>
@@ -121,7 +279,7 @@ function IconField({
           className="editor-input"
           value={isKey ? "" : icon}
           placeholder="https://…"
-          onChange={(e) => set(e.target.value)}
+          onChange={(event) => setIcon(event.target.value)}
         />
       )}
       {hint && <span className="editor-hint">{hint}</span>}
@@ -129,7 +287,6 @@ function IconField({
   );
 }
 
-/** The big picture of a character, with a stand-in while there is none. */
 function Avatar({ src }: { src?: string }) {
   const [failed, setFailed] = useState<string>();
   const broken = failed === src;
@@ -146,9 +303,9 @@ function Avatar({ src }: { src?: string }) {
 
 function WindowField({ node }: { node: VNode }) {
   const { draft } = useEditor();
-  const win = node.window ?? {};
+  const windowOverrides = node.window ?? {};
   const patch = (changes: Record<string, unknown>) => {
-    const next = { ...win, ...changes };
+    const next = { ...windowOverrides, ...changes };
     for (const [key, value] of Object.entries(next)) {
       if (value === undefined) delete next[key as keyof typeof next];
     }
@@ -164,25 +321,25 @@ function WindowField({ node }: { node: VNode }) {
         <ScalarField
           label="Width"
           type="number"
-          value={win.width}
-          onChange={(v) =>
-            patch({ width: v === undefined ? undefined : Number(v) })
+          value={windowOverrides.width}
+          onChange={(value) =>
+            patch({ width: value === undefined ? undefined : Number(value) })
           }
         />
         <ScalarField
           label="Height"
           type="number"
-          value={win.height}
-          onChange={(v) =>
-            patch({ height: v === undefined ? undefined : Number(v) })
+          value={windowOverrides.height}
+          onChange={(value) =>
+            patch({ height: value === undefined ? undefined : Number(value) })
           }
         />
         <label className="editor-field editor-check">
           <input
             type="checkbox"
-            checked={win.resizable !== false}
-            onChange={(e) =>
-              patch({ resizable: e.target.checked ? undefined : false })
+            checked={windowOverrides.resizable !== false}
+            onChange={(event) =>
+              patch({ resizable: event.target.checked ? undefined : false })
             }
           />
           <span>Resizable</span>
@@ -192,8 +349,7 @@ function WindowField({ node }: { node: VNode }) {
   );
 }
 
-/** The soft ordering hint for entities discovered as sibling files — the one
- *  cross-file reference the model permits, and one save to reorder them all. */
+// The soft ordering hint for sibling-file entities: the one cross-file reference the model permits.
 function ChildOrderField({ node }: { node: VNode }) {
   const { draft } = useEditor();
   const slugs = [...draft.entities.keys()]
@@ -245,23 +401,7 @@ function ChildOrderField({ node }: { node: VNode }) {
   );
 }
 
-/** What a slot holds today, in the fewest words that distinguish empty from not. */
-function slotStatus(child: VNode | undefined): string {
-  if (!child) return "empty — hidden";
-  if (isNodeEmpty(child)) return "empty — hidden";
-  if (child.view === "imageGallery" || child.view === "imageViewer") {
-    const count = child.images.length;
-    return `${count} image${count === 1 ? "" : "s"}`;
-  }
-  return "has text";
-}
-
-/**
- * The children of a node whose folder fixes them (folderConventions.ts): a
- * character is always the same five files, so there is nothing to add, remove,
- * rename or reorder here — only content to fill in. A slot the file does not
- * have yet is listed all the same and written on the first edit.
- */
+// Children fixed by the folder (folderConventions.ts): only content to fill in, nothing to add, remove or reorder.
 function SlotSection({
   node,
   slots,
@@ -276,16 +416,18 @@ function SlotSection({
       <div className="editor-slot-grid">
         {slots.map((slot) => {
           const id = `${node.id}/${slot.key}`;
-          const status = slot.disabled
-            ? "Coming soon"
-            : slotStatus(draft.index.get(id));
-          const empty = status === "empty — hidden";
+          const child = draft.index.get(id);
+          let status = "has text";
+          if (slot.disabled) status = "Coming soon";
+          else if (!child || isNodeEmpty(child)) status = "Empty (hidden)";
+          else if (child.view === "imageGallery" || child.view === "imageViewer") {
+            const count = child.images.length;
+            status = `${count} image${count === 1 ? "" : "s"}`;
+          }
           const body = (
             <>
               <span className="editor-slot-name">{slot.name}</span>
-              <span className="editor-slot-status">
-                {empty ? "Empty (hidden)" : status}
-              </span>
+              <span className="editor-slot-status">{status}</span>
               {!slot.disabled && <ChevronRight size={16} />}
             </>
           );
@@ -315,25 +457,21 @@ function ChildrenSection({ node }: { node: VNode }) {
   const [typedView, setTypedView] = useState<ViewId>("msWord");
   const [name, setName] = useState("");
   const children = node.children ?? [];
-  // A document, a gallery or a plain notepad never renders its children, so
-  // there is nothing to add here. Children it somehow *has* are still listed —
-  // that list is the only way to see and remove them.
+  // A view that never renders children gets no Add; children it somehow has are still listed so they can be removed.
   const canAdd = showsChildren(node);
   if (!canAdd && children.length === 0) return null;
 
-  // The key is never asked for: it is the slugified name, everywhere. A folder
-  // with a declared convention (folderConventions.ts) drops the view question
-  // too, since every item in it is the same kind of thing. Both derived per
-  // render, not initial state, so moving the form to another node cannot leave
-  // the previous node's answer behind.
+  // Key is always the slugified name; a folder convention also fixes the view. Derived per render,
+  // not initial state, so moving to another node cannot leave the previous answer behind.
   const key = slugify(name);
   const preset = folderConvention(node.id)?.view;
   const view = preset ?? typedView;
 
-  // A sibling *file* claims the same id as an in-file child with that key, so
-  // both have to be checked — the draft index holds every node in either shape.
+  // A sibling *file* claims the same id as an in-file child; the draft index holds both shapes.
   const taken = draft.index.has(`${node.id}/${key}`);
   const validKey = /^[a-z0-9][a-z0-9-]*$/.test(key) && !taken;
+  let nameHint: string | undefined;
+  if (name) nameHint = taken ? `${node.id}/${key} already exists` : `id: ${node.id}/${key || "…"}`;
 
   return (
     <div className="editor-field">
@@ -343,7 +481,7 @@ function ChildrenSection({ node }: { node: VNode }) {
           <button
             type="button"
             className="editor-button editor-button-small"
-            onClick={() => setAdding((a) => !a)}
+            onClick={() => setAdding((wasAdding) => !wasAdding)}
           >
             {adding ? <X size={13} /> : <Plus size={13} />}
             {adding ? "Cancel" : "Add"}
@@ -361,14 +499,8 @@ function ChildrenSection({ node }: { node: VNode }) {
                 value={name}
                 required
                 invalid={Boolean(name) && !validKey}
-                onChange={(v) => setName(String(v ?? ""))}
-                hint={
-                  name
-                    ? taken
-                      ? `${node.id}/${key} already exists`
-                      : `id: ${node.id}/${key || "…"}`
-                    : undefined
-                }
+                onChange={(value) => setName(String(value ?? ""))}
+                hint={nameHint}
               />
               {!preset && (
                 <label className="editor-field">
@@ -376,7 +508,7 @@ function ChildrenSection({ node }: { node: VNode }) {
                   <select
                     className="editor-input"
                     value={typedView}
-                    onChange={(e) => setTypedView(e.target.value as ViewId)}
+                    onChange={(event) => setTypedView(event.target.value as ViewId)}
                   >
                     {VIEWS.map((id) => (
                       <option key={id} value={id}>
@@ -417,14 +549,13 @@ function ChildrenSection({ node }: { node: VNode }) {
             <ReorderButtons
               index={index}
               total={children.length}
-              onMove={(i, direction) =>
-                draft.moveChild(children[i].id, direction)
+              onMove={(moveIndex, direction) =>
+                draft.moveChild(children[moveIndex].id, direction)
               }
             />
             <DeleteButton
               onClick={() => {
-                // No confirmation: this only edits the draft, and nothing
-                // reaches the repo until Save file is pressed.
+                // No confirmation: only the draft changes until Save is pressed.
                 draft.removeNode(child.id);
                 select(node.id);
               }}
@@ -437,163 +568,4 @@ function ChildrenSection({ node }: { node: VNode }) {
   );
 }
 
-export default function NodeForm({ node }: { node: VNode }) {
-  const { draft, select } = useEditor();
-  const def = APP_REGISTRY[node.view];
-  const problems = draft.problems.filter((p) => p.nodeId === node.id);
-  const knownView = VIEWS.includes(node.view);
-  // A top-level entity is a desktop icon (content/desktop.json lists them by id).
-  // Its name, icon, view and window shape are fixed by the shell, so the chrome
-  // fields are hidden — only its content is editable here.
-  const isDesktopEntry = !node.id.includes("/");
-  // The folder this node sits in may fix its window type and how it is pictured
-  // — a character is always a folder shown by its own image, an infection is
-  // never pictured at all. Both controls are only dropped once the node
-  // actually matches, so a node holding something else still has the control
-  // that repairs it: a stray icon on an `icon: "none"` item stays clearable.
-  const convention = conventionFor(node.id);
-  const fixedView = convention?.view === node.view;
-  const hideIcon = convention?.icon === "none" && !node.icon;
-  // The node's own slot, when its parent's folder fixes its children: name,
-  // type and icon are then the layout's, not the owner's, so the form is the
-  // content and nothing else.
-  const slot = slotFor(node.id);
-  const slots = slotsOf(node.id);
-
-  return (
-    <div className="editor-form">
-      {slot && (
-        <button
-          type="button"
-          className="editor-back"
-          onClick={() => select(node.id.slice(0, node.id.lastIndexOf("/")))}
-        >
-          <ChevronLeft size={16} />
-          Back
-        </button>
-      )}
-      <div className="editor-form-head">
-        <h2>{node.name || "(unnamed)"}</h2>
-        <span className="editor-text-mono">{node.id}</span>
-      </div>
-
-      {problems.map((problem, i) => (
-        <p
-          key={i}
-          className={
-            problem.severity === "error" ? "editor-error" : "editor-warn"
-          }
-        >
-          [{problem.severity}] {problem.message}
-        </p>
-      ))}
-
-      {slot?.disabled && (
-        <p className="editor-hint">
-          {slot.name} is under construction — hidden, and not editable here.
-        </p>
-      )}
-
-      {!isDesktopEntry && !slot && slots && (
-        <div className="editor-profile">
-          <Avatar src={node.icon} />
-          <div className="editor-profile-fields">
-            <ScalarField
-              label="Name"
-              type="text"
-              required
-              value={node.name}
-              onChange={(v) => draft.patchNode(node.id, { name: v })}
-            />
-            <IconField
-              node={node}
-              urlOnly
-              hidePreview
-              label="Avatar picture"
-              hint="Use the [ Thumbnail ] image link in [ Get Pinterest image link ] tab."
-            />
-          </div>
-        </div>
-      )}
-
-      {!isDesktopEntry && !slot && !slots && (
-        <>
-          <ScalarField
-            label="Name"
-            type="text"
-            required
-            value={node.name}
-            onChange={(v) => draft.patchNode(node.id, { name: v })}
-          />
-
-          {!fixedView && (
-            <label className="editor-field">
-              <span className="editor-label">Type</span>
-              <select
-                className={`editor-input${knownView ? "" : " editor-input-invalid"}`}
-                value={node.view}
-                onChange={(e) =>
-                  draft.patchNode(node.id, { view: e.target.value as ViewId })
-                }
-              >
-                {!knownView && (
-                  <option value={node.view}>
-                    {node.view} — unknown, pick one
-                  </option>
-                )}
-                {VIEWS.map((id) => (
-                  <option key={id} value={id}>
-                    {viewLabel(id)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {!hideIcon && (
-            <IconField node={node} urlOnly={convention?.icon === "url"} />
-          )}
-        </>
-      )}
-
-      {!slot?.disabled &&
-        def?.fields
-          ?.filter((spec) => !COMMON_KEYS.has(spec.key))
-          .map((spec, i) => (
-            <FieldRenderer
-              key={`${spec.key}-${spec.type}-${i}`}
-              spec={spec}
-              node={node}
-            />
-          ))}
-
-      {SHOW_ADVANCED && !isDesktopEntry && (
-        <details className="editor-details">
-          <summary>Advanced</summary>
-          <div className="editor-grid-2">
-            <ScalarField
-              label="Sort order among siblings"
-              type="number"
-              value={node.order}
-              onChange={(v) => draft.patchNode(node.id, { order: v })}
-            />
-            <ScalarField
-              label="Taskbar group"
-              type="text"
-              value={node.group}
-              onChange={(v) => draft.patchNode(node.id, { group: v })}
-            />
-          </div>
-          <WindowField node={node} />
-        </details>
-      )}
-
-      {!slot && <ChildOrderField node={node} />}
-      {slots ? (
-        <SlotSection node={node} slots={slots} />
-      ) : (
-        !slot?.disabled && <ChildrenSection node={node} />
-      )}
-    </div>
-  );
-}
+// #endregion

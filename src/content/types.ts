@@ -1,6 +1,6 @@
+// #region Images, zones and rooms
 import type { ViewId } from "../window-system/types";
 
-/** One image in an image set. */
 export interface ImageRef {
   thumbnail: string;
   full: string;
@@ -27,8 +27,7 @@ export type Effect = OpenNodeEffect | GoToRoomEffect;
 /** An image has no rooms, so an easter egg click can do anything else. */
 export type HotspotAction = Exclude<Effect, GoToRoomEffect>;
 
-/** A rectangle on a picture, in percentages of the rendered picture box, so it
- *  survives resizing, maximizing and zooming. */
+/** A rectangle in percentages of the rendered picture box, so it survives resize, maximize and zoom. */
 export interface ZoneBox {
   x: number;
   y: number;
@@ -55,8 +54,7 @@ export interface RoomZone extends ZoneBox {
   action: Effect;
 }
 
-/** One page of a click-and-point site. Not a node — it lives inside its
- *  site's file, so a link between rooms can never dangle across files. */
+/** One page of a click-and-point site. Not a node: it lives in its site's file, so a room link never dangles across files. */
 export interface Room {
   /** Fixed when the room is created; `goToRoom` points at it. Never renamed. */
   key: string;
@@ -66,9 +64,11 @@ export interface Room {
   zones?: RoomZone[];
 }
 
+// #endregion
+
+// #region Nodes
 interface VNodeBase {
-  /** Derived at load time — NOT present in the JSON file.
-   *  Top-level: from the file path. Nested: parentId + "/" + key. */
+  /** Derived at load time, never in the JSON file: the file path, or parentId + "/" + key when nested. */
   id: string;
   /** Nested children only: the id segment for this child, unique among its siblings. */
   key?: string;
@@ -201,3 +201,4 @@ export interface TreeProblem {
   /** `error` nodes are quarantined out of the index; `warning` nodes are kept. */
   severity: "error" | "warning";
 }
+// #endregion

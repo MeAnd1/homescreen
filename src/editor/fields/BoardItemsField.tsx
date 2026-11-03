@@ -1,3 +1,4 @@
+// #region Setup
 import { useState } from "react";
 import type { BoardItem } from "../../content/types";
 import ListEditor from "./ListEditor";
@@ -20,13 +21,11 @@ const blank = (): BoardItem => ({
   opens: "",
 });
 
-/**
- * A name plate may hang off its sprite — `FavouriteSprite.css` says so, and the
- * board relies on it for sprites whose art fills the frame. The stage keeps this
- * much room around the picture so an off-sprite plate stays visible and grabbable.
- */
+// A plate may hang off its sprite (`FavouriteSprite.css`); this margin keeps it visible and grabbable.
 const PLATE_BLEED = 25;
+// #endregion
 
+// #region Main flow
 export default function BoardItemsField({ label, value, onChange }: Props) {
   const items = Array.isArray(value) ? (value as BoardItem[]) : [];
 
@@ -36,7 +35,7 @@ export default function BoardItemsField({ label, value, onChange }: Props) {
       items={items}
       onChange={onChange}
       create={blank}
-      summary={(item, i) => item.name || `Sprite ${i + 1}`}
+      summary={(item, index) => item.name || `Sprite ${index + 1}`}
     >
       {(item, _index, patch) => (
         <>
@@ -45,26 +44,26 @@ export default function BoardItemsField({ label, value, onChange }: Props) {
             type="text"
             value={item.name}
             required
-            onChange={(v) => patch({ name: String(v ?? "") })}
+            onChange={(next) => patch({ name: String(next ?? "") })}
           />
           <ScalarField
             label="Sprite URL"
             type="url"
             value={item.spriteUrl}
             required
-            onChange={(v) => patch({ spriteUrl: String(v ?? "") })}
+            onChange={(next) => patch({ spriteUrl: String(next ?? "") })}
           />
           <NodeRefField
             label="Opens"
             value={item.opens}
-            onChange={(v) => patch({ opens: String(v ?? "") })}
+            onChange={(next) => patch({ opens: String(next ?? "") })}
           />
           <NamePlatePlacer item={item} patch={patch} />
           <ScalarField
             label="Short description"
             type="text"
             value={item.shortDescription}
-            onChange={(v) => patch({ shortDescription: String(v ?? "") })}
+            onChange={(next) => patch({ shortDescription: String(next ?? "") })}
           />
         </>
       )}
@@ -72,11 +71,7 @@ export default function BoardItemsField({ label, value, onChange }: Props) {
   );
 }
 
-/**
- * One sprite's name plate on one sprite — the only placement on the board, and
- * the same percentages `FavouriteSprite` renders it at. A component of its own
- * because it holds state and the list renders it in a loop.
- */
+// Same percentages `FavouriteSprite` renders the plate at. Own component because it holds state.
 function NamePlatePlacer({
   item,
   patch,
@@ -137,3 +132,4 @@ function NamePlatePlacer({
     </div>
   );
 }
+// #endregion

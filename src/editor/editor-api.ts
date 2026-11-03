@@ -1,27 +1,36 @@
-/**
- * Both are overridable so the editor can be pointed at a locally running
- * static-page-editors instance (and a scratch repo) without touching the code
- * that ships. Defaults are the deployed server and the real project.
- */
+// #region Config
+
+// Overridable so the editor can point at a local static-page-editors server and a scratch repo.
 export const EDITOR_API_URL =
   import.meta.env.VITE_EDITOR_API_URL ?? "https://09176645.xyz/github-pages-editor";
 export const PROJECT_ID =
   import.meta.env.VITE_EDITOR_PROJECT_ID ?? "kataa-homescreen";
 
-function getStorageKey(): string {
-  return `editor_password_${PROJECT_ID}`;
+const PASSWORD_STORAGE_KEY = `editor_password_${PROJECT_ID}`;
+
+export interface SaveResult {
+  success: boolean;
+  message: string;
+  warnings?: string[];
+  error?: string;
+  /** Set on 429 so the UI can offer a retry rather than reporting a hard failure. */
+  rateLimited?: boolean;
 }
 
+// #endregion
+
+// #region Password
+
 export function getSavedPassword(): string | null {
-  return localStorage.getItem(getStorageKey());
+  return localStorage.getItem(PASSWORD_STORAGE_KEY);
 }
 
 export function savePassword(password: string): void {
-  localStorage.setItem(getStorageKey(), password);
+  localStorage.setItem(PASSWORD_STORAGE_KEY, password);
 }
 
 export function clearPassword(): void {
-  localStorage.removeItem(getStorageKey());
+  localStorage.removeItem(PASSWORD_STORAGE_KEY);
 }
 
 export async function verifyPassword(password: string): Promise<boolean> {
@@ -33,14 +42,42 @@ export async function verifyPassword(password: string): Promise<boolean> {
   return response.ok;
 }
 
-export interface SaveResult {
-  success: boolean;
-  message: string;
-  warnings?: string[];
-  error?: string;
-  /** Set on 429 so the UI can offer a retry rather than reporting a hard failure. */
-  rateLimited?: boolean;
+// #endregion
+
+// #region Save and delete
+
+export function saveAndPush(
+  fileId: string,
+  content: unknown,
+  password: string,
+): Promise<SaveResult> {
+  return post("/save", {
+    fileId,
+    content,
+    password,
+    timestamp: new Date().toISOString(),
+  });
 }
+
+/**
+ * Removes a file and pushes the removal. Only fileIds the server marks deletable can go
+ * (others return 400); a 404 means it was already gone and is reported, not swallowed.
+ * Callers must confirm with the user first.
+ */
+export function deleteAndPush(
+  fileId: string,
+  password: string,
+): Promise<SaveResult> {
+  return post("/delete", { fileId, password });
+}
+
+/** Where a save lands, for the UI to show before it happens. */
+export const describeTarget = (fileId: string): string =>
+  `${PROJECT_ID} · ${fileId}`;
+
+// #endregion
+
+// #region Helpers
 
 async function post(
   path: string,
@@ -69,33 +106,4 @@ async function post(
   return (await response.json()) as SaveResult;
 }
 
-export function saveAndPush(
-  fileId: string,
-  content: unknown,
-  password: string,
-): Promise<SaveResult> {
-  return post("/save", {
-    fileId,
-    content,
-    password,
-    timestamp: new Date().toISOString(),
-  });
-}
-
-/**
- * Removes a file and pushes the removal. Sibling of saveAndPush.
- *
- * Only fileIds the server marks deletable can be removed; others return 400. A 404 means
- * the file was already gone, and is reported rather than swallowed. Callers must confirm
- * with the user first.
- */
-export function deleteAndPush(
-  fileId: string,
-  password: string,
-): Promise<SaveResult> {
-  return post("/delete", { fileId, password });
-}
-
-/** Where a save lands, for the UI to show before it happens. */
-export const describeTarget = (fileId: string): string =>
-  `${PROJECT_ID} · ${fileId}`;
+// #endregion
