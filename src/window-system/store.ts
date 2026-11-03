@@ -143,9 +143,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       viewport,
     );
 
-    // Small viewports open maximized (placement.ts owns the rule). `rect` still
-    // holds the windowed geometry, so unmaximizing on a rotated phone works.
-    const maximized = shouldOpenMaximized(viewport);
+    // `rect` still holds the windowed geometry, so unmaximizing on a rotated
+    // phone works. Decided on the requested height, before clamping hides it.
+    const requestedHeight = input.rect?.height ?? def.defaultSize.height;
+    const maximized = shouldOpenMaximized(requestedHeight, viewport);
 
     const instance: WindowInstance = {
       id,

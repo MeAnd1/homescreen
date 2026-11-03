@@ -21,12 +21,13 @@ export function currentViewport(): Size {
 }
 
 /**
- * Below the mobile breakpoint a new window opens maximized — owner's choice.
- * A floating 320px window on a 375px screen leaves no room to drag it and no
- * room to read it. This is the one rule; no app special-cases it.
+ * A window opens maximized only when its own height does not fit the usable
+ * area — a phone in landscape, or a short browser window. Width never decides
+ * it: on a narrow phone `clampToViewport` already makes a window full width
+ * minus the margins, so maximizing would only erase the desktop look.
  */
-export function shouldOpenMaximized(viewport: Size): boolean {
-  return viewport.width <= MOBILE_BREAKPOINT;
+export function shouldOpenMaximized(requestedHeight: number, viewport: Size): boolean {
+  return requestedHeight > viewport.height;
 }
 
 /**
@@ -53,9 +54,10 @@ export function clampToViewport(rect: Rect, viewport: Size): Rect {
 }
 
 /**
- * Place a new window: `defaultSize` at the cascade origin, or one step down and
- * right from `anchor` (its parent, or the topmost window). Wraps back to the
- * origin when the cascade would leave the viewport.
+ * Place a new window: `defaultSize` at the cascade origin, or one step down
+ * from `anchor` (its parent, or the topmost window) — and one step right when
+ * that still fits. Wraps back to the origin when the cascade would leave the
+ * bottom of the viewport.
  */
 export function computeRect(opts: {
   size: Size;
@@ -67,16 +69,12 @@ export function computeRect(opts: {
   let x = ORIGIN.x;
   let y = ORIGIN.y;
 
-  if (anchor) {
+  // A window too wide to step right still steps down — on a phone every
+  // window is full width, and without this they would all land on one spot.
+  if (anchor && anchor.y + CASCADE_STEP + size.height <= viewport.height) {
+    y = anchor.y + CASCADE_STEP;
     const cascadedX = anchor.x + CASCADE_STEP;
-    const cascadedY = anchor.y + CASCADE_STEP;
-    const fits =
-      cascadedX + size.width <= viewport.width &&
-      cascadedY + size.height <= viewport.height;
-    if (fits) {
-      x = cascadedX;
-      y = cascadedY;
-    }
+    if (cascadedX + size.width <= viewport.width) x = cascadedX;
   }
 
   return clampToViewport({ x, y, width: size.width, height: size.height }, viewport);
